@@ -46,8 +46,8 @@ vector <char *> parse_command(string &input) {
         bool spaceFound = false;
         while (input[i] == ' ') {
             if (!spaceFound) {
-            spaceFound = true;
-            j = i;
+                spaceFound = true;
+                j = i;
             }
             oneSpace = true;
             i++;
@@ -62,11 +62,11 @@ vector <char *> parse_command(string &input) {
     }
     unsigned int lastSpace = input.rfind(' ');
     if (!oneSpace || lastSpace < input.length() - 1) {
-    char *temp = new char[input.length() - begin + 1];
-    strcpy(temp, input.substr(begin).c_str());
-    ret.push_back(temp);
+        char *temp = new char[input.length() - begin + 1];
+        strcpy(temp, input.substr(begin).c_str());
+        ret.push_back(temp);
     }
-    
+
     //for (unsigned i = 0; i < input.length(); i++) {
     //    if (input[i] == ' ') {
     //        char *temp = new char[i - begin];
@@ -82,10 +82,10 @@ vector <char *> parse_command(string &input) {
 }
 
 int handle_command(struct passwd *p, vector <char *> &cmd) {
-    printVec(cmd);
+    //printVec(cmd);
     int status = 0;
     if (!strcmp(cmd[0], "cd")) {
-    //    cout << cmd[1] << endl;
+        //    cout << cmd[1] << endl;
         if (cmd.size() == 1) {
             string home = "/home/" + string(p->pw_name);
             return chdir(home.c_str());
@@ -97,8 +97,9 @@ int handle_command(struct passwd *p, vector <char *> &cmd) {
             }
             if (chdir(cmd[1]) == -1) {
                 cerr << "\033[1;41mcd: No such file or directory: " << cmd[1] << "\033[0m\n";
-                return -1;
+                return EXIT_FAILURE;
             }
+            return EXIT_SUCCESS;
         }
     }
     char **ptr = &cmd[0];
@@ -127,6 +128,28 @@ void printPrompt(struct passwd *p) {
     char hostname[100];
     char *buf = get_current_dir_name();
     gethostname(hostname, sizeof(hostname));
-    cout << p->pw_name << "@" << hostname << ":" << buf << " ";
+    string cwd = replaceHomeDir(buf, p->pw_name);
+    cout << p->pw_name << "@" << hostname << ":" << cwd << " $ ";
     free(buf);
+}
+
+string replaceHomeDir(char *buf, char *pw_name) {
+    string ret;
+    string token = "/home/" + string(pw_name);
+    //cout << token << endl;
+    string bufstring = string(buf);
+    int ind = bufstring.find(token);
+   // cout << ind << endl;
+    for (unsigned i = 0; i < bufstring.length(); i++) {
+        if ((int)i == ind) {
+            ret += "~";
+        }
+        else if ((int)i < ind + (int)token.length() && ind != -1) {
+            continue;
+        }
+        else {
+            ret += buf[i];
+        }
+    }
+    return ret;
 }

@@ -7,4 +7,5 @@ vector <char *> parse_command(string &input);
 int handle_command(struct passwd *p, vector <char *> &cmd);
 void freeStrings(vector <char *> &cmd);
 void printPrompt(struct passwd *p);
+string replaceHomeDir(char *buf, char *pw_name);
 #endif
