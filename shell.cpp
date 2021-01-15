@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 #include <pwd.h>
 #include <unistd.h>
 #include "shell.h"
@@ -81,8 +82,15 @@ vector <char *> parse_command(string &input) {
     return ret;
 }
 
+int detectCarrots(vector <char *> &cmd) {
+    for (int i = 0; i < (int)cmd.size(); i++) {
+        if (!strcmp(">", cmd[i]) || !strcmp("<", cmd[i])) return i;
+    }
+    return -1;
+}
+
 int handle_command(struct passwd *p, vector <char *> &cmd) {
-    //printVec(cmd);
+    int carrot = detectCarrots(cmd);
     int status = 0;
     if (!strcmp(cmd[0], "cd")) {
         //    cout << cmd[1] << endl;
@@ -102,19 +110,66 @@ int handle_command(struct passwd *p, vector <char *> &cmd) {
             return EXIT_SUCCESS;
         }
     }
-    char **ptr = &cmd[0];
+    int io_copy;
+    int fd;
+    int mode = -1;
     pid_t child;
+    if (carrot != -1) {
+        if (!strcmp(cmd[carrot], "<")) {
+            io_copy = dup(STDIN_FILENO);
+            close(STDIN_FILENO);
+            if ((int)cmd.size() == carrot + 1) {
+                return EXIT_FAILURE;
+            }
+            fd = open(cmd[carrot + 1], O_RDONLY);
+            mode = 0;
+            string line;
+            cmd.erase(cmd.begin() + carrot, cmd.end());
+        }
+        if (!strcmp(cmd[carrot], ">")) {
+            io_copy = dup(STDOUT_FILENO);
+            if ((int)cmd.size() == carrot + 1) {
+                return EXIT_FAILURE;
+            }
+            close(STDOUT_FILENO);
+            fd = open(cmd[carrot + 1], O_CREAT | O_TRUNC | O_WRONLY, 00644);
+            mode = 1;
+            // dup2(fd, STDOUT_FILENO);
+            //close(fd);
+            cmd.erase(cmd.begin() + carrot, cmd.end());
+        }
+    }
+    char **ptr = new char*[cmd.size() + 1];
+    for (int i = 0; i < (int)cmd.size(); i++) {
+        ptr[i] = cmd[i];
+    }
+    ptr[cmd.size()] = NULL;
     child = fork();
-    // cout << child << endl;
     if (child == 0) {
         if (execvp(cmd[0], ptr) == -1) {
             cerr << "\033[1;41mshell: command not found: " << cmd[0] << "\033[0m\n";
-            return EXIT_FAILURE;
+            exit(EXIT_FAILURE);
         }
     }
     else {
         waitpid(child, &status, 0);
+        if (carrot != -1) {
+            int fd2;
+            close(fd);
+            switch (mode) {
+                case 0:
+                    fd2 = dup2(io_copy, STDIN_FILENO);
+                    cout << fd2 << endl;
+                    close(io_copy);
+                case 1:
+                    fd2 = dup2(io_copy, STDOUT_FILENO);
+                    cout << fd2 << endl;
+                    close(io_copy);
+                default: break;
+            }
+        }
     }
+    delete [] ptr;
     return EXIT_SUCCESS;
 }
 
@@ -139,7 +194,7 @@ string replaceHomeDir(char *buf, char *pw_name) {
     //cout << token << endl;
     string bufstring = string(buf);
     int ind = bufstring.find(token);
-   // cout << ind << endl;
+    // cout << ind << endl;
     for (unsigned i = 0; i < bufstring.length(); i++) {
         if ((int)i == ind) {
             ret += "~";
