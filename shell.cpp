@@ -1,6 +1,6 @@
 #include <bits/stdc++.h>
-#include <stdio.h>
-#include <stdlib.h>
+//#include <stdio.h>
+//#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <fcntl.h>
@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
     string input;
     while (1) {
         printPrompt(p);
-        getline(cin, input);
+        if (!getline(cin, input)) break;
         if (input.compare("") == 0) {
             continue;
         }
@@ -119,6 +119,7 @@ int handle_command(struct passwd *p, vector <char *> &cmd) {
             io_copy = dup(STDIN_FILENO);
             close(STDIN_FILENO);
             if ((int)cmd.size() == carrot + 1) {
+                freeStrings(cmd);
                 return EXIT_FAILURE;
             }
             fd = open(cmd[carrot + 1], O_RDONLY);
@@ -129,6 +130,7 @@ int handle_command(struct passwd *p, vector <char *> &cmd) {
         if (!strcmp(cmd[carrot], ">")) {
             io_copy = dup(STDOUT_FILENO);
             if ((int)cmd.size() == carrot + 1) {
+                freeStrings(cmd);
                 return EXIT_FAILURE;
             }
             close(STDOUT_FILENO);
@@ -148,6 +150,9 @@ int handle_command(struct passwd *p, vector <char *> &cmd) {
     if (child == 0) {
         if (execvp(cmd[0], ptr) == -1) {
             cerr << "\033[1;41mshell: command not found: " << cmd[0] << "\033[0m\n";
+            delete [] ptr;
+            freeStrings(cmd);
+            cmd.~vector<char *>();
             exit(EXIT_FAILURE);
         }
     }
