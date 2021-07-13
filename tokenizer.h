@@ -1,6 +1,7 @@
 #ifndef TOKENIZER_H
 #define TOKENIZER_H
 #include <bits/stdc++.h>
+#include "misc.h"
 
 using namespace std;
 typedef enum tokenType {
@@ -21,20 +22,6 @@ typedef struct token {
     void printToken();
 }Token;
 
-typedef struct stringIterator {
-    stringIterator(string &line);
-    ~stringIterator();
-    char lookahead(int n);
-    char **it;
-    unsigned int pos;
-    unsigned int len;
-}StringIterator;
-
 Token next(StringIterator &it);
-char peek(StringIterator &it);
-char advance(StringIterator &it);
-string consumeSpaces(StringIterator &it);
 vector <Token> genTokens(string &line);
-void removeWhiteSpace(string &line);
-void printPrompt();
 #endif

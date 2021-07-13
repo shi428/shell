@@ -1,11 +1,8 @@
-#include <bits/stdc++.h>
+#include "parser.h"
 #include "tokenizer.h"
-#include "misc.h"
-
-using namespace std;
 
 void printPrompt() {
-    cout << "tokenizer>";
+    cout << "parser>";
 }
 
 void printTokens(vector <Token> &tokens) {
@@ -20,6 +17,10 @@ int main(int argc, char *argv[]) {
         if (!getline(cin, line)) break;
         vector <Token> tokens = genTokens(line);
         printTokens(tokens);
+        Tree *parseTree = newTree(tokens);
+        if (parseTree->root) {
+            parseTree->root->traverse(0);
+        }
+        delete parseTree;
     }
-    return EXIT_SUCCESS;
 }

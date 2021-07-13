@@ -1,66 +1,8 @@
 #include "tokenizer.h"
-void printPrompt() {
-    cout << "tokenizer>";
-}
-
-void removeTrailingWhiteSpace(string &line) {
-    while (line.front() == ' ') {
-        line.erase(line.begin());
-    }
-    while (line.back() == ' ') {
-        line.pop_back();
-    }
-}
-
-stringIterator::stringIterator(string &line) {
-    this->it = new char *;
-    *(this->it) = &(line[0]);
-    this->pos = 0;
-    this->len = line.length();
-}
-
-char stringIterator::lookahead(int n) {
-    return *(*(this->it) + n);
-}
-stringIterator::~stringIterator() {
-    delete this->it;
-}
-
-char advance(StringIterator &it) {
-    char ch = **(it.it);
-    *(it.it) += 1;
-    it.pos += 1;
-    return ch;
-}
-
-char peek(StringIterator &it) {
-    return **(it.it);
-}
-
-string consumeSpaces(StringIterator &it) {
-    string ret = "";
-    char c;
-    while (((c = peek(it)) == ' ') && (it.pos < it.len)) {
-        //if (c == ' ') cout << "space" << endl;
-        ret += c;
-        advance(it);
-    }
-    return ret;
-}
-
-string consumeChars(StringIterator &it) {
-    string ret = "";
-    char c;
-    while ((it.pos < it.len) && ((c = peek(it)) != ' ') && ((c = peek(it)) != '>') && ((c = peek(it)) != '<') && ((c = peek(it)) != '|')) {
-        ret += c;
-        advance(it);
-    }
-    return ret;
-}
 
 string createFileTokenEntry(StringIterator &it) {
     string ret;
-    ret += advance(it);
+    ret += it.advance();
     ret+= consumeSpaces(it);
     ret+= consumeChars(it);
     ret+= consumeSpaces(it);
@@ -68,35 +10,35 @@ string createFileTokenEntry(StringIterator &it) {
 }
 
 bool detectError(StringIterator &it) {
-    return (peek(it) == '2') && (it.lookahead(1) == '>');
+    return (it.peek() == '2') && (it.lookahead(1) == '>');
 }
 
 Token next(StringIterator &it) {
     Token ret;
     ret.lexeme = string();
-    if (peek(it) == '|') {
-        ret.lexeme = advance(it);
+    if (it.peek() == '|') {
+        ret.lexeme = it.advance();
         ret.type = PIPE;
         consumeSpaces(it);
     }
     else if (detectError(it)) {
         ret.type = FILE_ERR;
-        ret.lexeme += advance(it);
+        ret.lexeme += it.advance();
         ret.lexeme += createFileTokenEntry(it);
     }
-    else if (peek(it) == '<') {
+    else if (it.peek() == '<') {
         ret.type = FILE_IN;
         ret.lexeme += createFileTokenEntry(it);
     }
-    else if (peek(it) == '>') {
-        ret.lexeme += advance(it);
-        if (peek(it)== '&')  {
+    else if (it.peek() == '>') {
+        ret.lexeme += it.advance();
+        if (it.peek()== '&')  {
             ret.type = FILE_OUT_ERR;
             ret.lexeme += createFileTokenEntry(it);
         }
-        else if (peek(it) == '>') {
-            ret.lexeme += advance(it);
-            if (peek(it) == '&') {
+        else if (it.peek() == '>') {
+            ret.lexeme += it.advance();
+            if (it.peek() == '&') {
                 ret.type = FILE_APPEND_ERR;
                 ret.lexeme += createFileTokenEntry(it);
             }
@@ -113,9 +55,9 @@ Token next(StringIterator &it) {
     else {
         ret.type = COMMAND;
         //consumeSpaces(it);
-        while (it.pos < it.len && peek(it) != '>' && peek(it) != '<') {
+        while (it.pos < it.len && it.peek() != '>' && it.peek() != '<' && it.peek() != '|') {
             ret.lexeme += consumeChars(it);
-            if (it.pos == it.len || peek(it) == '>' || peek(it) == '<')// reached end
+            if (it.pos == it.len || it.peek() == '>' || it.peek() == '<' || it.peek() == '|')// reached end
                 break;
             string spaces = consumeSpaces(it);
             if (spaces == "") {
@@ -170,7 +112,7 @@ void Token::printToken() {
 
 vector <Token> genTokens(string &line) {
     vector <Token> ret;
-    removeTrailingWhiteSpace(line);
+    removeWhiteSpace(line);
     cout << line << endl;
     stringIterator it(line);
     while (it.pos < it.len) {
