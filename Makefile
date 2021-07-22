@@ -1,5 +1,5 @@
 CPP = g++ -std=c++11 -g -Wall -Werror
-SRCS=shell.cpp
+SRCS=shell_main.cpp tokenizer.cpp misc.cpp parser.cpp command.cpp exec.cpp
 TOKENSRCS=token_main.cpp tokenizer.cpp misc.cpp
 PARSERSRCS=parser.cpp tokenizer.cpp misc.cpp parser_main.cpp command.cpp
 SHELLOBJS=$(SRCS:%.cpp=%.o)

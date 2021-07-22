@@ -1,10 +1,18 @@
 #ifndef COMMAND_H
 #define COMMAND_H
 #include <bits/stdc++.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <fcntl.h>
+#include <pwd.h>
+#include <unistd.h>
 #include "tokenizer.h"
 
 typedef struct command {
     ~command();
+    int execute(struct passwd *p, vector <pid_t> &children, int readfd, int writefd);
+    int redirectIn(int *pipefd, vector <pid_t> &children, int readfd, int writefd, bool pipe);
+    int redirectOut(int *pipefd, vector <pid_t> &children, int readfd, int writefd, int i, bool pipe);
     void parseCommand(Token &cmd);
     void parseFileList(vector <Token> &files);
     void printCommand(int spaces);
@@ -15,3 +23,4 @@ typedef struct command {
 
 }Command;
 #endif
+

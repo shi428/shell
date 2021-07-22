@@ -6,8 +6,8 @@
 using namespace std;
 typedef enum tokenType {
     COMMAND = 0,
-    FILE_OUT = 1, // >
-    FILE_IN = 2, // <
+    FILE_IN = 1, // <
+    FILE_OUT = 2, // >
     FILE_ERR = 3, // 2>
     FILE_OUT_ERR = 4, // >&
     FILE_APPEND = 5, //>>

@@ -113,7 +113,6 @@ void Token::printToken() {
 vector <Token> genTokens(string &line) {
     vector <Token> ret;
     removeWhiteSpace(line);
-    cout << line << endl;
     stringIterator it(line);
     while (it.pos < it.len) {
         ret.push_back(next(it));
