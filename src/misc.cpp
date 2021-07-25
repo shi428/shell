@@ -1,4 +1,4 @@
-#include "misc.h"
+#include <misc.h>
 
 StringIterator::stringIterator(string &line) {
     this->it = new char *;

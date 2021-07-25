@@ -1,4 +1,4 @@
-#include "exec.h"
+#include <exec.h>
 
 int exec(struct passwd *p, Node *node) {
     vector <pid_t> children;

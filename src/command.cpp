@@ -4,8 +4,8 @@
 #include <fcntl.h>
 #include <pwd.h>
 #include <unistd.h>
-#include "command.h"
-#include "misc.h"
+#include <command.h>
+#include <misc.h>
 
 Command::~Command() {
     int i = 0;

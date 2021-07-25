@@ -1,6 +1,6 @@
-#include "parser.h"
-#include "tokenizer.h"
-#include "exec.h"
+#include <parser.h>
+#include <tokenizer.h>
+#include <exec.h>
 
 void printPrompt() {
     cout << "shell>";

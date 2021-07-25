@@ -1,5 +1,5 @@
-#include "parser.h"
-#include "command.h"
+#include <parser.h>
+#include <command.h>
 
 Node::node(Token &t, vector <Token> &files) {
     token = t;

@@ -1,5 +1,5 @@
-#include "parser.h"
-#include "tokenizer.h"
+#include <parser.h>
+#include <tokenizer.h>
 
 void printPrompt() {
     cout << "parser>";
