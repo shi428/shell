@@ -146,63 +146,20 @@ int test_redirect(vector <string> *files) {
     return !files[1].size() && !files[2].size() && !files[3].size() && !files[4].size() && !files[5].size();
 }
 
-int Command::redirectOut(int *pipefd, vector <pid_t> &children, int readfd, int writefd, int i, bool pipe) {
-    //int status;
-    pid_t child;
+int Command::redirectOut(int *pipefd, int *pipefd2, int i, bool pipeflag, bool _append) {
     char **temp_cmd = NULL;
     int start = 1;
-    if (!files[i].size()) {
-        if (pipe) {
-            temp_cmd = new char *[3];
-            temp_cmd[0] = new char[4];
-            temp_cmd[1] = new char[10];
-            strcpy(temp_cmd[0], "tee");
-            strcpy(temp_cmd[1], "/tmp/pipe");
-            temp_cmd[2] = NULL;
-            child = fork();
-            if (child == 0) {
-                dup2(pipefd[0], STDIN_FILENO);
-                dup2(writefd, STDOUT_FILENO);
-                //close(readfd);
-                close(pipefd[1]);
-                execvp(temp_cmd[0], temp_cmd);
-            }
-            //           waitpid(child, &status, 0);
-            delete [] temp_cmd[0];
-            delete temp_cmd;
-            close(pipefd[0]);
-            children.push_back(child);
-            return 1;
-        }
-        close(pipefd[0]);
-        return 0;
-    }
-    if (i == 4 || i == 5) {
+    pid_t child;
+    if (_append) {
         start = 2;
-        if (pipe) {
-            start++;
-            temp_cmd = new char *[files[i].size() + 4];
-            temp_cmd[2] = new char[10];
-            strcpy(temp_cmd[2], "/tmp/pipe");
-        }
-        else {
-            temp_cmd = new char *[files[i].size() + 3];
-        }
+        temp_cmd = new char *[files[i].size() + 3];
         temp_cmd[0] = new char[4];
         temp_cmd[1] = new char[3];
         strcpy(temp_cmd[0], "tee");
         strcpy(temp_cmd[1], "-a");
     }
     else {
-        if (pipe) {
-            temp_cmd = new char *[files[i].size() + 3];
-            temp_cmd[1] = new char[10];
-            strcpy(temp_cmd[1], "/tmp/pipe");
-            start++;
-        }
-        else {
-            temp_cmd = new char *[files[i].size() + 2];
-        }
+        temp_cmd = new char *[files[i].size() + 2];
         temp_cmd[0] = new char[4];
         strcpy(temp_cmd[0], "tee");
     }
@@ -211,13 +168,12 @@ int Command::redirectOut(int *pipefd, vector <pid_t> &children, int readfd, int 
         strcpy(temp_cmd[j + start], files[i][j].c_str());
     }
     temp_cmd[files[i].size() + start] = NULL;
-    child = fork();
-    if (child == 0) {
+    if ((child = fork()) == 0) {
         dup2(pipefd[0], STDIN_FILENO);
         close(pipefd[1]);
-        if (pipe) {
-            dup2(writefd, STDOUT_FILENO);
-            close(readfd);
+        if (pipeflag) {
+            dup2(pipefd2[1], STDOUT_FILENO);
+            close(pipefd2[0]);
         }
         else {
             int devnull = open("/dev/null", O_WRONLY | O_CREAT | O_TRUNC);
@@ -225,23 +181,114 @@ int Command::redirectOut(int *pipefd, vector <pid_t> &children, int readfd, int 
             close(devnull);
         }
         execvp(temp_cmd[0], temp_cmd);
+        exit(EXIT_SUCCESS);
     }
-    //    waitpid(child, &status, 0);
+    close(pipefd[0]);
+    if (pipeflag) {
+        close(pipefd2[1]);
+    }
     for (unsigned int j = 0; j < files[i].size() + start; j++) {
         delete [] temp_cmd[j];
     }
     delete []temp_cmd;
-    close(pipefd[0]);
-    children.push_back(child);
-    return 1;
+    return 0;
 }
+/*int Command::redirectOut(int *pipefd, vector <pid_t> &children, int readfd, int writefd, int i, bool pipe) {
+//int status;
+pid_t child;
+char **temp_cmd = NULL;
+int start = 1;
+if (!files[i].size()) {
+if (pipe) {
+temp_cmd = new char *[3];
+temp_cmd[0] = new char[4];
+temp_cmd[1] = new char[10];
+strcpy(temp_cmd[0], "tee");
+strcpy(temp_cmd[1], "/tmp/pipe");
+temp_cmd[2] = NULL;
+child = fork();
+if (child == 0) {
+dup2(pipefd[0], STDIN_FILENO);
+dup2(writefd, STDOUT_FILENO);
+//close(readfd);
+close(pipefd[1]);
+execvp(temp_cmd[0], temp_cmd);
+}
+//           waitpid(child, &status, 0);
+delete [] temp_cmd[0];
+delete temp_cmd;
+close(pipefd[0]);
+children.push_back(child);
+return 1;
+}
+close(pipefd[0]);
+return 0;
+}
+if (i == 4 || i == 5) {
+start = 2;
+if (pipe) {
+start++;
+temp_cmd = new char *[files[i].size() + 4];
+temp_cmd[2] = new char[10];
+strcpy(temp_cmd[2], "/tmp/pipe");
+}
+else {
+temp_cmd = new char *[files[i].size() + 3];
+}
+temp_cmd[0] = new char[4];
+temp_cmd[1] = new char[3];
+strcpy(temp_cmd[0], "tee");
+strcpy(temp_cmd[1], "-a");
+}
+else {
+if (pipe) {
+temp_cmd = new char *[files[i].size() + 3];
+temp_cmd[1] = new char[10];
+strcpy(temp_cmd[1], "/tmp/pipe");
+start++;
+}
+else {
+temp_cmd = new char *[files[i].size() + 2];
+}
+temp_cmd[0] = new char[4];
+strcpy(temp_cmd[0], "tee");
+}
+for (unsigned int j = 0; j < files[i].size(); j++) {
+temp_cmd[j + start] = new char [files[i][j].length() + 1];
+strcpy(temp_cmd[j + start], files[i][j].c_str());
+}
+temp_cmd[files[i].size() + start] = NULL;
+child = fork();
+if (child == 0) {
+dup2(pipefd[0], STDIN_FILENO);
+close(pipefd[1]);
+if (pipe) {
+dup2(writefd, STDOUT_FILENO);
+close(readfd);
+}
+else {
+    int devnull = open("/dev/null", O_WRONLY | O_CREAT | O_TRUNC);
+    dup2(devnull, STDOUT_FILENO);
+    close(devnull);
+}
+execvp(temp_cmd[0], temp_cmd);
+}
+//    waitpid(child, &status, 0);
+for (unsigned int j = 0; j < files[i].size() + start; j++) {
+    delete [] temp_cmd[j];
+}
+delete []temp_cmd;
+close(pipefd[0]);
+children.push_back(child);
+return 1;
+}*/
 
-int Command::redirectIn(int *pipefd, vector <pid_t> &children, int readfd, int writefd, bool pipe) {
+int Command::redirectIn(int *pipefd, vector <pid_t> &children, int readfd, int writefd, bool pipeflag) {
     pid_t child;
     // int status;
     int start = 1;
     char **temp_cmd = NULL;
-    if (pipe) {
+    if (pipeflag) {
         start = 2;
         temp_cmd = new char *[files[0].size() + 3];
         temp_cmd[0] = new char[4];
@@ -261,8 +308,8 @@ int Command::redirectIn(int *pipefd, vector <pid_t> &children, int readfd, int w
     temp_cmd[files[0].size() + start] = NULL;
     child = fork();
     if (child == 0) {
-        if (pipe) {
-           // dup2(readfd, STDIN_FILENO);
+        if (pipeflag) {
+            // dup2(readfd, STDIN_FILENO);
             //close(writefd);
         }
         dup2(pipefd[1], STDOUT_FILENO);
@@ -295,55 +342,36 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int readfd, int
     if (strcmp(cmd[0], "exit") == 0) {
         exit(EXIT_SUCCESS);
     }
-    int flag = 0;
     pid_t child;
-    for (int i = 1; i < 6; i++) {
-        //  int status;
-        int fds[2]; //output redirection
-        int fds1[2]; //input redirection
-        pipe(fds);
-        pipe(fds1);
-        if (!flag) {
-            if (files[0].size() || readfd != STDIN_FILENO) { //redirect input or reading from pipe
-                ret += redirectIn(fds1, children, readfd, writefd, readfd != STDIN_FILENO);
-            }
-            else {
-                close(fds1[0]);
-                close(fds1[1]);
-            }
-            if ((child = fork()) == 0) {
-                if (files[0].size() || readfd != STDIN_FILENO) {
-                    dup2(fds1[0], STDIN_FILENO);
-                    close(fds1[1]);
-                }
-                if (test_out(files) || writefd != STDOUT_FILENO) {
-                    //cerr << "redirectout" << endl;
-                    dup2(fds[1], STDOUT_FILENO);
-                    close(fds[0]);
-                }
-                if (test_error(files)) {
-                    dup2(fds[1], STDERR_FILENO);
-                    close(fds[0]);
-                }
-                //close(fds1[1]);
-                if (execvp(cmd[0], cmd) == -1) {
-                    cerr << "\033[1;41mshell: command not found: " << cmd[0] << "\033[0m\n";
-                    exit(EXIT_FAILURE);
-                }
-            }
-            //       waitpid(child, &status, 0);
-            close(fds[1]);
-            ret += 1;
-            //cout << ret << endl;
-            if (test_redirect(files) && writefd == STDOUT_FILENO) {
-                flag = 1;
-            }
+    int fdout[2];
+    pipe(fdout);
+
+    if ((child = fork()) == 0) {
+        if (files[1].size() || files[4].size()) {
+            dup2(fdout[1], STDOUT_FILENO); 
+            close(fdout[0]);
         }
-        //cout << (int)(writefd != STDOUT_FILENO);
-        ret += redirectOut(fds, children, readfd, writefd, i, writefd != STDOUT_FILENO);
-        //close(fds[0]);
+        if (execvp(cmd[0], cmd) == -1) {
+            cerr << "\033[1;41mshell: command not found: " << cmd[0] << "\033[0m\n";
+            exit(EXIT_FAILURE);
+        }
     }
-            children.push_back(child);
+    close(fdout[1]);
+    if (files[1].size()) { //>
+        if (files[4].size()) { //>> 
+            int fdappend[2];
+            pipe(fdappend);
+            redirectOut(fdout, fdappend, 1, true, false);
+            redirectOut(fdappend, NULL, 4, false, true);
+        }
+        else {
+            redirectOut(fdout, NULL, 1, false, false);
+        }
+    }
+    else if (files[4].size()) {
+            redirectOut(fdout, NULL, 4, false, true);
+    }
+    children.push_back(child);
     return ret;
 }
 
