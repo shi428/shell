@@ -165,7 +165,6 @@ int Command::redirectOut(int *pipefd, vector <pid_t> &children, int readfd, int 
                 dup2(writefd, STDOUT_FILENO);
                 //close(readfd);
                 close(pipefd[1]);
-                //cerr << "tard" << endl;
                 execvp(temp_cmd[0], temp_cmd);
             }
             //           waitpid(child, &status, 0);
@@ -270,7 +269,6 @@ int Command::redirectIn(int *pipefd, vector <pid_t> &children, int readfd, int w
         close(pipefd[0]);
         execvp(temp_cmd[0], temp_cmd);
     }
-            cerr << "TARD" << endl;
     //waitpid(child, &status, 0);
     for (unsigned int i = 0; i < files[0].size() + start; i++) {
         delete [] temp_cmd[i];
@@ -298,10 +296,9 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int readfd, int
         exit(EXIT_SUCCESS);
     }
     int flag = 0;
+    pid_t child;
     for (int i = 1; i < 6; i++) {
-        pid_t child;
         //  int status;
-        //cerr << "TARD" << endl;
         int fds[2]; //output redirection
         int fds1[2]; //input redirection
         pipe(fds);
@@ -328,7 +325,6 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int readfd, int
                     dup2(fds[1], STDERR_FILENO);
                     close(fds[0]);
                 }
-                //cerr << "tard" << endl;
                 //close(fds1[1]);
                 if (execvp(cmd[0], cmd) == -1) {
                     cerr << "\033[1;41mshell: command not found: " << cmd[0] << "\033[0m\n";
@@ -337,19 +333,17 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int readfd, int
             }
             //       waitpid(child, &status, 0);
             close(fds[1]);
-            //cerr << "tard" << endl;
             ret += 1;
             //cout << ret << endl;
             if (test_redirect(files) && writefd == STDOUT_FILENO) {
-                cerr << "TARD" << endl;
                 flag = 1;
             }
-            children.push_back(child);
         }
         //cout << (int)(writefd != STDOUT_FILENO);
         ret += redirectOut(fds, children, readfd, writefd, i, writefd != STDOUT_FILENO);
         //close(fds[0]);
     }
+            children.push_back(child);
     return ret;
 }
 

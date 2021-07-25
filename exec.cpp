@@ -2,12 +2,13 @@
 
 void exec(struct passwd *p, Node *node) {
     vector <pid_t> children;
-    int processes = exec_node(p, children, node, STDIN_FILENO, STDOUT_FILENO);
-    cout << processes << endl;
-    for (auto i: children) {
+    exec_node(p, children, node, STDIN_FILENO, STDOUT_FILENO);
+    //cout << children.size() << endl;
+    waitpid(children[children.size() - 1], NULL, 0);
+    //for (auto i: children) {
         //cout << i << endl;
-        waitpid(i, NULL, 0);
-    }
+    //    waitpid(i, NULL, 0);
+   // }
 }
 
 int exec_node(struct passwd *p, vector <pid_t> &children, Node *node, int readfd, int writefd) {

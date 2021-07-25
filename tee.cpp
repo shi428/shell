@@ -29,9 +29,10 @@ void myTee(int inputfd, vector <string> &files) {
 
 int main() {
     vector <string> files;
-    files.push_back("tard");
-    files.push_back("gay");
-    files.push_back("nigger");
+    files.push_back("file1");
+    files.push_back("file2");
+    files.push_back("file3");
     myTee(0, files);
     return 0;
 }
+

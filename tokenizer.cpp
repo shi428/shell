@@ -68,7 +68,6 @@ Token next(StringIterator &it) {
             if (detectError(it)) {
                 break;
             }
-            //    else cout << "tard" << spaces.length() << endl;
             ret.lexeme += spaces;
         }
     }

@@ -2,10 +2,10 @@
 
 using namespace std;
 int main() {
-    cout << "tard" << endl;
-    cerr << "fag" << endl;
-    cout << "gay" << endl;
-    cerr << "nig" << endl;
-    cout << "asdf" << endl;
+    cout << "one" << endl;
+    cerr << "two" << endl;
+    cout << "three" << endl;
+    cerr << "four" << endl;
+    cout << "five" << endl;
     return 0;
 }
