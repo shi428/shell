@@ -11,6 +11,6 @@
 #include <unistd.h>
 
 void exec(struct passwd *p, Node *node);
-int exec_node(struct passwd *p, vector <pid_t> &children, Node *node, int readfd, int writefd);
-int exec_pipe(struct passwd *p, vector <pid_t> &children, Node *node, int readfd, int writefd);
+int exec_node(struct passwd *p, vector <pid_t> &children, Node *node, int *pipefds, int readfd, int writefd);
+int exec_pipe(struct passwd *p, vector <pid_t> &children, Node *node, int *pipefds, int readfd, int writefd);
 #endif

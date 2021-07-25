@@ -292,9 +292,9 @@ int Command::redirectIn(int *pipefd, vector <pid_t> &children, int readfd, int w
         start = 2;
         temp_cmd = new char *[files[0].size() + 3];
         temp_cmd[0] = new char[4];
-        temp_cmd[1] = new char[10];
+        temp_cmd[1] = new char[2];
         strcpy(temp_cmd[0], "cat");
-        strcpy(temp_cmd[1], "/tmp/pipe");
+        strcpy(temp_cmd[1], "-");
     }
     else {
         temp_cmd = new char *[files[0].size() + 2];
@@ -309,8 +309,8 @@ int Command::redirectIn(int *pipefd, vector <pid_t> &children, int readfd, int w
     child = fork();
     if (child == 0) {
         if (pipeflag) {
-            // dup2(readfd, STDIN_FILENO);
-            //close(writefd);
+            dup2(readfd, STDIN_FILENO);
+            close(writefd);
         }
         dup2(pipefd[1], STDOUT_FILENO);
         close(pipefd[0]);
@@ -326,7 +326,7 @@ int Command::redirectIn(int *pipefd, vector <pid_t> &children, int readfd, int w
     return 1;
 }
 
-int Command::execute(struct passwd *p, vector <pid_t> &children, int readfd, int writefd) {
+int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, int readfd, int writefd) {
     int ret = 0;
     if (strcmp(cmd[0], "cd") == 0) {
         if (cmd[1] == NULL) {
@@ -344,12 +344,27 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int readfd, int
     }
     pid_t child;
     int fdout[2];
+    int fdin[2];
+    int fderr[2];
     pipe(fdout);
+    pipe(fdin);
+    pipe(fderr);
 
     if ((child = fork()) == 0) {
+        dup2(readfd, STDIN_FILENO);
+        dup2(writefd, STDOUT_FILENO);
+        if (files[0].size()) {
+        redirectIn(fdin, children, readfd, writefd, readfd != STDIN_FILENO);
+        dup2(fdin[0], STDIN_FILENO);
+        }
+        close(fdin[1]);
         if (files[1].size() || files[4].size()) {
             dup2(fdout[1], STDOUT_FILENO); 
             close(fdout[0]);
+        }
+        if (files[2].size()) {
+            dup2(fderr[1], STDERR_FILENO); 
+            close(fderr[0]);
         }
         if (execvp(cmd[0], cmd) == -1) {
             cerr << "\033[1;41mshell: command not found: " << cmd[0] << "\033[0m\n";
@@ -357,6 +372,9 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int readfd, int
         }
     }
     close(fdout[1]);
+    close(fderr[1]);
+    close(fdin[1]);
+    close(fdin[0]);
     if (files[1].size()) { //>
         if (files[4].size()) { //>> 
             int fdappend[2];
@@ -365,8 +383,11 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int readfd, int
             redirectOut(fdappend, NULL, 4, false, true);
         }
         else {
-            redirectOut(fdout, NULL, 1, false, false);
+            redirectOut(fdout, writefd != STDOUT_FILENO ? pipefd : NULL, 1, writefd != STDOUT_FILENO, false);
         }
+    }
+    if (files[2].size()) { //2>
+        redirectOut(fderr, NULL, 2, false, false);
     }
     else if (files[4].size()) {
             redirectOut(fdout, NULL, 4, false, true);

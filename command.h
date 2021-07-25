@@ -10,7 +10,7 @@
 
 typedef struct command {
     ~command();
-    int execute(struct passwd *p, vector <pid_t> &children, int readfd, int writefd);
+    int execute(struct passwd *p, vector <pid_t> &children, int *pipefd, int readfd, int writefd);
     int redirectIn(int *pipefd, vector <pid_t> &children, int readfd, int writefd, bool pipeflag);
  //   int redirectOut(int *pipefd, vector <pid_t> &children, int readfd, int writefd, int i, bool pipe);
     int redirectOut(int *pipefd, int *pipefd2, int i, bool pipe, bool _append);
