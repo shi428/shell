@@ -7,7 +7,7 @@
 #include "command.h"
 #include "misc.h"
 
-Command::~command() {
+Command::~Command() {
     int i = 0;
     while (cmd[i]) {
         delete [] cmd[i];
@@ -327,7 +327,7 @@ int Command::redirectIn(int *pipefd, vector <pid_t> &children, int readfd, int w
 }
 
 int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, int readfd, int writefd) {
-    int ret = 0;
+    //int ret = 0;
     if (strcmp(cmd[0], "cd") == 0) {
         if (cmd[1] == NULL) {
             string homedir = "/home/" + string(p->pw_name);
@@ -340,7 +340,7 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, in
         }
     }
     if (strcmp(cmd[0], "exit") == 0) {
-        exit(EXIT_SUCCESS);
+        return 1;
     }
     pid_t child;
     int fdout[2];
@@ -393,6 +393,6 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, in
             redirectOut(fdout, NULL, 4, false, true);
     }
     children.push_back(child);
-    return ret;
+    return 0;
 }
 

@@ -14,11 +14,15 @@ int main(int argc, char *argv[]) {
         if (!getline(cin, line)) break;
         vector <Token> tokens = genTokens(line);
         Tree *parseTree = newTree(tokens);
+        //tokens.~vector <Token>();
         if (parseTree->root) {
-    //        parseTree->root->traverse(0);
-            exec(p, parseTree->root);
+            //        parseTree->root->traverse(0);
+            if (exec(p, parseTree->root)) {
+                delete parseTree;
+                break;
+            }
         }
         delete parseTree;
     }
-return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }

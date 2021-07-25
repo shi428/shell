@@ -55,9 +55,9 @@ Token next(StringIterator &it) {
     else {
         ret.type = COMMAND;
         //consumeSpaces(it);
-        while (it.pos < it.len && it.peek() != '>' && it.peek() != '<' && it.peek() != '|') {
+        while (it.pos < it.len && it.peek() != '>' && it.peek() != '<' && it.peek() != '|' && it.peek() != '&') {
             ret.lexeme += consumeChars(it);
-            if (it.pos == it.len || it.peek() == '>' || it.peek() == '<' || it.peek() == '|')// reached end
+            if (it.pos == it.len || it.peek() == '>' || it.peek() == '<' || it.peek() == '|' || it.peek() == '&')// reached end
                 break;
             string spaces = consumeSpaces(it);
             if (spaces == "") {

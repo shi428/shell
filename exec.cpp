@@ -1,14 +1,17 @@
 #include "exec.h"
 
-void exec(struct passwd *p, Node *node) {
+int exec(struct passwd *p, Node *node) {
     vector <pid_t> children;
-    exec_node(p, children, node, NULL, STDIN_FILENO, STDOUT_FILENO);
+    int ret = exec_node(p, children, node, NULL, STDIN_FILENO, STDOUT_FILENO);
     //cout << children.size() << endl;
+    if (children.size()) {
     waitpid(children[children.size() - 1], NULL, 0);
+    }
     //for (auto i: children) {
         //cout << i << endl;
     //    waitpid(i, NULL, 0);
    // }
+    return ret;
 }
 
 int exec_node(struct passwd *p, vector <pid_t> &children, Node *node, int *pipefds, int readfd, int writefd) {

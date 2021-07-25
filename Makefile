@@ -18,7 +18,7 @@ compile_tokenizer: $(TOKENOBJS)
 	$(CPP) $(TOKENOBJS) -o tokenizer
 compile_parser: $(PARSEROBJS)
 	$(CPP) $(PARSEROBJS) -o parser
-.cpp.o:
+%.o: %.cpp
 	$(CPP) -c $*.cpp
 clean:
 	rm -rf $(OBJS) shell tokenizer parser
