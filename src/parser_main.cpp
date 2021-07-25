@@ -19,6 +19,7 @@ int main(int argc, char *argv[]) {
         printTokens(tokens);
         Tree *parseTree = newTree(tokens);
         if (parseTree->root) {
+            cout << "BACKGROUND: " << parseTree->root->background << endl;
             parseTree->root->traverse(0);
         }
         delete parseTree;

@@ -4,7 +4,7 @@ int exec(struct passwd *p, Node *node) {
     vector <pid_t> children;
     int ret = exec_node(p, children, node, NULL, STDIN_FILENO, STDOUT_FILENO);
     //cout << children.size() << endl;
-    if (children.size()) {
+    if (children.size() && !node->background) {
     waitpid(children[children.size() - 1], NULL, 0);
     }
     //for (auto i: children) {

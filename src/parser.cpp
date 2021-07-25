@@ -2,6 +2,7 @@
 #include <command.h>
 
 Node::node(Token &t, vector <Token> &files) {
+    background = 0;
     token = t;
     if (t.type == COMMAND) {
         obj = new Command();
@@ -44,7 +45,7 @@ Node *parseCommand(vector <Token> &tokens, unsigned int *index) {
     if (!tokens.size()) return NULL;
     Token token = tokens[*index];
     (*index)++;
-    while (*index < tokens.size() && tokens[*index].type != COMMAND && tokens[*index].type != PIPE) {
+    while (*index < tokens.size() && tokens[*index].type != COMMAND && tokens[*index].type != PIPE && tokens[*index].type != AMPERSAND) {
         files.push_back(tokens[*index]);
         (*index)++;
     }
@@ -84,6 +85,11 @@ Tree* newTree(vector <Token> &t) {
             ret->root = parsePipe(t, &index);
             ret->root->left = left;
             ret->root->right = parseCommand(t, &index);
+        //    ret->root->right;
+        }
+        if (index == t.size() - 1 && t[index].type == AMPERSAND) {
+            index++;
+            ret->root->background = 1;
         }
     }
     return ret;

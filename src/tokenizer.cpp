@@ -16,7 +16,12 @@ bool detectError(StringIterator &it) {
 Token next(StringIterator &it) {
     Token ret;
     ret.lexeme = string();
-    if (it.peek() == '|') {
+    if (it.peek() == '&') {
+        ret.lexeme = it.advance();
+        ret.type = AMPERSAND;
+        consumeSpaces(it);
+    }
+    else if (it.peek() == '|') {
         ret.lexeme = it.advance();
         ret.type = PIPE;
         consumeSpaces(it);
@@ -100,6 +105,9 @@ void Token::printToken() {
             break;
         case PIPE:
             commandType = "PIPE";
+            break;
+        case AMPERSAND:
+            commandType = "AMPERSAND";
             break;
         case ERROR:
             commandType = "ERROR";

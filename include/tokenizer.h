@@ -13,7 +13,8 @@ typedef enum tokenType {
     FILE_APPEND = 5, //>>
     FILE_APPEND_ERR = 6, //>>&
     PIPE = 7, //|
-    ERROR = 8,
+    AMPERSAND = 8, //&
+    ERROR = 9,
 }TokenType;
 
 typedef struct token {
