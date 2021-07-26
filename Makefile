@@ -29,4 +29,3 @@ compile_parser: $(PARSEROBJS)
 	$(CPP) -c $< -o $(WORKDIR)/$@ 
 clean:
 	rm -rf shell tokenizer parser work
-	

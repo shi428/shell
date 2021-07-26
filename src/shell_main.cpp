@@ -2,20 +2,45 @@
 #include <tokenizer.h>
 #include <exec.h>
 
+queue <pair<pid_t, vector <string>>> bPids;
 void printPrompt() {
     cout << "shell>";
 }
 
 void sigint_handler(int signum) {
-    signal(SIGINT, sigint_handler);
-    fflush(stdout);
+    //signal(SIGINT, sigint_handler);
     cout << endl;
+    if (isatty(0)) {
     printPrompt();
+    }
     fflush(stdout);
+}
+
+void sigchild_handler(int signum) {
+    pid_t pid;
+    while ((pid = waitpid(-1, NULL, WNOHANG)) > 0) {
+        if (!bPids.empty()) {
+            if (bPids.front().first == pid) {
+                cout << endl;
+                cout << "[" << pid << "] ";
+                for (auto i: bPids.front().second) {
+                    cout << i << " ";
+                }
+                cout << "has exited";
+                cout << endl;
+                bPids.pop();
+                if (isatty(0)) {
+                    printPrompt();
+                }
+                fflush(stdout);
+            }
+        }
+    }
 }
 
 int main(int argc, char *argv[]) {
     signal(SIGINT, sigint_handler);
+    signal(SIGCHLD, sigchild_handler);
     string line;
     struct passwd *p = getpwuid(getuid());
     while (1) {
@@ -28,7 +53,7 @@ int main(int argc, char *argv[]) {
         //tokens.~vector <Token>();
         if (parseTree->root) {
             //        parseTree->root->traverse(0);
-            if (exec(p, parseTree->root)) {
+            if (exec(p, parseTree->root, bPids)) {
                 delete parseTree;
                 break;
             }

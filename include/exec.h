@@ -10,7 +10,7 @@
 #include <pwd.h>
 #include <unistd.h>
 
-int exec(struct passwd *p, Node *node);
-int exec_node(struct passwd *p, vector <pid_t> &children, Node *node, int *pipefds, int readfd, int writefd);
-int exec_pipe(struct passwd *p, vector <pid_t> &children, Node *node, int *pipefds, int readfd, int writefd);
+int exec(struct passwd *p, Node *node, queue <pair<pid_t, vector <string>>> &bPids);
+int exec_node(struct passwd *p, vector <pid_t> &children, Node *node, int *pipefds, int readfd, int writefd, vector <string> &cmds);
+int exec_pipe(struct passwd *p, vector <pid_t> &children, Node *node, int *pipefds, int readfd, int writefd, vector <string> &cmds);
 #endif

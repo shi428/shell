@@ -326,8 +326,8 @@ int Command::redirectIn(int *pipefd, vector <pid_t> &children, int readfd, int w
     return 1;
 }
 
-int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, int readfd, int writefd) {
-    //int ret = 0;
+int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, int readfd, int writefd, vector <string> &cmds) {
+    int i = 0;
     if (strcmp(cmd[0], "cd") == 0) {
         if (cmd[1] == NULL) {
             string homedir = "/home/" + string(p->pw_name);
@@ -393,6 +393,10 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, in
             redirectOut(fdout, NULL, 4, false, true);
     }
     children.push_back(child);
+    while (cmd[i]) {
+        cmds.push_back(cmd[i]);
+        i++;
+    }
     return 0;
 }
 
