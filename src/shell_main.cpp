@@ -3,6 +3,7 @@
 #include <exec.h>
 
 vector <pair<pid_t, vector <string>>> bPids;
+vector <int> pos;
 void printPrompt() {
     cout << "shell>";
 }
@@ -20,15 +21,16 @@ void sigchild_handler(int signum) {
     pid_t pid;
     while ((pid = waitpid(-1, NULL, WNOHANG)) > 0) {
         for (unsigned int i = 0; i < bPids.size(); i++) {
-            if (bPids[i].first == pid) {
+            if (bPids[i].first == pid && pos.size()) {
                 cout << endl;
-                cout << "[" << pid << "] ";
+                cout << pos[i] <<". [" << pid << "] ";
                 for (auto i: bPids[i].second) {
                     cout << i << " ";
                 }
                 cout << "has exited";
                 cout << endl;
                 bPids.erase(bPids.begin() + i);
+                pos.erase(pos.begin() + i);
                 i--;
                 if (isatty(0)) {
                     printPrompt();
@@ -54,7 +56,7 @@ int main(int argc, char *argv[]) {
         //tokens.~vector <Token>();
         if (parseTree->root) {
             //        parseTree->root->traverse(0);
-            if (exec(p, parseTree->root, bPids)) {
+            if (exec(p, parseTree->root, bPids, pos)) {
                 delete parseTree;
                 break;
             }

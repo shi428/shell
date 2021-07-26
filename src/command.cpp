@@ -340,6 +340,7 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, in
         }
     }
     if (strcmp(cmd[0], "exit") == 0) {
+        cout << "exit" << endl;
         return 1;
     }
     pid_t child;
