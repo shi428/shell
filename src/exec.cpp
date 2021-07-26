@@ -1,6 +1,6 @@
 #include <exec.h>
 
-int exec(struct passwd *p, Node *node, queue <pair<pid_t, vector <string>>> &bPids) {
+int exec(struct passwd *p, Node *node, vector <pair<pid_t, vector <string>>> &bPids) {
     vector <pid_t> children;
     vector <string> cmds;
     int ret = exec_node(p, children, node, NULL, STDIN_FILENO, STDOUT_FILENO, cmds);
@@ -9,7 +9,7 @@ int exec(struct passwd *p, Node *node, queue <pair<pid_t, vector <string>>> &bPi
     waitpid(children[children.size() - 1], NULL, 0);
     }
     if (node->background) {
-        bPids.push(pair<pid_t, vector <string>>(children[children.size() - 1], cmds));
+        bPids.push_back(pair<pid_t, vector <string>>(children[children.size() - 1], cmds));
     }
     //for (auto i: children) {
         //cout << i << endl;
