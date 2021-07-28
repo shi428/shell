@@ -44,27 +44,46 @@ Node::~node() {
 Node *parseCommand(vector <Token> &tokens, unsigned int *index) {
     vector <Token> files;
     vector <Token> command;
+    bool flag = 0;
     if (!tokens.size()) return NULL;
-    Token token = tokens[*index];
+    // Token token = tokens[*index];
+    // (*index)++;
+    if (tokens[*index].type == QUOTES) {
+        flag = 1;
+    }
+    command.push_back(tokens[*index]);
     (*index)++;
-    while (*index < tokens.size() && tokens[*index].type != COMMAND && tokens[*index].type != PIPE && tokens[*index].type != AMPERSAND) {
+    while (*index < tokens.size() && tokens[*index].type != PIPE && tokens[*index].type != AMPERSAND) {
         if (tokens[*index].type > 0 && tokens[*index].type < 7) {
             files.push_back(tokens[*index]);
             (*index)++;
         }
         else {
-            command.push_back(tokens[*index]);
-            (*index)++;
+            if (tokens[*index].type == QUOTES) {
+                command.push_back(tokens[*index]);
+                (*index)++;
+                flag = 1;
+            } 
+            else if (tokens[*index].type == COMMAND) {
+                if (flag) {
+                    command.push_back(tokens[*index]);
+                    (*index)++;
+                }
+                else {
+                    break;
+                }
+            }
         }
     }
-    return new Node (tokens, files);
+    return new Node (command, files);
 }
 
 Node *parsePipe(vector <Token> &tokens, unsigned int *index) {
+    vector <Token> ts(tokens.begin() + *index, tokens.end());
     Token token = tokens[*index];
     if (token.type != PIPE) return NULL;
     (*index)++;
-    return new Node(tokens, tokens);
+    return new Node(ts, tokens);
 }
 
 Tree::tree() {
