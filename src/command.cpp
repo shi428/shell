@@ -15,6 +15,7 @@ Command::~Command() {
     }
     delete [] cmd;
 }
+
 void Command::parseCommand(Token &cmd) {
     vector <string> args;
     removeWhiteSpace(cmd.lexeme);

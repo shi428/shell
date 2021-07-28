@@ -49,7 +49,7 @@ string consumeSpaces(StringIterator &it) {
 string consumeChars(StringIterator &it) {
     string ret = "";
     char c;
-    while ((it.pos < it.len) && ((c = it.peek()) != ' ') && ((c = it.peek()) != '>') && ((c = it.peek()) != '<') && ((c = it.peek()) != '|') && ((c = it.peek()) != '&')) {
+    while ((it.pos < it.len) && ((c = it.peek()) != ' ') && ((c = it.peek()) != '>') && ((c = it.peek()) != '<') && ((c = it.peek()) != '|') && ((c = it.peek()) != '&') && ((c = it.peek()) != '\"') && (c = it.peek()) != '\'') {
         ret += c;
         it.advance();
     }

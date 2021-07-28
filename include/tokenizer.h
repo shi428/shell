@@ -14,7 +14,8 @@ typedef enum tokenType {
     FILE_APPEND_ERR = 6, //>>&
     PIPE = 7, //|
     AMPERSAND = 8, //&
-    ERROR = 9,
+    QUOTES = 9, //&
+    ERROR = 10,
 }TokenType;
 
 typedef struct token {

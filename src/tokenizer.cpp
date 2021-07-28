@@ -21,6 +21,36 @@ Token next(StringIterator &it) {
         ret.type = AMPERSAND;
         consumeSpaces(it);
     }
+    else if (it.peek() == '\"') {
+        ret.type = QUOTES;
+        it.advance();
+        consumeSpaces(it);
+        while (it.pos < it.len) {
+            ret.lexeme += consumeChars(it);
+            ret.lexeme += consumeSpaces(it);
+            if (it.peek() == '\"') {
+                it.advance();
+                return ret;
+            }
+        }
+        ret.type = ERROR;
+        ret.lexeme = "Missing \"";
+    }
+    else if (it.peek() == '\'') {
+        ret.type = QUOTES;
+        it.advance();
+        consumeSpaces(it);
+        while (it.pos < it.len) {
+            ret.lexeme += consumeChars(it);
+            ret.lexeme += consumeSpaces(it);
+            if (it.peek() == '\'') {
+                it.advance();
+                return ret;
+            }
+        }
+        ret.type = ERROR;
+        ret.lexeme = "Missing \'";
+    }
     else if (it.peek() == '|') {
         ret.lexeme = it.advance();
         ret.type = PIPE;
@@ -48,13 +78,13 @@ Token next(StringIterator &it) {
                 ret.lexeme += createFileTokenEntry(it);
             }
             else {
-            ret.type = FILE_APPEND;
-            ret.lexeme += createFileTokenEntry(it);
+                ret.type = FILE_APPEND;
+                ret.lexeme += createFileTokenEntry(it);
             }
         }
         else {
-        ret.type = FILE_OUT;
-        ret.lexeme += createFileTokenEntry(it);
+            ret.type = FILE_OUT;
+            ret.lexeme += createFileTokenEntry(it);
         }
     }
     else {
@@ -62,7 +92,7 @@ Token next(StringIterator &it) {
         //consumeSpaces(it);
         while (it.pos < it.len && it.peek() != '>' && it.peek() != '<' && it.peek() != '|' && it.peek() != '&') {
             ret.lexeme += consumeChars(it);
-            if (it.pos == it.len || it.peek() == '>' || it.peek() == '<' || it.peek() == '|' || it.peek() == '&')// reached end
+            if (it.pos == it.len || it.peek() == '>' || it.peek() == '<' || it.peek() == '|' || it.peek() == '&' || it.peek() == '\'' || it.peek() == '\"')// reached end
                 break;
             string spaces = consumeSpaces(it);
             if (spaces == "") {
@@ -108,6 +138,9 @@ void Token::printToken() {
             break;
         case AMPERSAND:
             commandType = "AMPERSAND";
+            break;
+        case QUOTES:
+            commandType = "QUOTES";
             break;
         case ERROR:
             commandType = "ERROR";
