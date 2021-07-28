@@ -16,13 +16,23 @@ Command::~Command() {
     delete [] cmd;
 }
 
-void Command::parseCommand(Token &cmd) {
+void Command::parseCommand(vector <Token> &cmd) {
     vector <string> args;
-    removeWhiteSpace(cmd.lexeme);
-    this->it = new StringIterator(cmd.lexeme); 
-    while (this->it->pos < this->it->len) {
-        args.push_back(consumeChars(*it));
-        consumeSpaces(*it);
+    for (auto i: cmd) {
+        if (i.type == COMMAND) {
+            removeWhiteSpace(i.lexeme);
+            this->it = new StringIterator(i.lexeme); 
+            while (this->it->pos < this->it->len) {
+                args.push_back(consumeChars(*it));
+                consumeSpaces(*it);
+            }
+        }
+        else if (i.type == ERROR) {
+            return ;
+        }
+        else {
+            args.push_back(i.lexeme);
+        }
     }
     this->cmd = new char*[args.size() + 1];
     for (unsigned int i = 0; i < args.size(); i++) {
@@ -93,7 +103,7 @@ void Command::printCommand(int spaces) {
             cout << cmd[i] << "]" << endl;
         }
         else {
-            cout << cmd[i] << " ";
+            cout << cmd[i] << ", ";
         }
         i++;
     }
@@ -356,8 +366,8 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, in
         dup2(readfd, STDIN_FILENO);
         dup2(writefd, STDOUT_FILENO);
         if (files[0].size()) {
-        redirectIn(fdin, children, readfd, writefd, readfd != STDIN_FILENO);
-        dup2(fdin[0], STDIN_FILENO);
+            redirectIn(fdin, children, readfd, writefd, readfd != STDIN_FILENO);
+            dup2(fdin[0], STDIN_FILENO);
         }
         close(fdin[1]);
         if (files[1].size() || files[4].size()) {
@@ -392,7 +402,7 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, in
         redirectOut(fderr, NULL, 2, false, false);
     }
     else if (files[4].size()) {
-            redirectOut(fdout, NULL, 4, false, true);
+        redirectOut(fdout, NULL, 4, false, true);
     }
     children.push_back(child);
     while (cmd[i]) {

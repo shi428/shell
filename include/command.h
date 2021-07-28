@@ -14,7 +14,7 @@ typedef struct command {
     int redirectIn(int *pipefd, vector <pid_t> &children, int readfd, int writefd, bool pipeflag);
  //   int redirectOut(int *pipefd, vector <pid_t> &children, int readfd, int writefd, int i, bool pipe);
     int redirectOut(int *pipefd, int *pipefd2, int i, bool pipe, bool _append);
-    void parseCommand(Token &cmd);
+    void parseCommand(vector <Token> &cmd);
     void parseFileList(vector <Token> &files);
     void printCommand(int spaces);
 

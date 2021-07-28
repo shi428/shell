@@ -1,17 +1,18 @@
 #include <parser.h>
 #include <command.h>
 
-Node::node(Token &t, vector <Token> &files) {
+Node::node(vector <Token> &t, vector <Token> &files) {
     background = 0;
-    token = t;
-    if (t.type == COMMAND) {
+    if (t[0].type == COMMAND || t[0].type == QUOTES) {
+        token.type = COMMAND;
         obj = new Command();
-        ((Command *)obj)->parseCommand(token);
+        ((Command *)obj)->parseCommand(t);
         ((Command *)obj)->parseFileList(files);
     }
     else {
-        obj = new char[t.lexeme.length() + 1];
-        strcpy((char *)obj, t.lexeme.c_str());
+        token.type = PIPE;
+        obj = new char[t[0].lexeme.length() + 1];
+        strcpy((char *)obj, t[0].lexeme.c_str());
     }
     left = NULL;
     right = NULL;
@@ -42,21 +43,28 @@ Node::~node() {
 
 Node *parseCommand(vector <Token> &tokens, unsigned int *index) {
     vector <Token> files;
+    vector <Token> command;
     if (!tokens.size()) return NULL;
     Token token = tokens[*index];
     (*index)++;
     while (*index < tokens.size() && tokens[*index].type != COMMAND && tokens[*index].type != PIPE && tokens[*index].type != AMPERSAND) {
-        files.push_back(tokens[*index]);
-        (*index)++;
+        if (tokens[*index].type > 0 && tokens[*index].type < 7) {
+            files.push_back(tokens[*index]);
+            (*index)++;
+        }
+        else {
+            command.push_back(tokens[*index]);
+            (*index)++;
+        }
     }
-    return new Node (token, files);
+    return new Node (tokens, files);
 }
 
 Node *parsePipe(vector <Token> &tokens, unsigned int *index) {
     Token token = tokens[*index];
     if (token.type != PIPE) return NULL;
     (*index)++;
-    return new Node(token, tokens);
+    return new Node(tokens, tokens);
 }
 
 Tree::tree() {
@@ -71,7 +79,7 @@ void Tree::freeNodes(Node *node) {
 }
 
 Tree::~tree() {
-   freeNodes(root); 
+    freeNodes(root); 
 }
 
 Tree* newTree(vector <Token> &t) {
@@ -85,7 +93,7 @@ Tree* newTree(vector <Token> &t) {
             ret->root = parsePipe(t, &index);
             ret->root->left = left;
             ret->root->right = parseCommand(t, &index);
-        //    ret->root->right;
+            //    ret->root->right;
         }
         if (index == t.size() - 1 && t[index].type == AMPERSAND) {
             index++;

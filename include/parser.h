@@ -5,7 +5,7 @@
 #include <bits/stdc++.h>
 typedef struct node {
     int background;
-    node(Token &t, vector <Token> &tokens);
+    node(vector <Token> &t, vector <Token> &tokens);
     ~node();
     Token token;
     node *left;
