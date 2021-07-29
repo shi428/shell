@@ -30,6 +30,7 @@ Token next(StringIterator &it) {
             ret.lexeme += consumeSpaces(it);
             if (it.peek() == '\"') {
                 it.advance();
+                consumeSpaces(it);
                 return ret;
             }
         }
@@ -45,6 +46,7 @@ Token next(StringIterator &it) {
             ret.lexeme += consumeSpaces(it);
             if (it.peek() == '\'') {
                 it.advance();
+                consumeSpaces(it);
                 return ret;
             }
         }
@@ -66,15 +68,16 @@ Token next(StringIterator &it) {
         ret.lexeme += createFileTokenEntry(it);
     }
     else if (it.peek() == '>') {
-        ret.lexeme += it.advance();
-        if (it.peek()== '&')  {
+        if (it.lookahead(1)== '&')  {
             ret.type = FILE_OUT_ERR;
+            ret.lexeme += it.advance();
             ret.lexeme += createFileTokenEntry(it);
         }
-        else if (it.peek() == '>') {
+        else if (it.lookahead(1) == '>') {
             ret.lexeme += it.advance();
-            if (it.peek() == '&') {
+            if (it.lookahead(1) == '&') {
                 ret.type = FILE_APPEND_ERR;
+                ret.lexeme += it.advance();
                 ret.lexeme += createFileTokenEntry(it);
             }
             else {

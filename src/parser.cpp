@@ -55,8 +55,24 @@ Node *parseCommand(vector <Token> &tokens, unsigned int *index) {
     (*index)++;
     while (*index < tokens.size() && tokens[*index].type != PIPE && tokens[*index].type != AMPERSAND) {
         if (tokens[*index].type > 0 && tokens[*index].type < 7) {
+            if (*index + 1 < tokens.size() && tokens[*index + 1].type == QUOTES) {
+                tokens[*index + 1].type = tokens[*index].type;
+                if (tokens[*index].type < 3) {
+                tokens[*index + 1].lexeme.insert(tokens[*index + 1].lexeme.begin(), tokens[*index].lexeme[0]);
+                }
+                else if(tokens[*index].type > 2 && tokens[*index].type < 5) {
+                tokens[*index + 1].lexeme.insert(tokens[*index + 1].lexeme.begin(), tokens[*index].lexeme.begin(), tokens[*index].lexeme.begin() + 2);
+                }
+                else {
+                tokens[*index + 1].lexeme.insert(tokens[*index + 1].lexeme.begin(), tokens[*index].lexeme.begin(), tokens[*index].lexeme.begin() + 3);
+                }
+                files.push_back(tokens[++(*index)]);
+                (*index)++;
+            }
+            else {
             files.push_back(tokens[*index]);
             (*index)++;
+            }
         }
         else {
             if (tokens[*index].type == QUOTES) {

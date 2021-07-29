@@ -51,37 +51,37 @@ string parseFile(Token &file) {
         case FILE_OUT:
             it.advance();
             consumeSpaces(it);
-            ret += consumeChars(it);
+            ret += string(*it.it);
             break;
         case FILE_IN:
             it.advance();
             consumeSpaces(it);
-            ret += consumeChars(it);
+            ret += string(*it.it);
             break;
         case FILE_ERR:
             it.advance();
             it.advance();
             consumeSpaces(it);
-            ret += consumeChars(it);
+            ret += string(*it.it);
             break;
         case FILE_OUT_ERR: 
             it.advance();
             it.advance();
             consumeSpaces(it);
-            ret += consumeChars(it);
+            ret += string(*it.it);
             break;
         case FILE_APPEND:
             it.advance();
             it.advance();
             consumeSpaces(it);
-            ret += consumeChars(it);
+            ret += string(*it.it);
             break;
         case FILE_APPEND_ERR:
             it.advance();
             it.advance();
             it.advance();
             consumeSpaces(it);
-            ret += consumeChars(it);
+            ret += string(*it.it);
             break;
         default: break;
     }
@@ -401,8 +401,8 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, in
     if (files[2].size()) { //2>
         redirectOut(fderr, NULL, 2, false, false);
     }
-    else if (files[4].size()) {
-        redirectOut(fdout, NULL, 4, false, true);
+    else if (files[4].size()) { //append
+        redirectOut(fdout, writefd != STDOUT_FILENO ? pipefd: NULL, 4, writefd != STDOUT_FILENO, true);
     }
     children.push_back(child);
     while (cmd[i]) {
