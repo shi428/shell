@@ -43,6 +43,7 @@ Token next(StringIterator &it) {
         consumeSpaces(it);
         while (it.pos < it.len) {
             ret.lexeme += consumeChars(it, true);
+            cout << it.peek() << endl;
             ret.lexeme += consumeSpaces(it);
             if (it.peek() == '\'') {
                 it.advance();

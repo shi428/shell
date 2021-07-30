@@ -52,15 +52,18 @@ void removeWhiteSpace(string &line) {
 
 char consumeChar(StringIterator &it, bool parse, bool *escapeQuote) {
     char c = it.lookahead(1);
-    *escapeQuote = (c == '\"' || c == '\'');
-    if (it.peek() == '\\' && parse) {
-        *escapeQuote = (c == '\"' || c == '\'');
-        it.advance();
-        it.advance();
-        if (it.escapeChars.find(c) != it.escapeChars.end()) {
-            return it.escapeChars[c];
+    if (it.peek() == '\\') {
+        if (parse) {
+            it.advance();
+            it.advance();
+            if (it.escapeChars.find(c) != it.escapeChars.end()) {
+                return it.escapeChars[c];
+            }
+            return c;
         }
-        return c;
+        else {
+            *escapeQuote = (c == '\"' || c == '\'');
+        }
     }
     return it.advance();
 }
