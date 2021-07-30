@@ -1,0 +1,31 @@
+#!/bin/zsh
+check() {
+    if [ $2 -ne 0 ] 
+    then
+        echo -e "\033[1;31m Failed to run $1\033[0m"
+    else
+        echo -e "\033[1;32m $1 ran successfully\033[0m"
+    fi
+}
+echo -e "\033[1;4;93m\ttest basic commands\033[0m"
+input_str=$'ls'
+diff <(/bin/zsh <<< $input_str 2>&1) <(../shell <<< $input_str 2>&1)
+check $input_str $?
+input_str=$'ls -al'
+diff <(/bin/zsh <<< $input_str 2>&1) <(../shell <<< $input_str 2>&1)
+check $input_str $?
+input_str=$'ls -al ../'
+diff <(/bin/zsh <<< $input_str 2>&1) <(../shell <<< $input_str 2>&1)
+check $input_str $?
+input_str=$'ls -al aaa bbb cc'
+diff <(/bin/zsh <<< $input_str 2>&1) <(../shell <<< $input_str 2>&1)
+check $input_str $?
+input_str=$'echo hello'
+diff <(/bin/zsh <<< $input_str 2>&1) <(../shell <<< $input_str 2>&1)
+check $input_str $?
+input_str=$'cat ../shell'
+diff <(/bin/zsh <<< $input_str 2>&1) <(../shell <<< $input_str 2>&1)
+check $input_str $?
+input_str=$'cat /usr/share/dict/words'
+diff <(/bin/zsh <<< $input_str 2>&1) <(../shell <<< $input_str 2>&1)
+check $input_str $?
