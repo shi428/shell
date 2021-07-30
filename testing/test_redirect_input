@@ -1,5 +1,5 @@
 #!/bin/zsh
-diffFile=test_basic_commands.diff
+diffFile=test_redirect_input.diff
 pass=true
 run_cmd() {
     #echo Processing Command: $1
@@ -16,23 +16,17 @@ check() {
         echo -e "\033[1;32m $1 ran successfully\033[0m"
     fi
 }
-echo -e "\033[1;4;93m\ttest basic commands\033[0m"
-echo -e "\033[1;4;93m\ttest basic commands\033[0m" > $diffFile
-input_str=$'ls'
+echo -e "\033[1;4;93m\ttest redirect input\033[0m"
+echo -e "\033[1;4;93m\ttest redirect input\033[0m" > $diffFile
+input_str=$'cat < testall'
 run_cmd $input_str
-input_str=$'ls -al'
+input_str=$'cat <testall<test_redirect_input< test_basic_commands'
 run_cmd $input_str
-input_str=$'ls -al ../'
+input_str=$'grep a < testall'
 run_cmd $input_str
-input_str=$'ls -al aaa bbb cc'
+input_str=$'wc < testall'
 run_cmd $input_str
-input_str=$'echo hello'
-run_cmd $input_str
-input_str=$'cat ../shell'
-run_cmd $input_str
-input_str=$'cat /usr/share/dict/words'
-run_cmd $input_str
-input_str=$'            grep -r a                  '
+input_str=$'bash <test_basic_commands'
 run_cmd $input_str
 if [ $pass = true ]
 then

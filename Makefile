@@ -30,4 +30,4 @@ compile_parser: $(PARSEROBJS)
 %.o: %.cpp | $(WORKDIR)
 	$(CPP) -c $< -o $(WORKDIR)/$@ 
 clean:
-	rm -rf shell tokenizer parser work
+	rm -rf shell tokenizer parser work testing/*diff
