@@ -4,7 +4,7 @@ pass=true
 run_cmd() {
     #echo Processing Command: $1
     echo Processing Command: $1 >>& $diffFile
-    diff -u <(/bin/zsh <<< $1 2>&1) <(../shell <<< $1 2>&1) >>& $diffFile
+    diff --color -u <(/bin/zsh <<< $1 2>&1) <(../shell <<< $1 2>&1) >>& $diffFile
     check $1 $?
 }
 check() {

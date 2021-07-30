@@ -13,6 +13,8 @@ vpath %.cpp $(SRCDIR)/
 vpath %.o $(WORKDIR)/
 test: compile_shell
 	cd testing && ./testall
+test_%: compile_shell
+	cd testing && ./testall $@
 $(WORKDIR): 
 	test -d $(WORKDIR) || mkdir $(WORKDIR)
 %: compile_%
@@ -30,4 +32,4 @@ compile_parser: $(PARSEROBJS)
 %.o: %.cpp | $(WORKDIR)
 	$(CPP) -c $< -o $(WORKDIR)/$@ 
 clean:
-	rm -rf shell tokenizer parser work testing/*diff
+	rm -rf shell tokenizer parser work testing/*diff testing/out* testing/*.out
