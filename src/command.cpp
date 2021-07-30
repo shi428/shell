@@ -23,7 +23,7 @@ void Command::parseCommand(vector <Token> &cmd) {
             removeWhiteSpace(i.lexeme);
             this->it = new StringIterator(i.lexeme); 
             while (this->it->pos < this->it->len) {
-                args.push_back(consumeChars(*it));
+                args.push_back(consumeChars(*it, true));
                 consumeSpaces(*it);
             }
         }

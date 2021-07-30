@@ -4,6 +4,7 @@
 #include <bits/stdc++.h>
 using namespace std;
 typedef struct stringIterator {
+    unordered_map<char, char> escapeChars;
     stringIterator(string &line);
     ~stringIterator();
     char lookahead(int n);
@@ -17,6 +18,8 @@ typedef struct stringIterator {
 
 void removeWhiteSpace(string &line);
 string consumeSpaces(StringIterator &it);
-string consumeChars(StringIterator &it);
+char consumeChar(StringIterator &it, bool parse, bool *escapeQuote);
+string consumeChars(StringIterator &it, bool parse);
 void indent(int spaces);
+void initEscapeChars();
 #endif

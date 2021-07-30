@@ -1,6 +1,21 @@
 #include <misc.h>
 
 StringIterator::stringIterator(string &line) {
+    escapeChars = {
+        {'0', '\0'},
+        {'a', '\a'},
+        {'b', '\b'},
+        {'f', '\f'},
+        {'n', '\n'},
+        {'t', '\t'},
+        {'r', '\r'},
+        {'t', '\t'},
+        {'v', '\v'},
+        {'\'', '\''},
+        {'\"', '\"'},
+        {'\?', '\?'},
+        {'\\', '\\'},
+    };
     this->it = new char *;
     *(this->it) = &(line[0]);
     this->pos = 0;
@@ -35,6 +50,20 @@ void removeWhiteSpace(string &line) {
     }
 }
 
+char consumeChar(StringIterator &it, bool parse, bool *escapeQuote) {
+    char c = it.lookahead(1);
+    *escapeQuote = (c == '\"' || c == '\'');
+    if (it.peek() == '\\' && parse) {
+        *escapeQuote = (c == '\"' || c == '\'');
+        it.advance();
+        it.advance();
+        if (it.escapeChars.find(c) != it.escapeChars.end()) {
+            return it.escapeChars[c];
+        }
+        return c;
+    }
+    return it.advance();
+}
 string consumeSpaces(StringIterator &it) {
     string ret = "";
     char c;
@@ -46,12 +75,14 @@ string consumeSpaces(StringIterator &it) {
     return ret;
 }
 
-string consumeChars(StringIterator &it) {
+string consumeChars(StringIterator &it, bool parse) {
     string ret = "";
     char c;
-    while ((it.pos < it.len) && ((c = it.peek()) != ' ') && ((c = it.peek()) != '>') && ((c = it.peek()) != '<') && ((c = it.peek()) != '|') && ((c = it.peek()) != '&') && ((c = it.peek()) != '\"') && (c = it.peek()) != '\'') {
-        ret += c;
-        it.advance();
+    bool escapeQuote = false;
+    while ((it.pos < it.len) && ((c = it.peek()) != ' ') && ((c = it.peek()) != '>') && ((c = it.peek()) != '<') && ((c = it.peek()) != '|') && ((c = it.peek()) != '&') && ((c = it.peek()) != '\"' || escapeQuote) && ((c = it.peek()) != '\'' || escapeQuote)) {
+        escapeQuote = false;
+        ret += consumeChar(it, parse, &escapeQuote);
+        //it.advance();
     }
     return ret;
 }

@@ -4,7 +4,7 @@ string createFileTokenEntry(StringIterator &it) {
     string ret;
     ret += it.advance();
     ret+= consumeSpaces(it);
-    ret+= consumeChars(it);
+    ret+= consumeChars(it, true);
     ret+= consumeSpaces(it);
     return ret;
 }
@@ -26,7 +26,7 @@ Token next(StringIterator &it) {
         it.advance();
         consumeSpaces(it);
         while (it.pos < it.len) {
-            ret.lexeme += consumeChars(it);
+            ret.lexeme += consumeChars(it, true);
             ret.lexeme += consumeSpaces(it);
             if (it.peek() == '\"') {
                 it.advance();
@@ -42,7 +42,7 @@ Token next(StringIterator &it) {
         it.advance();
         consumeSpaces(it);
         while (it.pos < it.len) {
-            ret.lexeme += consumeChars(it);
+            ret.lexeme += consumeChars(it, true);
             ret.lexeme += consumeSpaces(it);
             if (it.peek() == '\'') {
                 it.advance();
@@ -94,7 +94,7 @@ Token next(StringIterator &it) {
         ret.type = COMMAND;
         //consumeSpaces(it);
         while (it.pos < it.len && it.peek() != '>' && it.peek() != '<' && it.peek() != '|' && it.peek() != '&') {
-            ret.lexeme += consumeChars(it);
+            ret.lexeme += consumeChars(it, false);
             if (it.pos == it.len || it.peek() == '>' || it.peek() == '<' || it.peek() == '|' || it.peek() == '&' || it.peek() == '\'' || it.peek() == '\"')// reached end
                 break;
             string spaces = consumeSpaces(it);
