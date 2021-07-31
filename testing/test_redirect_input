@@ -24,6 +24,10 @@ input_str=$'cat <testall<test_redirect_input< test_basic_commands'
 run_cmd $input_str
 input_str=$'grep a < testall'
 run_cmd $input_str
+input_str=$'head < test_redirect_input'
+run_cmd $input_str
+#input_str=$'tail < test_redirect_input<testall'
+#run_cmd $input_str
 input_str=$'wc < testall'
 run_cmd $input_str
 input_str=$'bash <test_basic_commands'

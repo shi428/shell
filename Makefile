@@ -11,7 +11,7 @@ PARSEROBJS=$(PARSERSRCS:%.cpp=%.o)
 
 vpath %.cpp $(SRCDIR)/
 vpath %.o $(WORKDIR)/
-test: compile_shell
+testall: compile_shell
 	cd testing && ./testall
 test_%: compile_shell
 	cd testing && ./testall $@
