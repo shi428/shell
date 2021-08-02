@@ -4,7 +4,7 @@ string createFileTokenEntry(StringIterator &it) {
     string ret;
     ret += it.advance();
     ret+= consumeSpaces(it);
-    ret+= consumeChars(it, true);
+    ret+= consumeChars(it, true, false);
     ret+= consumeSpaces(it);
     return ret;
 }
@@ -21,12 +21,24 @@ Token next(StringIterator &it) {
         ret.type = AMPERSAND;
         consumeSpaces(it);
     }
+    else if (it.peek() == '$' && it.lookahead(1)) {
+            it.advance();
+            it.advance();
+            ret.type = SUBSHELL;
+            while (it.pos < it.len) {
+                if (it.peek() == ')') {
+                    it.advance();
+                    break;
+                }
+                ret.lexeme += it.advance();
+            }
+    }
     else if (it.peek() == '\"') {
         ret.type = QUOTES;
         it.advance();
         consumeSpaces(it);
         while (it.pos < it.len) {
-            ret.lexeme += consumeChars(it, true);
+            ret.lexeme += consumeChars(it, true, true);
             ret.lexeme += consumeSpaces(it);
             if (it.peek() == '\"') {
                 it.advance();
@@ -42,8 +54,8 @@ Token next(StringIterator &it) {
         it.advance();
         consumeSpaces(it);
         while (it.pos < it.len) {
-            ret.lexeme += consumeChars(it, true);
-            cout << it.peek() << endl;
+            ret.lexeme += consumeChars(it, true, false);
+            //cout << it.peek() << endl;
             ret.lexeme += consumeSpaces(it);
             if (it.peek() == '\'') {
                 it.advance();
@@ -94,9 +106,9 @@ Token next(StringIterator &it) {
     else {
         ret.type = COMMAND;
         //consumeSpaces(it);
-        while (it.pos < it.len && it.peek() != '>' && it.peek() != '<' && it.peek() != '|' && it.peek() != '&') {
-            ret.lexeme += consumeChars(it, false);
-            if (it.pos == it.len || it.peek() == '>' || it.peek() == '<' || it.peek() == '|' || it.peek() == '&' || it.peek() == '\'' || it.peek() == '\"')// reached end
+        while (it.pos < it.len && it.peek() != '>' && it.peek() != '<' && it.peek() != '|' && it.peek() != '&' && it.peek() != '$') {
+            ret.lexeme += consumeChars(it, false, false);
+            if (it.pos == it.len || it.peek() == '>' || it.peek() == '<' || it.peek() == '|' || it.peek() == '&' || it.peek() == '\'' || it.peek() == '\"' || it.peek() == '$')// reached end
                 break;
             string spaces = consumeSpaces(it);
             if (spaces == "") {
@@ -145,6 +157,9 @@ void Token::printToken() {
             break;
         case QUOTES:
             commandType = "QUOTES";
+            break;
+        case SUBSHELL:
+            commandType = "SUBSHELL";
             break;
         case ERROR:
             commandType = "ERROR";

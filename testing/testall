@@ -39,6 +39,8 @@ if [ $# -eq 0 ]; then
     run_test test_redirect_output
     run_test test_redirect_input
     run_test test_redirect_error
+    run_test test_redirect_append
+    run_test test_redirect_multiple
     run_test test_pipe
 else
     all=false

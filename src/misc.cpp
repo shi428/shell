@@ -50,7 +50,17 @@ void removeWhiteSpace(string &line) {
     }
 }
 
-char consumeChar(StringIterator &it, bool parse, bool *escapeQuote) {
+struct escape {
+    bool doubleQuote;
+    bool singleQuote;
+    bool rightCarrot;
+    bool leftCarrot;
+    bool ampersand;
+    bool pipe;
+    bool dollar;
+};
+
+char consumeChar(StringIterator &it, bool parse, escape *escapeChars){
     char c = it.lookahead(1);
     if (it.peek() == '\\') {
         if (parse) {
@@ -62,7 +72,18 @@ char consumeChar(StringIterator &it, bool parse, bool *escapeQuote) {
             return c;
         }
         else {
-            *escapeQuote = (c == '\"' || c == '\'');
+            escapeChars->doubleQuote = c == '\"';
+            escapeChars->singleQuote = c == '\'';
+            escapeChars->rightCarrot = c == '>';
+            escapeChars->leftCarrot = c == '<';
+            escapeChars->ampersand = c == '&';
+            escapeChars->pipe = c == '|';
+            escapeChars->dollar = c == '$';
+            /* if (c == '<' || c == '>') {
+               it.advance();
+               it.advance();
+               return c;
+               }*/
         }
     }
     return it.advance();
@@ -78,13 +99,26 @@ string consumeSpaces(StringIterator &it) {
     return ret;
 }
 
-string consumeChars(StringIterator &it, bool parse) {
+string consumeChars(StringIterator &it, bool parse, bool quote) {
     string ret = "";
     char c;
-    bool escapeQuote = false;
-    while ((it.pos < it.len) && ((c = it.peek()) != ' ') && ((c = it.peek()) != '>') && ((c = it.peek()) != '<') && ((c = it.peek()) != '|') && ((c = it.peek()) != '&') && ((c = it.peek()) != '\"' || escapeQuote) && ((c = it.peek()) != '\'' || escapeQuote)) {
-        escapeQuote = false;
-        ret += consumeChar(it, parse, &escapeQuote);
+    escape escapeChars;
+    escapeChars.doubleQuote = false;
+    escapeChars.singleQuote = false;
+    escapeChars.rightCarrot = false; 
+    escapeChars.leftCarrot = false; 
+    escapeChars.ampersand = false; 
+    escapeChars.pipe = false; 
+    escapeChars.dollar = false; 
+    while ((it.pos < it.len) && (((c = it.peek()) != ' ') || quote) && (((c = it.peek()) != '>') || quote || escapeChars.rightCarrot) && (((c = it.peek()) != '<') || quote || escapeChars.leftCarrot) && (((c = it.peek()) != '|') || quote || escapeChars.pipe) && (((c = it.peek()) != '&') || quote || escapeChars.ampersand) && (((c = it.peek())!= '$') || escapeChars.dollar) && ((c = it.peek()) != '\"' || escapeChars.doubleQuote) && ((c = it.peek()) != '\'' || escapeChars.singleQuote) ) {
+        escapeChars.doubleQuote = false;
+        escapeChars.singleQuote = false;
+        escapeChars.rightCarrot = false; 
+        escapeChars.leftCarrot = false; 
+        escapeChars.ampersand = false; 
+        escapeChars.dollar = false; 
+        ret += consumeChar(it, parse, &escapeChars);
+        //       cout << it.pos << " " << it.len <<  " " << endl; //escapeQuote << endl;
         //it.advance();
     }
     return ret;

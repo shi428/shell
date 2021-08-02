@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <command.h>
 #include <misc.h>
+#include <built-in.h>
 
 Command::~Command() {
     int i = 0;
@@ -23,7 +24,7 @@ void Command::parseCommand(vector <Token> &cmd) {
             removeWhiteSpace(i.lexeme);
             this->it = new StringIterator(i.lexeme); 
             while (this->it->pos < this->it->len) {
-                args.push_back(consumeChars(*it, true));
+                args.push_back(consumeChars(*it, true, false));
                 consumeSpaces(*it);
             }
         }
@@ -339,17 +340,17 @@ int Command::redirectIn(int *pipefd, vector <pid_t> &children, int readfd, int w
 
 int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, int readfd, int writefd, vector <string> &cmds) {
     int i = 0;
-    if (strcmp(cmd[0], "cd") == 0) {
-        if (cmd[1] == NULL) {
-            string homedir = "/home/" + string(p->pw_name);
-            chdir(homedir.c_str());
-            return 0;
-        }
-        else {
-            chdir(cmd[1]);
-            return 0;
-        }
-    }
+    /*    if (strcmp(cmd[0], "cd") == 0) {
+          if (cmd[1] == NULL) {
+          string homedir = "/home/" + string(p->pw_name);
+          chdir(homedir.c_str());
+          return 0;
+          }
+          else {
+          chdir(cmd[1]);
+          return 0;
+          }
+          }*/
     if (strcmp(cmd[0], "exit") == 0) {
         cout << "exit" << endl;
         return 1;
@@ -362,25 +363,35 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, in
     pipe(fdin);
     pipe(fderr);
 
-    if ((child = fork()) == 0) {
-        dup2(readfd, STDIN_FILENO);
-        dup2(writefd, STDOUT_FILENO);
-        if (files[0].size()) {
-            redirectIn(fdin, children, readfd, writefd, readfd != STDIN_FILENO);
-            dup2(fdin[0], STDIN_FILENO);
-        }
-        close(fdin[1]);
-        if (files[1].size() || files[4].size()) {
-            dup2(fdout[1], STDOUT_FILENO); 
-            close(fdout[0]);
-        }
-        if (files[2].size()) {
-            dup2(fderr[1], STDERR_FILENO); 
-            close(fderr[0]);
-        }
-        if (execvp(cmd[0], cmd) == -1) {
-            cerr << "\033[1;41mshell: command not found: " << cmd[0] << "\033[0m\n";
-            exit(EXIT_FAILURE);
+    if (isBuiltIn(cmd[0])) {
+        runBuiltInCommand(cmd, p);
+    }
+    else {
+        if ((child = fork()) == 0) {
+            dup2(readfd, STDIN_FILENO);
+            dup2(writefd, STDOUT_FILENO);
+            if (files[0].size()) {
+                redirectIn(fdin, children, readfd, writefd, readfd != STDIN_FILENO);
+                dup2(fdin[0], STDIN_FILENO);
+            }
+            close(fdin[1]);
+            if (files[1].size() || files[4].size()) {
+                dup2(fdout[1], STDOUT_FILENO); 
+                close(fdout[0]);
+            }
+            if ((files[3].size() || files[5].size()) && (writefd == STDOUT_FILENO) && !files[1].size() && !files[2].size() && !files[4].size()) {
+                dup2(fdout[1], STDOUT_FILENO);
+                dup2(fdout[1], STDERR_FILENO);
+                close(fdout[0]);
+            }
+            if (files[2].size()) {
+                dup2(fderr[1], STDERR_FILENO); 
+                close(fderr[0]);
+            }
+            if (execvp(cmd[0], cmd) == -1) {
+                cerr << "\033[1;41mshell: command not found: " << cmd[0] << "\033[0m\n";
+                exit(EXIT_FAILURE);
+            }
         }
     }
     close(fdout[1]);
@@ -392,7 +403,7 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, in
             int fdappend[2];
             pipe(fdappend);
             redirectOut(fdout, fdappend, 1, true, false);
-            redirectOut(fdappend, NULL, 4, false, true);
+            redirectOut(fdappend, writefd != STDOUT_FILENO ? pipefd : NULL, 4, writefd != STDOUT_FILENO, true);
         }
         else {
             redirectOut(fdout, writefd != STDOUT_FILENO ? pipefd : NULL, 1, writefd != STDOUT_FILENO, false);
@@ -401,8 +412,22 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, in
     if (files[2].size()) { //2>
         redirectOut(fderr, NULL, 2, false, false);
     }
-    else if (files[4].size()) { //append
+    if (files[4].size()) { //append
         redirectOut(fdout, writefd != STDOUT_FILENO ? pipefd: NULL, 4, writefd != STDOUT_FILENO, true);
+    }
+    if ((files[3].size()) && writefd == STDOUT_FILENO && !files[1].size() && !files[2].size() && !files[4].size()) {
+        if (files[5].size()) {
+            int fdappend[2];
+            pipe(fdappend);
+            redirectOut(fdout, fdappend, 3, true, false);
+            redirectOut(fdappend, NULL, 5, false, true);
+        }
+        else {
+            redirectOut(fdout, NULL, 3, false, false);
+        }
+    }
+    if ((files[5].size()) && writefd == STDOUT_FILENO && !files[1].size() && !files[2].size() && !files[4].size()) {
+        redirectOut(fdout, NULL, 5, false, false);
     }
     children.push_back(child);
     while (cmd[i]) {

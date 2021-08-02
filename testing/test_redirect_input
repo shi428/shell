@@ -30,7 +30,7 @@ run_cmd $input_str
 #run_cmd $input_str
 input_str=$'wc < testall'
 run_cmd $input_str
-input_str=$'bash <test_basic_commands'
+input_str=$'ls < testall < test_redirect_input'
 run_cmd $input_str
 if [ $pass = true ]
 then
