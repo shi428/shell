@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
               //  cout << "subshell" << endl;
               //  cout << tokens[i].lexeme.c_str() << endl;
                 pid_t child;
-                const char *shell[2] = {"./shell", NULL};
+                const char *shell[2] = {"/proc/self/exe", NULL};
                 int pipefd[2];
                 //int og_stdin = dup(STDIN_FILENO);
                 int pipefd2[2];
@@ -103,7 +103,6 @@ int main(int argc, char *argv[]) {
                         }
                         temp++;
                     }
-                    //cout << buf;
                 }
                 close(pipefd2[0]);
                 //dup2(og_stdin, STDIN_FILENO);

@@ -1,2 +1,2 @@
-echo "Logged in:"
+echo $(whoami) "logged in:"
 date

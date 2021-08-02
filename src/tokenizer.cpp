@@ -21,12 +21,22 @@ Token next(StringIterator &it) {
         ret.type = AMPERSAND;
         consumeSpaces(it);
     }
-    else if (it.peek() == '$' && it.lookahead(1)) {
+    else if (it.peek() == '$' && it.lookahead(1) == '(') {
+            stack <string> paren;
+            paren.push("$(");
             it.advance();
             it.advance();
             ret.type = SUBSHELL;
+            //string subshelltoken(*it.it);
+            //unsigned int index = subshelltoken.find_last_of(')') + it.pos;
             while (it.pos < it.len) {
+                if (it.peek() == '$' && it.lookahead(1) == '(') {
+                    paren.push("$(");
+                }
                 if (it.peek() == ')') {
+                    paren.pop();
+                }
+                if (paren.empty()) {
                     it.advance();
                     break;
                 }
