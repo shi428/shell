@@ -1,2 +1,3 @@
-echo $(whoami) "logged in:"
-date
+echo $(whoami) "logged in:" $(date)
+echo "System info": 
+neofetch

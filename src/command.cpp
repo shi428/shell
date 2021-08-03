@@ -27,6 +27,7 @@ void Command::parseCommand(vector <Token> &cmd) {
                 args.push_back(consumeChars(*it, true, false));
                 consumeSpaces(*it);
             }
+            delete this->it;
         }
         else if (i.type == ERROR) {
             return ;
@@ -41,7 +42,6 @@ void Command::parseCommand(vector <Token> &cmd) {
         strcpy(this->cmd[i], args[i].c_str());
     }
     this->cmd[args.size()] = NULL;
-    delete this->it;
 }
 
 string parseFile(Token &file) {

@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <pwd.h>
 #include <exec.h>
+#include <expansion.h>
 
 const char *built_in[4] = {"setenv", "unsetenv", "source", "cd"};
 
@@ -100,80 +101,7 @@ int runBuiltInCommand(char **cmd, struct passwd *p) {
                     //                    printPrompt();
                 }
                 vector <Token> tokens = genTokens(line);
-                for (unsigned int i = 0; i < tokens.size(); i++) {
-                    if (tokens[i].type == SUBSHELL) {
-                        //  cout << "subshell" << endl;
-                        //  cout << tokens[i].lexeme.c_str() << endl;
-                        pid_t child;
-                        const char *shell[2] = {"/proc/self/exe", NULL};
-                        int pipefd[2];
-                        //int og_stdin = dup(STDIN_FILENO);
-                        int pipefd2[2];
-                        pipe(pipefd);
-                        pipe(pipefd2);
-                        write(pipefd[1], tokens[i].lexeme.c_str(), tokens[i].lexeme.length());
-                        tokens.erase(tokens.begin() + i);
-                        i--;
-                        if ((child = fork()) == 0) {
-                            dup2(pipefd[0], STDIN_FILENO);
-                            dup2(pipefd2[1], STDOUT_FILENO);
-                            close(pipefd2[0]);
-                            close(pipefd[1]);
-                            execvp(shell[0], (char **)shell);
-                            exit(EXIT_SUCCESS);
-                        }
-                        // waitpid(child, NULL, 0);
-                        close(pipefd[0]);
-                        close(pipefd[1]);
-                        // dup2(pipefd2[0], STDIN_FILENO);
-                        close(pipefd2[1]);
-                        char buf[4096];
-                        //FILE *input = fdopen(STDIN_FILENO,"r");
-                        //size_t size;
-                        // getline(&line_ptr, &size, input);
-                        string line2;
-                        ssize_t n_bytes;
-                        while ((n_bytes = read(pipefd2[0], buf, 4095)) != 0) {
-                            buf[n_bytes] = '\0';
-                            char *temp = buf;
-                            while (*temp != '\0'){
-                                if (*temp == '\n') {
-                                    line2 += ' ';
-                                }
-                                else {
-                                    line2 += *temp;
-                                }
-                                temp++;
-                            }
-                        }
-                        close(pipefd2[0]);
-                        //dup2(og_stdin, STDIN_FILENO);
-                        //cout << line << endl;
-                        // free(line_ptr);
-                        // fclose(input);
-                        vector <Token> tokens2 = genTokens(line2);
-                        for (unsigned int j = 0; j < tokens2.size(); j++) {
-                            if (tokens2[j].type == COMMAND) {
-                                if (tokens[i].type == COMMAND) {
-                                    tokens[i].lexeme += tokens2[j].lexeme;
-                                }
-                                /*  else {
-                                    tokens.insert(tokens.begin() + i - 1, tokens2[j]);
-                                    i++;
-                                    }*/
-                            }
-                            else {
-                                tokens.insert(tokens.begin() + i - 1, tokens2[j]);
-                                i++;
-                            }
-                        }
-                        if (tokens[i+1].type == COMMAND && tokens[i].type == COMMAND) {
-                            tokens[i].lexeme += tokens[i+1].lexeme;
-                            tokens.erase(tokens.begin() + i + 1);
-                        }
-                    }
-                }
-
+                tokens = expand_subshell(tokens);
                 Tree *parseTree = newTree(tokens);
                 //tokens.~vector <Token>();
                 if (parseTree->root) {
