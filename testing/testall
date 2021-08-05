@@ -40,8 +40,18 @@ if [ $# -eq 0 ]; then
     run_test test_redirect_input
     run_test test_redirect_error
     run_test test_redirect_append
+    run_test test_redirect_outerr
     run_test test_redirect_multiple
     run_test test_pipe
+    run_test test_pipe_redirect
+    run_test test_zombie
+    run_test test_exit
+    run_test test_quotes
+    run_test test_escape
+    run_test test_setenv
+    run_test test_unsetenv
+    run_test test_source
+    run_test test_cd
 else
     all=false
     run_test $1

@@ -4,7 +4,7 @@ WORKDIR=work
 SRCDIR=src
 SHELLSRCS=shell_main.cpp tokenizer.cpp misc.cpp parser.cpp command.cpp exec.cpp built-in.cpp expansion.cpp
 TOKENSRCS=token_main.cpp tokenizer.cpp misc.cpp
-PARSERSRCS=parser.cpp tokenizer.cpp misc.cpp parser_main.cpp command.cpp built-in.cpp exec.cpp
+PARSERSRCS=parser.cpp tokenizer.cpp misc.cpp parser_main.cpp command.cpp exec.cpp
 SHELLOBJS=$(SHELLSRCS:%.cpp=%.o)
 TOKENOBJS=$(TOKENSRCS:%.cpp=%.o)
 PARSEROBJS=$(PARSERSRCS:%.cpp=%.o)
@@ -32,4 +32,4 @@ compile_parser: $(PARSEROBJS)
 %.o: %.cpp | $(WORKDIR)
 	$(CPP) -c $< -o $(WORKDIR)/$@ 
 clean:
-	rm -rf shell tokenizer parser work testing/*diff testing/out* testing/*.out
+	rm -rf shell tokenizer parser work testing/*diff testing/out* testing/*.out testing/o* testing/f*

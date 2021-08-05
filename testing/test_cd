@@ -1,0 +1,30 @@
+#!/bin/zsh
+diffFile=test_cd.diff
+pass=true
+run_cmd() {
+    #echo Processing Command: $1
+    echo Processing Command: $1 >>& $diffFile
+    diff --color -u <(/bin/zsh <<< $1 2>&1) <(../shell <<< $1 2>&1) >>& $diffFile
+    check $1 $?
+}
+check() {
+    if [ $2 -ne 0 ] 
+    then
+        echo -e "\033[1;31m Failed to run $1\033[0m"
+        pass=false
+    else
+        echo -e "\033[1;32m $1 ran successfully\033[0m"
+    fi
+}
+echo -e "\033[1;4;93m\ttest cd\033[0m"
+echo -e "\033[1;4;93m\ttest cd\033[0m" > $diffFile
+input_str=$'cd test_dir\n ls -al\n pwd'
+run_cmd $input_str
+input_str=$'cd asdlfkjh'
+run_cmd $input_str
+if [ $pass = true ]
+then
+    exit 0
+else
+    exit 1
+fi

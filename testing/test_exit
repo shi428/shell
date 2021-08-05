@@ -1,0 +1,27 @@
+#!/bin/zsh
+diffFile=test_exit.diff
+pass=true
+run_cmd() {
+    #echo Processing Command: $1
+    echo Processing Command: $1 >>& $diffFile
+    diff --color -u <(/bin/bash <<< $1 2>&1) <(../shell <<< $1 2>&1) >>& $diffFile
+    check $1 $?
+}
+check() {
+    if [ $2 -ne 0 ] 
+    then
+        echo -e "\033[1;31m Failed to run $1\033[0m"
+        pass=false
+    else
+        echo -e "\033[1;32m $1 ran successfully\033[0m"
+    fi
+}
+echo -e "\033[1;4;93m\ttest exit\033[0m"
+echo -e "\033[1;4;93m\ttest exit\033[0m" > $diffFile
+input_str=$'exit'
+if [ $pass = true ]
+then
+    exit 0
+else
+    exit 1
+fi

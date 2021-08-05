@@ -409,11 +409,11 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, in
             redirectOut(fdout, writefd != STDOUT_FILENO ? pipefd : NULL, 1, writefd != STDOUT_FILENO, false);
         }
     }
+    else if (files[4].size()) { //append
+        redirectOut(fdout, writefd != STDOUT_FILENO ? pipefd: NULL, 4, writefd != STDOUT_FILENO, true);
+    }
     if (files[2].size()) { //2>
         redirectOut(fderr, NULL, 2, false, false);
-    }
-    if (files[4].size()) { //append
-        redirectOut(fdout, writefd != STDOUT_FILENO ? pipefd: NULL, 4, writefd != STDOUT_FILENO, true);
     }
     if ((files[3].size()) && writefd == STDOUT_FILENO && !files[1].size() && !files[2].size() && !files[4].size()) {
         if (files[5].size()) {
