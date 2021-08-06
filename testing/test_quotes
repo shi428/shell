@@ -19,43 +19,48 @@ echo -e "\033[1;4;93m\ttest quotes\033[0m" > $diffFile
 shell_in=$'echo "hello"'
 zsh_in=$'echo "hello"'
 echo Processing Command: $shell_in>>$diffFile
-timeout 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
+timeout -k 1 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
 check $shell_in $?
 shell_in=$'ls "some file"'
 zsh_in=$'ls "some file"'
 echo Processing Command: $shell_in>>$diffFile
-timeout 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
+timeout -k 1 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
 check $shell_in $?
 #special characters
 shell_in=$'echo "<>\'{}a&|"'
 zsh_in=$'echo "<>\'{}a&|"'
 echo Processing Command: $shell_in>>$diffFile
-timeout 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
+timeout -k 1 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
 check $shell_in $?
 shell_in=$'cat "some$"'
 zsh_in=$'cat "some$"'
 echo Processing Command: $shell_in>>$diffFile
-timeout 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
+timeout -k 1 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
 check $shell_in $?
 shell_in=$'echo "fdsa a" asdf "a d f"'
 zsh_in=$'echo "fdsa a" asdf "a d f"'
 echo Processing Command: $shell_in>>$diffFile
-timeout 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
+timeout -k 1 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
+check $shell_in $?
+shell_in=$'echo "fdsa a" "asdf "a d f'
+zsh_in=$'echo "fdsa a" "asdf "a d f'
+echo Processing Command: $shell_in>>$diffFile
+timeout -k 1 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
 check $shell_in $?
 shell_in=$'echo fdsa a asdf "a d f"'
 zsh_in=$'echo fdsa a asdf "a d f"'
 echo Processing Command: $shell_in>>$diffFile
-timeout 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
+timeout -k 1 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
 check $shell_in $?
 shell_in=$'echo fdsa "a asdf" a d \'f\''
 zsh_in=$'echo fdsa "a asdf" a d \'f\''
 echo Processing Command: $shell_in>>$diffFile
-timeout 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
+timeout -k 1 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
 check $shell_in $?
 shell_in=$'echo fdsa"a asdf"a'
 zsh_in=$'echo fdsa"a asdf"a'
 echo Processing Command: $shell_in>>$diffFile
-timeout 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
+timeout -k 1 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
 check $shell_in $?
 shell_in=$'cat testall < "test_redirect_input" > "file1 file2" 2> \'file3 4\' >> "f i l e" >& "<>/>" >"ok"'
 zsh <<< $shell_in
@@ -63,7 +68,7 @@ res=$(ls)
 ../shell <<< $shell_in
 res2=$(ls)
 echo Processing Command: $shell_in>>$diffFile
-timeout 2.5 diff --color -u <($res 2>&1; ) <($res2 2>&1; ) >>& $diffFile
+timeout -k 1 2.5 diff --color -u <($res 2>&1; ) <($res2 2>&1; ) >>& $diffFile
 check $shell_in $?
 if [ $pass = true ]
 then

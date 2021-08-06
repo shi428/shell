@@ -39,7 +39,7 @@ int exec_pipe(struct passwd *p, vector <pid_t> &children, Node *node, int *pipef
     int left = exec_node(p, children, node->left, fds, readfd, fds[1], cmds);
     cmds.push_back(string("|"));
     close(fds[1]);
-    int right = exec_node(p, children, node->right, fds, fds[0], writefd, cmds);
+    int right = exec_node(p, children, node->right, pipefds, fds[0], writefd, cmds);
     close(fds[0]);
     return left + right;
 }

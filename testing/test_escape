@@ -19,18 +19,18 @@ echo -e "\033[1;4;93m\ttest escape\033[0m" > $diffFile
 shell_in=$'echo h\zello'
 zsh_in=$'echo h\zello'
 echo Processing Command: $shell_in>>$diffFile
-timeout 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
+timeout -k 1 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
 check $shell_in $?
 shell_in=$'echo h\ ello'
 zsh_in=$'echo h\ ello'
 echo Processing Command: $shell_in>>$diffFile
-timeout 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
+timeout -k 1 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
 check $shell_in $?
 #special characters
 shell_in=$'echo h\'\>\|\$\<\&\" ello'
 zsh_in=$'echo h\'\>\|\$\<\&\" ello'
 echo Processing Command: $shell_in>>$diffFile
-timeout 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
+timeout -k 1 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
 check $shell_in $?
 if [ $pass = true ]
 then

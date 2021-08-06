@@ -1,5 +1,6 @@
 #include <bits/stdc++.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <pwd.h>
@@ -8,6 +9,7 @@
 #include <misc.h>
 #include <built-in.h>
 
+extern int fdin[2];
 Command::~Command() {
     int i = 0;
     while (cmd[i]) {
@@ -296,7 +298,7 @@ return 1;
 }*/
 
 int Command::redirectIn(int *pipefd, vector <pid_t> &children, int readfd, int writefd, bool pipeflag) {
-    pid_t child;
+    /*pid_t child;
     // int status;
     int start = 1;
     char **temp_cmd = NULL;
@@ -334,7 +336,10 @@ int Command::redirectIn(int *pipefd, vector <pid_t> &children, int readfd, int w
     }
     delete []temp_cmd;
     close(pipefd[1]);
-    children.push_back(child);
+    children.push_back(child);*/
+    //close(writefd);
+    myCat(readfd, pipefd[1], files[0], pipeflag);
+    close(pipefd[1]);
     return 1;
 }
 
@@ -362,7 +367,6 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, in
     pipe(fdout);
     pipe(fdin);
     pipe(fderr);
-
     if (isBuiltIn(cmd[0])) {
         runBuiltInCommand(cmd, p);
     }
@@ -370,9 +374,15 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, in
         if ((child = fork()) == 0) {
             dup2(readfd, STDIN_FILENO);
             dup2(writefd, STDOUT_FILENO);
-            if (files[0].size()) {
+            if (files[0].size() > 1 || (readfd != STDIN_FILENO && files[0].size())) {
                 redirectIn(fdin, children, readfd, writefd, readfd != STDIN_FILENO);
                 dup2(fdin[0], STDIN_FILENO);
+                close(fdin[1]);
+            }
+            else if (files[0].size() == 1) {
+                int fd = open(files[0][0].c_str(), O_RDONLY);
+                dup2(fd, STDIN_FILENO);
+                close(fd);
             }
             close(fdin[1]);
             if (files[1].size() || files[4].size()) {
@@ -427,7 +437,7 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, in
         }
     }
     if ((files[5].size()) && writefd == STDOUT_FILENO && !files[1].size() && !files[2].size() && !files[4].size()) {
-        redirectOut(fdout, NULL, 5, false, false);
+        redirectOut(fdout, NULL, 5, false, true);
     }
     children.push_back(child);
     while (cmd[i]) {

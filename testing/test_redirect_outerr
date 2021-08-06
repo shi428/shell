@@ -24,10 +24,10 @@ rm -f out*
 echo Processing Command: $shell_in>>$diffFile
 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; cat out2) <(../shell <<< $shell_in 2>&1; cat out1) >>& $diffFile
 check $shell_in $?
-shell_in=$'cat hello testall >>& out1 >>& out2'
-zsh_in=$'cat hello testall >>& out3 >>& out4'
+shell_in=$'cat hello testall >>& out1 >>& out3'
+zsh_in=$'cat hello testall >>& out2 >>& out4'
 echo Processing Command: $shell_in>>$diffFile
-diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; cat out[3-4]) <(../shell <<< $shell_in 2>&1; cat out[1-2]) >>& $diffFile
+diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; cat out2 out4) <(../shell <<< $shell_in 2>&1; cat out1 out3) >>& $diffFile
 check $shell_in $?
 if [ $pass = true ]
 then

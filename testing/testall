@@ -52,6 +52,7 @@ if [ $# -eq 0 ]; then
     run_test test_unsetenv
     run_test test_source
     run_test test_cd
+    run_test test_subshell
 else
     all=false
     run_test $1

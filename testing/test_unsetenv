@@ -25,8 +25,8 @@ shell_in=$'unsetenv asdf'
 echo Processing Command: $shell_in>>&$diffFile
 grep "unsetenv: variable not found" <(../shell <<< "$shell_in" 2>&1)
 check $shell_in $?
-echo Processing Command: $shell_in>>&$diffFile
 shell_in=$'unsetenv asdf s'
+echo Processing Command: $shell_in>>&$diffFile
 grep "unsetenv: wrong number of arguments" <(../shell <<< "$shell_in" 2>&1)>>&$diffFile
 check $shell_in $?
 if [ $pass = true ]

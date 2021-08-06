@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include "tokenizer.h"
 
+extern void myCat(int inputfd, int outputfd, vector <string> &files, bool readInput);
+extern vector <int> openFiles(vector <string> &files);
 typedef struct command {
     ~command();
     int execute(struct passwd *p, vector <pid_t> &children, int *pipefd, int readfd, int writefd, vector <string> &cmds);

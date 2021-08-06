@@ -3,6 +3,7 @@
 #include <exec.h>
 #include <built-in.h>
 #include <expansion.h>
+#include <sys/stat.h>
 vector <pair<pid_t, vector <string>>> bPids;
 vector <int> pos;
 void printPrompt() {
