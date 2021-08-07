@@ -21,21 +21,31 @@ Command::~Command() {
 
 void Command::parseCommand(vector <Token> &cmd) {
     vector <string> args;
-    for (auto i: cmd) {
-        if (i.type == COMMAND) {
-            removeWhiteSpace(i.lexeme);
-            this->it = new StringIterator(i.lexeme); 
+    for (unsigned int i = 0; i < cmd.size(); i++) {
+        if (cmd[i].type == COMMAND) {
+            while (cmd[i].lexeme.front() == ' ') {
+                cmd[i].lexeme.erase(cmd[i].lexeme.begin());
+            }
+
+            this->it = new StringIterator(cmd[i].lexeme); 
             while (this->it->pos < this->it->len) {
-                args.push_back(consumeChars(*it, true, false));
-                consumeSpaces(*it);
+                string a = consumeChars(*it, true, false, false);
+                string spaces = consumeSpaces(*it);
+                if (strcmp(spaces.c_str(),"") == 0) {
+                    if (i < cmd.size() - 1 && cmd[i+1].type == QUOTES) {
+                        a += cmd[i+1].lexeme;
+                        i++;
+                    }
+                }
+                args.push_back(a);
             }
             delete this->it;
         }
-        else if (i.type == ERROR) {
+        else if (cmd[i].type == ERROR) {
             return ;
         }
         else {
-            args.push_back(i.lexeme);
+            args.push_back(cmd[i].lexeme);
         }
     }
     this->cmd = new char*[args.size() + 1];
@@ -303,36 +313,36 @@ int Command::redirectIn(int *pipefd, vector <pid_t> &children, int readfd, int w
     int start = 1;
     char **temp_cmd = NULL;
     if (pipeflag) {
-        start = 2;
-        temp_cmd = new char *[files[0].size() + 3];
-        temp_cmd[0] = new char[4];
-        temp_cmd[1] = new char[2];
-        strcpy(temp_cmd[0], "cat");
-        strcpy(temp_cmd[1], "-");
+    start = 2;
+    temp_cmd = new char *[files[0].size() + 3];
+    temp_cmd[0] = new char[4];
+    temp_cmd[1] = new char[2];
+    strcpy(temp_cmd[0], "cat");
+    strcpy(temp_cmd[1], "-");
     }
     else {
-        temp_cmd = new char *[files[0].size() + 2];
-        temp_cmd[0] = new char[4];
-        strcpy(temp_cmd[0], "cat");
+    temp_cmd = new char *[files[0].size() + 2];
+    temp_cmd[0] = new char[4];
+    strcpy(temp_cmd[0], "cat");
     }
     for (unsigned int i = 0; i < files[0].size(); i++) {
-        temp_cmd[start + i] = new char [files[0][i].length() + 1];
-        strcpy(temp_cmd[start + i], files[0][i].c_str());
+    temp_cmd[start + i] = new char [files[0][i].length() + 1];
+    strcpy(temp_cmd[start + i], files[0][i].c_str());
     }
     temp_cmd[files[0].size() + start] = NULL;
     child = fork();
     if (child == 0) {
-        if (pipeflag) {
-            dup2(readfd, STDIN_FILENO);
-            close(writefd);
-        }
-        dup2(pipefd[1], STDOUT_FILENO);
-        close(pipefd[0]);
-        execvp(temp_cmd[0], temp_cmd);
+    if (pipeflag) {
+    dup2(readfd, STDIN_FILENO);
+    close(writefd);
+    }
+    dup2(pipefd[1], STDOUT_FILENO);
+    close(pipefd[0]);
+    execvp(temp_cmd[0], temp_cmd);
     }
     //waitpid(child, &status, 0);
     for (unsigned int i = 0; i < files[0].size() + start; i++) {
-        delete [] temp_cmd[i];
+    delete [] temp_cmd[i];
     }
     delete []temp_cmd;
     close(pipefd[1]);
@@ -370,6 +380,8 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, in
     if (isBuiltIn(cmd[0])) {
         runBuiltInCommand(cmd, p);
     }
+    /*if (true) {
+      }*/
     else {
         if ((child = fork()) == 0) {
             dup2(readfd, STDIN_FILENO);

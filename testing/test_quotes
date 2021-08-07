@@ -27,8 +27,8 @@ echo Processing Command: $shell_in>>$diffFile
 timeout -k 1 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
 check $shell_in $?
 #special characters
-shell_in=$'echo "<>\'{}a&|"'
-zsh_in=$'echo "<>\'{}a&|"'
+shell_in=$'echo "<>{}a&|"'
+zsh_in=$'echo "<>{}a&|"'
 echo Processing Command: $shell_in>>$diffFile
 timeout -k 1 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
 check $shell_in $?
@@ -44,6 +44,11 @@ timeout -k 1 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $
 check $shell_in $?
 shell_in=$'echo "fdsa a" "asdf "a d f'
 zsh_in=$'echo "fdsa a" "asdf "a d f'
+echo Processing Command: $shell_in>>$diffFile
+timeout -k 1 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
+check $shell_in $?
+shell_in=$'echo "fdsa a""asdf "a d f'
+zsh_in=$'echo "fdsa a""asdf "a d f'
 echo Processing Command: $shell_in>>$diffFile
 timeout -k 1 2.5 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; ) <(../shell <<< $shell_in 2>&1; ) >>& $diffFile
 check $shell_in $?

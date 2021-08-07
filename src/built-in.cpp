@@ -8,7 +8,7 @@
 #include <pwd.h>
 #include <exec.h>
 #include <expansion.h>
-
+extern char **environ;
 const char *built_in[4] = {"setenv", "unsetenv", "source", "cd"};
 
 extern vector <pair<pid_t, vector <string>>> bPids;
@@ -84,8 +84,26 @@ int runBuiltInCommand(char **cmd, struct passwd *p) {
             }
         }
         if (!strcmp(cmd[0], "unsetenv")) {
-            if (unsetenv(cmd[1]) == -1) {
-                cerr << "unsetenv: failed to unset environment variable: " << cmd[2] << endl;
+            int i = 0;
+            char c = '=';
+            char *token = NULL;
+            bool run = false;
+            while (environ[i]) {
+                token = strtok(environ[i], &c);
+                cout << token << " " << cmd[1] << endl;
+                if (!strcmp(token, cmd[1])) {
+                    run = true;
+                    break;
+                }
+                i++;
+            }
+            if (run) {
+                if (unsetenv(cmd[1]) == -1) {
+                    cerr << "unsetenv: failed to unset environment variable: " << cmd[1] << endl;
+                }
+            }
+            else {
+                cerr << "unsetenv: failed to unset environment variable: " << cmd[1] << endl;
             }
         }
         if (!strcmp(cmd[0], "source")) {

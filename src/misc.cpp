@@ -99,7 +99,7 @@ string consumeSpaces(StringIterator &it) {
     return ret;
 }
 
-string consumeChars(StringIterator &it, bool parse, bool quote) {
+string consumeChars(StringIterator &it, bool parse, bool singlequote, bool doublequote) {
     string ret = "";
     char c;
     escape escapeChars;
@@ -110,7 +110,8 @@ string consumeChars(StringIterator &it, bool parse, bool quote) {
     escapeChars.ampersand = false; 
     escapeChars.pipe = false; 
     escapeChars.dollar = false; 
-    while ((it.pos < it.len) && (((c = it.peek()) != ' ') || quote) && (((c = it.peek()) != '>') || quote || escapeChars.rightCarrot) && (((c = it.peek()) != '<') || quote || escapeChars.leftCarrot) && (((c = it.peek()) != '|') || quote || escapeChars.pipe) && (((c = it.peek()) != '&') || quote || escapeChars.ampersand) && (((c = it.peek())!= '$') || escapeChars.dollar) && ((c = it.peek()) != '\"' || escapeChars.doubleQuote) && ((c = it.peek()) != '\'' || escapeChars.singleQuote) ) {
+    bool quote = singlequote || doublequote;
+    while ((it.pos < it.len) && (((c = it.peek()) != ' ') || quote) && (((c = it.peek()) != '>') || quote || escapeChars.rightCarrot) && (((c = it.peek()) != '<') || quote || escapeChars.leftCarrot) && (((c = it.peek()) != '|') || quote || escapeChars.pipe) && (((c = it.peek()) != '&') || quote || escapeChars.ampersand) && (((c = it.peek())!= '$' || !(it.lookahead(1) == '{' || it.lookahead(1) == '(') || it.pos == it.len - 1) || escapeChars.dollar) && ((c = it.peek()) != '\"' || escapeChars.doubleQuote || singlequote) && ((c = it.peek()) != '\'' || escapeChars.singleQuote || doublequote) ) {
         escapeChars.doubleQuote = false;
         escapeChars.singleQuote = false;
         escapeChars.rightCarrot = false; 

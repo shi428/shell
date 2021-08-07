@@ -4,7 +4,7 @@ WORKDIR=work
 SRCDIR=src
 SHELLSRCS=shell_main.cpp tokenizer.cpp misc.cpp parser.cpp command.cpp exec.cpp built-in.cpp expansion.cpp cat.cpp
 TOKENSRCS=token_main.cpp tokenizer.cpp misc.cpp
-PARSERSRCS=parser.cpp tokenizer.cpp misc.cpp parser_main.cpp command.cpp exec.cpp
+PARSERSRCS=parser.cpp tokenizer.cpp misc.cpp parser_main.cpp command.cpp exec.cpp cat.cpp
 SHELLOBJS=$(SHELLSRCS:%.cpp=%.o)
 TOKENOBJS=$(TOKENSRCS:%.cpp=%.o)
 PARSEROBJS=$(PARSERSRCS:%.cpp=%.o)

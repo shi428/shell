@@ -61,6 +61,19 @@ int main(int argc, char *argv[]) {
         if (isatty(0)) {//for (auto i: tokens) i.printToken();
         }
         tokens = expand_subshell(tokens);
+        //fix tokens
+        for (unsigned int i = 0; i < tokens.size(); i++) {
+            if ((i < tokens.size() - 1) && ((tokens[i].type == QUOTES && (tokens[i+1].type == COMMAND)) || (tokens[i].type == QUOTES && tokens[i+1].type == QUOTES))) {
+            tokens[i].lexeme += tokens[i+1].lexeme;
+            tokens.erase(tokens.begin() + i + 1);
+            i--;
+            }
+            /*if (i < tokens.size() - 1 && !(!i || (i && tokens[i-1].type == PIPE)) && tokens[i].type == COMMAND && tokens[i+1].type == QUOTES) {
+            tokens[i].lexeme += tokens[i+1].lexeme;
+            tokens[i].type = QUOTES;
+            tokens.erase(tokens.begin() + i + 1);
+            }*/
+        }
         if (isatty(0)) {
            // for (auto i: tokens) i.printToken();
         }

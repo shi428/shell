@@ -23,7 +23,7 @@ fi
 check $shell_in $flag
 shell_in=$'unsetenv asdf'
 echo Processing Command: $shell_in>>&$diffFile
-grep "unsetenv: variable not found" <(../shell <<< "$shell_in" 2>&1)
+grep "unsetenv: failed to unset environment variable: asdf" <(../shell <<< "$shell_in" 2>&1)
 check $shell_in $?
 shell_in=$'unsetenv asdf s'
 echo Processing Command: $shell_in>>&$diffFile

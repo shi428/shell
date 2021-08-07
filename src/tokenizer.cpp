@@ -4,7 +4,7 @@ string createFileTokenEntry(StringIterator &it) {
     string ret;
     ret += it.advance();
     ret+= consumeSpaces(it);
-    ret+= consumeChars(it, true, false);
+    ret+= consumeChars(it, true, false, false);
     ret+= consumeSpaces(it);
     return ret;
 }
@@ -48,11 +48,17 @@ Token next(StringIterator &it) {
         it.advance();
         consumeSpaces(it);
         while (it.pos < it.len) {
-            ret.lexeme += consumeChars(it, true, true);
+            ret.lexeme += consumeChars(it, false, false, true);
             ret.lexeme += consumeSpaces(it);
             if (it.peek() == '\"') {
                 it.advance();
-                consumeSpaces(it);
+                if (it.peek() == '\'' || it.peek() == '\"') {
+                    ret.lexeme += next(it).lexeme;
+                }
+                string spaces = consumeSpaces(it);
+                if (it.pos < it.len) {//not at the end
+                    ret.lexeme += spaces;
+                }
                 return ret;
             }
         }
@@ -64,12 +70,18 @@ Token next(StringIterator &it) {
         it.advance();
         consumeSpaces(it);
         while (it.pos < it.len) {
-            ret.lexeme += consumeChars(it, true, false);
+            ret.lexeme += consumeChars(it, false, true, false);
             //cout << it.peek() << endl;
             ret.lexeme += consumeSpaces(it);
             if (it.peek() == '\'') {
                 it.advance();
-                consumeSpaces(it);
+                if (it.peek() == '\'' || it.peek() == '\"') {
+                    ret.lexeme += next(it).lexeme;
+                }
+                string spaces = consumeSpaces(it);
+                if (it.pos < it.len) {//not at the end
+                    ret.lexeme += spaces;
+                }
                 return ret;
             }
         }
@@ -116,9 +128,11 @@ Token next(StringIterator &it) {
     else {
         ret.type = COMMAND;
         //consumeSpaces(it);
-        while (it.pos < it.len && it.peek() != '>' && it.peek() != '<' && it.peek() != '|' && it.peek() != '&' && it.peek() != '$') {
-            ret.lexeme += consumeChars(it, false, false);
-            if (it.pos == it.len || it.peek() == '>' || it.peek() == '<' || it.peek() == '|' || it.peek() == '&' || it.peek() == '\'' || it.peek() == '\"' || it.peek() == '$')// reached end
+        bool lookahead = it.lookahead(1) == '{' || it.lookahead(1) == '(';
+        while (it.pos < it.len && it.peek() != '>' && it.peek() != '<' && it.peek() != '|' && it.peek() != '&' && (it.peek() != '$' || !lookahead) && it.peek() != '\'' && it.peek() != '\"') {
+            ret.lexeme += consumeChars(it, false, false, false);
+            lookahead = it.pos < it.len - 1 ? it.lookahead(1) == '{' || it.lookahead(1) == '(' : false;
+            if (it.pos == it.len || it.peek() == '>' || it.peek() == '<' || it.peek() == '|' || it.peek() == '&' || it.peek() == '\'' || it.peek() == '\"' || (it.peek() == '$' && lookahead))// reached end
                 break;
             string spaces = consumeSpaces(it);
             if (spaces == "") {
@@ -129,6 +143,7 @@ Token next(StringIterator &it) {
             if (detectError(it)) {
                 break;
             }
+            lookahead = it.lookahead(1) == '{' || it.lookahead(1) == '(';
             ret.lexeme += spaces;
         }
     }

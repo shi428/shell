@@ -6,7 +6,7 @@ run_cmd() {
     echo Processing Command: $1 >>& $diffFile
     before=$(ps -u | grep defunct)
     ../shell <<< $shell_in
-    sleep 1
+    sleep 0.2 
     after=$(ps -u | grep defunct)
     if [ $before -ne $after ]; then
         echo -e "\033[1;31m Failed to run $1\033[0m"

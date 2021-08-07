@@ -19,7 +19,7 @@ typedef struct stringIterator {
 void removeWhiteSpace(string &line);
 string consumeSpaces(StringIterator &it);
 char consumeChar(StringIterator &it, bool parse, bool *escapeQuote);
-string consumeChars(StringIterator &it, bool parse, bool quote);
+string consumeChars(StringIterator &it, bool parse, bool singleQuote, bool doubleQuote);
 void indent(int spaces);
 void initEscapeChars();
 #endif
