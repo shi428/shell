@@ -7,7 +7,13 @@
 vector <pair<pid_t, vector <string>>> bPids;
 vector <int> pos;
 void printPrompt() {
+    if (isEnviron((char *)"PROMPT")) {
+        char *prompt = getenv("PROMPT");
+        cout << expandPrompt(prompt);
+    }
+    else {
     cout << "shell>";
+    }
 }
 
 void sigint_handler(int signum) {

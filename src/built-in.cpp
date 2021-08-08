@@ -75,8 +75,21 @@ int runBuiltInCommand(char **cmd, struct passwd *p) {
             else {
                 if (chdir(cmd[1]) == -1) {
                     cerr << "cd: no such file or directory: " << cmd[1] << endl;
+                    return -1;
                 }
             }
+            char **setEnvCmd = new char *[4];
+            setEnvCmd[0] = new char[7];
+            setEnvCmd[1] = new char[4];
+            setEnvCmd[2] = get_current_dir_name();
+            setEnvCmd[3] = NULL;
+            strcpy(setEnvCmd[0], "setenv");
+            strcpy(setEnvCmd[1], "PWD");
+            runBuiltInCommand(setEnvCmd, p);
+            delete [] setEnvCmd[0];
+            delete [] setEnvCmd[1];
+            delete [] setEnvCmd[2];
+            delete [] setEnvCmd;
         }
         if (!strcmp(cmd[0], "setenv")) {
             if (setenv(cmd[1], cmd[2], 1) == -1) {
@@ -84,20 +97,18 @@ int runBuiltInCommand(char **cmd, struct passwd *p) {
             }
         }
         if (!strcmp(cmd[0], "unsetenv")) {
-            int i = 0;
-            char c = '=';
-            char *token = NULL;
+            /*int i = 0;
             bool run = false;
             while (environ[i]) {
-                token = strtok(environ[i], &c);
-                cout << token << " " << cmd[1] << endl;
-                if (!strcmp(token, cmd[1])) {
+                string env = environ[i];
+                string token = env.substr(0, env.find('='));
+                if (!strcmp(token.c_str(), cmd[1])) {
                     run = true;
                     break;
                 }
                 i++;
-            }
-            if (run) {
+            }*/
+            if (isEnviron(cmd[1])) {
                 if (unsetenv(cmd[1]) == -1) {
                     cerr << "unsetenv: failed to unset environment variable: " << cmd[1] << endl;
                 }

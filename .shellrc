@@ -1,3 +1,4 @@
+setenv PROMPT \\u@$(hostname):\\w\ $\ \
 echo $(whoami) "logged in:" $(date)
 echo "System info": 
 neofetch

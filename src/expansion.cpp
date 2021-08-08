@@ -81,3 +81,24 @@ vector <Token> expand_subshell(vector <Token> &tokens) {
     }
     return tokens;
 }
+
+string expandPrompt(char *prompt) {
+    string ret;
+    while (*prompt) {
+        if (*prompt == '\\') {
+            if (prompt[1] == 'w') {
+                ret += getenv("PWD");
+                prompt++;
+            }
+            if (prompt[1] == 'u') {
+                ret += getenv("USER");
+                prompt++;
+            }
+        }
+        else {
+            ret += *prompt;
+        }
+        prompt++;
+    }
+    return ret;
+}

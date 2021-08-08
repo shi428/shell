@@ -130,4 +130,17 @@ void indent(int spaces) {
         cout << " ";
     }
 }
+extern char **environ;
+bool isEnviron(char *String) {
+    int i = 0;
+    while (environ[i]) {
+        string env = environ[i];
+        string token = env.substr(0, env.find('='));
+        if (!strcmp(token.c_str(), String)) {
+            return true;
+        }
+        i++;
+    }
+    return false;
+}
 
