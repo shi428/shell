@@ -6,6 +6,11 @@
 #include <sys/stat.h>
 vector <pair<pid_t, vector <string>>> bPids;
 vector <int> pos;
+pid_t shell_pid;
+pid_t background_process;
+int return_code;
+string last_arg;
+
 void printPrompt() {
     if (isEnviron((char *)"PROMPT")) {
         char *prompt = getenv("PROMPT");
@@ -30,10 +35,11 @@ void sigchild_handler(int signum) {
     while ((pid = waitpid(-1, NULL, WNOHANG)) > 0) {
         for (unsigned int i = 0; i < bPids.size(); i++) {
             if (bPids[i].first == pid && pos.size()) {
+                background_process = pid;
                 cout << endl;
                 cout << pos[i] <<". [" << pid << "] ";
-                for (auto i: bPids[i].second) {
-                    cout << i << " ";
+                for (auto j: bPids[i].second) {
+                    cout << j << " ";
                 }
                 cout << "has exited";
                 cout << endl;
@@ -52,9 +58,14 @@ void sigchild_handler(int signum) {
 int main(int argc, char *argv[]) {
     signal(SIGINT, sigint_handler);
     signal(SIGCHLD, sigchild_handler);
+    shell_pid = getpid();
     string line;
     struct passwd *p = getpwuid(getuid());
     const char *source[3] = {"source", ".shellrc", NULL};
+    char *shell_path = realpath(argv[0], NULL);
+    const char *set_shell[4] = {"setenv", "SHELL", shell_path, NULL};
+    runBuiltInCommand((char **)set_shell, p);
+    free(shell_path);
     if (isatty(0)) {
         runBuiltInCommand((char **)source, p);
     }
@@ -92,8 +103,10 @@ int main(int argc, char *argv[]) {
                 delete parseTree;
                 break;
             }
+            //last_arg = (bPids.back().second).back();
         }
         delete parseTree;
     }
+    deleteAliasedCommands();
     return EXIT_SUCCESS;
 }

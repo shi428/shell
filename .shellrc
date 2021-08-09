@@ -1,4 +1,7 @@
 setenv PROMPT \\u@$(hostname):\\w\ $\ \
+alias ls ls --color=auto
+alias la ls -la
+alias grep grep --color=auto
 echo $(whoami) "logged in:" $(date)
 echo "System info": 
-neofetch
+screenfetch

@@ -3,4 +3,5 @@
 bool isBuiltIn(char *cmd);
 bool checkSyntax(char **cmd);
 int runBuiltInCommand(char **cmd, struct passwd *p);
+void deleteAliasedCommands();
 #endif

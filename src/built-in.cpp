@@ -8,9 +8,12 @@
 #include <pwd.h>
 #include <exec.h>
 #include <expansion.h>
-extern char **environ;
-const char *built_in[4] = {"setenv", "unsetenv", "source", "cd"};
 
+extern char **environ;
+const char *built_in[5] = {"alias", "cd", "setenv", "source", "unsetenv"};
+unordered_map<string, pair<char **, int>> aliases;
+
+vector <char **> alias_ptrs;
 extern vector <pair<pid_t, vector <string>>> bPids;
 extern vector <int> pos;
 extern void printPrompt();
@@ -39,17 +42,33 @@ void sigchild_handler2(int signum) {
     }
 }
 bool isBuiltIn(char *cmd) {
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 5; i++) {
         if (!strcmp(cmd, built_in[i])) return true;
     }
     return false;
 }
 
-bool checkSyntax(char **cmd) {
+int getLength(char **cmd) {
     int args = 0;
     while (cmd[args]) {
         args++;
     }
+    return args;
+}
+
+char **copyCommand(char **cmd) {
+    int length = getLength(cmd);
+    char **ret = new char*[length + 1];
+    for (int i = 0; i < length; i++) {
+        ret[i] = new char[strlen(cmd[i]) + 1];
+        strcpy(ret[i], cmd[i]);
+    }
+    ret[length] = NULL;
+    return ret;
+}
+
+bool checkSyntax(char **cmd) {
+    int args = getLength(cmd);
     if (!strcmp(cmd[0], "setenv")) {
         return args == 3;
     }
@@ -62,11 +81,40 @@ bool checkSyntax(char **cmd) {
     if (!strcmp(cmd[0], "source")) {
         return args == 2;
     }
+    if (!strcmp(cmd[0], "alias")) {
+        return args >= 3 || args == 1;
+    }
     return true;
 }
 
+void printAliases() {
+    cout << "aliases" << endl;
+    for (auto i: aliases) {
+        cout << i.first << "=";
+        for (int j = 0; j < i.second.second; j++) {
+            cout << i.second.first[j] << " ";
+        }
+        cout << endl;
+    }
+}
 int runBuiltInCommand(char **cmd, struct passwd *p) {
     if (checkSyntax(cmd)) {
+        if (!strcmp(cmd[0], "alias")) {
+            if (cmd[1] == NULL) {
+                printAliases();
+            }
+            else {
+                char **ptr = copyCommand(&cmd[1]);
+                //auto it = aliases.find(ptr[0]);
+                //if (it == aliases.end()) {
+                aliases[string(ptr[0])] = pair<char **, int>(&ptr[1], getLength(&cmd[2]));
+                alias_ptrs.push_back(ptr);
+                //}
+                /*else {
+                    it->second = pair<char **, int>(&ptr[1], getLength(&cmd[2]));
+                }*/
+            }
+        }
         if (!strcmp(cmd[0], "cd")){
             if (cmd[1] == NULL) {
                 string homedir = "/home/" + string(p->pw_name);
@@ -98,16 +146,16 @@ int runBuiltInCommand(char **cmd, struct passwd *p) {
         }
         if (!strcmp(cmd[0], "unsetenv")) {
             /*int i = 0;
-            bool run = false;
-            while (environ[i]) {
-                string env = environ[i];
-                string token = env.substr(0, env.find('='));
-                if (!strcmp(token.c_str(), cmd[1])) {
-                    run = true;
-                    break;
-                }
-                i++;
-            }*/
+              bool run = false;
+              while (environ[i]) {
+              string env = environ[i];
+              string token = env.substr(0, env.find('='));
+              if (!strcmp(token.c_str(), cmd[1])) {
+              run = true;
+              break;
+              }
+              i++;
+              }*/
             if (isEnviron(cmd[1])) {
                 if (unsetenv(cmd[1]) == -1) {
                     cerr << "unsetenv: failed to unset environment variable: " << cmd[1] << endl;
@@ -131,6 +179,7 @@ int runBuiltInCommand(char **cmd, struct passwd *p) {
                 }
                 vector <Token> tokens = genTokens(line, true);
                 tokens = expand_subshell(tokens);
+                tokens = expand_env(tokens);
                 Tree *parseTree = newTree(tokens);
                 //tokens.~vector <Token>();
                 if (parseTree->root) {
@@ -148,4 +197,16 @@ int runBuiltInCommand(char **cmd, struct passwd *p) {
     }
     cerr << cmd[0]<< ": wrong number of arguments" << endl;
     return -1;
+}
+
+void deleteAliasedCommands() {
+    for (auto i: alias_ptrs) {
+        char **ptr = i;
+        int j = 0;
+        while (ptr[j]) {
+            delete [] ptr[j];
+            j++;
+        }
+        delete [] ptr;
+    }
 }

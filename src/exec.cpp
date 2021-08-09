@@ -1,12 +1,17 @@
 #include <exec.h>
 
+extern int return_code;
+extern string last_arg;
 int exec(struct passwd *p, Node *node, vector <pair<pid_t, vector <string>>> &bPids, vector <int> &pos) {
     vector <pid_t> children;
     vector <string> cmds;
     int ret = exec_node(p, children, node, NULL, STDIN_FILENO, STDOUT_FILENO, cmds);
     //cout << children.size() << endl;
     if (children.size() && !node->background) {
-        waitpid(children[children.size() - 1], NULL, 0);
+        int status;
+        waitpid(children[children.size() - 1], &status, 0);
+        return_code = WEXITSTATUS(status);
+        last_arg = cmds.back();
     }
     if (node->background) {
         bPids.push_back(pair<pid_t, vector <string>>(children[children.size() - 1], cmds));

@@ -91,7 +91,7 @@ char consumeChar(StringIterator &it, bool parse, escape *escapeChars, bool escap
 string consumeSpaces(StringIterator &it) {
     string ret = "";
     char c;
-    while (((c = it.peek()) == ' ') && (it.pos < it.len)) {
+    while ((it.pos < it.len) && ((c = it.peek()) == ' ')) {
         //if (c == ' ') cout << "space" << endl;
         ret += c;
         it.advance();

@@ -8,6 +8,7 @@
 #include <command.h>
 #include <misc.h>
 #include <built-in.h>
+#include <expansion.h>
 
 extern int fdin[2];
 Command::~Command() {
@@ -366,6 +367,8 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, in
           return 0;
           }
           }*/
+    char **aliased_cmd = expandAlias(cmd);
+    char **ptr = aliased_cmd != cmd ? aliased_cmd : cmd;
     if (strcmp(cmd[0], "exit") == 0) {
         cout << "exit" << endl;
         return 1;
@@ -377,8 +380,8 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, in
     pipe(fdout);
     pipe(fdin);
     pipe(fderr);
-    if (isBuiltIn(cmd[0])) {
-        runBuiltInCommand(cmd, p);
+    if (isBuiltIn(ptr[0])) {
+        runBuiltInCommand(ptr, p);
     }
     /*if (true) {
       }*/
@@ -410,11 +413,12 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, in
                 dup2(fderr[1], STDERR_FILENO); 
                 close(fderr[0]);
             }
-            if (execvp(cmd[0], cmd) == -1) {
-                cerr << "\033[1;41mshell: command not found: " << cmd[0] << "\033[0m\n";
+            if (execvp(ptr[0], ptr) == -1) {
+                cerr << "\033[1;41mshell: command not found: " << ptr[0] << "\033[0m\n";
                 exit(EXIT_FAILURE);
             }
         }
+        children.push_back(child);
     }
     close(fdout[1]);
     close(fderr[1]);
@@ -451,11 +455,11 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, in
     if ((files[5].size()) && writefd == STDOUT_FILENO && !files[1].size() && !files[2].size() && !files[4].size()) {
         redirectOut(fdout, NULL, 5, false, true);
     }
-    children.push_back(child);
-    while (cmd[i]) {
-        cmds.push_back(cmd[i]);
+    while (ptr[i]) {
+        cmds.push_back(ptr[i]);
         i++;
     }
+    if (aliased_cmd != cmd) delete [] ptr;
     return 0;
 }
 

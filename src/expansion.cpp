@@ -1,9 +1,10 @@
 #include <expansion.h>
-
+#include <bits/stdc++.h>
+extern int getLength(char **);
 vector <Token> expand_subshell(vector <Token> &tokens) {
     for (unsigned int i = 0; i < tokens.size(); i++) {
         if (tokens[i].type == SUBSHELL) {
-        //      cout << "subshell" << endl;
+            //      cout << "subshell" << endl;
             //cout << tokens[i].lexeme.c_str() << endl;
             pid_t child;
             const char *shell[2] = {"/proc/self/exe", NULL};
@@ -68,7 +69,7 @@ vector <Token> expand_subshell(vector <Token> &tokens) {
                     }
                 }
                 else {
-            //        cout << "insert" << endl;
+                    //        cout << "insert" << endl;
                     tokens.insert(tokens.begin() + i + 1, tokens2[j]);
                     i++;
                 }
@@ -82,10 +83,32 @@ vector <Token> expand_subshell(vector <Token> &tokens) {
     return tokens;
 }
 
+extern pid_t shell_pid;
+extern int return_code;
+extern pid_t background_process;
+extern string last_arg;
 vector <Token> expand_env(vector <Token> &tokens) {
     for (unsigned int i = 0; i < tokens.size(); i++) {
         if (tokens[i].type == ENV) {
             string line2 = isEnviron((char *)tokens[i].lexeme.c_str()) ? getenv(tokens[i].lexeme.c_str()) : "";
+            if (!tokens[i].lexeme.compare("$")) {
+                stringstream ss;
+                ss << shell_pid;
+                line2 = ss.str();
+            }
+            if (!tokens[i].lexeme.compare("?")) {
+                stringstream ss;
+                ss << return_code;
+                line2 = ss.str();
+            }
+            if (!tokens[i].lexeme.compare("!")) {
+                stringstream ss;
+                ss << background_process;
+                line2 = ss.str();
+            }
+            if (!tokens[i].lexeme.compare("_")) {
+                line2 = last_arg;
+            }
             tokens.erase(tokens.begin() + i);
             i--;
             vector <Token> tokens2 = genTokens(line2, false);
@@ -105,7 +128,7 @@ vector <Token> expand_env(vector <Token> &tokens) {
                     }
                 }
                 else {
-            //        cout << "insert" << endl;
+                    //        cout << "insert" << endl;
                     tokens.insert(tokens.begin() + i + 1, tokens2[j]);
                     i++;
                 }
@@ -140,4 +163,38 @@ string expandPrompt(char *prompt) {
         prompt++;
     }
     return ret;
+}
+
+extern unordered_map<string, pair<char **, int>> aliases;
+char **expandAlias(char **cmd) {
+    if (aliases.find(string(cmd[0])) == aliases.end()) {
+        return cmd;
+    }
+    if (!strcmp(aliases[string(cmd[0])].first[0], cmd[0])) {
+        char **aliased_cmd = aliases[string(cmd[0])].first;
+        int aliased_length = getLength(aliased_cmd);
+        int length = getLength(&cmd[1]);
+        char **ptr = new char *[aliased_length + 1 + length];
+        for (int i = 0; i < aliased_length; i++) {
+            ptr[i] = aliased_cmd[i];
+        }
+        for (int i = aliased_length; i < aliased_length + length; i++) {
+            ptr[i] = cmd[i - aliased_length + 1];
+        }
+        ptr[aliased_length + length] = NULL;
+        return ptr;
+    }
+    char **aliased_cmd = expandAlias(aliases[string(cmd[0])].first);
+    int aliased_length = getLength(aliased_cmd);
+    int length = getLength(&cmd[1]);
+    char **ptr = new char *[aliased_length + length + 1];
+    for (int i = 0; i < aliased_length; i++) {
+        ptr[i] = aliased_cmd[i];
+    }
+    for (int i = aliased_length; i < aliased_length + length; i++) {
+        ptr[i] = cmd[i - aliased_length + 1];
+    }
+    ptr[aliased_length + length] = NULL;
+    delete []aliased_cmd;
+    return ptr;
 }
