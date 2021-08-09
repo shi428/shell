@@ -29,7 +29,7 @@ void Command::parseCommand(vector <Token> &cmd) {
 
             this->it = new StringIterator(cmd[i].lexeme); 
             while (this->it->pos < this->it->len) {
-                string a = consumeChars(*it, true, false, false);
+                string a = consumeChars(*it, true, false, false, !cmd[i].flag);
                 string spaces = consumeSpaces(*it);
                 if (strcmp(spaces.c_str(),"") == 0) {
                     if (i < cmd.size() - 1 && cmd[i+1].type == QUOTES) {

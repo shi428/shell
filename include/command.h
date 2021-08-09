@@ -23,7 +23,6 @@ typedef struct command {
     char **cmd;
     vector <string> files[6];
     StringIterator *it;
-
 }Command;
 #endif
 

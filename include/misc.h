@@ -18,8 +18,8 @@ typedef struct stringIterator {
 
 void removeWhiteSpace(string &line);
 string consumeSpaces(StringIterator &it);
-char consumeChar(StringIterator &it, bool parse, bool *escapeQuote);
-string consumeChars(StringIterator &it, bool parse, bool singleQuote, bool doubleQuote);
+char consumeChar(StringIterator &it, bool parse, bool *escapeQuote, bool escape);
+string consumeChars(StringIterator &it, bool parse, bool singleQuote, bool doubleQuote, bool escape);
 bool isEnviron(char *String);
 void indent(int spaces);
 void initEscapeChars();

@@ -6,5 +6,6 @@
 #include <exec.h>
 #include <built-in.h>
 vector <Token> expand_subshell(vector <Token> &tokens);
+vector <Token> expand_env(vector <Token> &tokens);
 string expandPrompt(char *prompt);
 #endif

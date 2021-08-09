@@ -129,7 +129,7 @@ int runBuiltInCommand(char **cmd, struct passwd *p) {
                 if (isatty(0)) {
                     //                    printPrompt();
                 }
-                vector <Token> tokens = genTokens(line);
+                vector <Token> tokens = genTokens(line, true);
                 tokens = expand_subshell(tokens);
                 Tree *parseTree = newTree(tokens);
                 //tokens.~vector <Token>();

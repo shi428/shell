@@ -63,10 +63,11 @@ int main(int argc, char *argv[]) {
             printPrompt();
         }
         if (!getline(cin, line)) break;
-        vector <Token> tokens = genTokens(line);
+        vector <Token> tokens = genTokens(line, true);
         if (isatty(0)) {//for (auto i: tokens) i.printToken();
         }
         tokens = expand_subshell(tokens);
+        tokens = expand_env(tokens);
         //fix tokens
         for (unsigned int i = 0; i < tokens.size(); i++) {
             if ((i < tokens.size() - 1) && ((tokens[i].type == QUOTES && (tokens[i+1].type == COMMAND)) || (tokens[i].type == QUOTES && tokens[i+1].type == QUOTES))) {

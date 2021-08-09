@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
     while (1) {
         printPrompt();
         if (!getline(cin, line)) break;
-        vector <Token> tokens = genTokens(line);
+        vector <Token> tokens = genTokens(line, true);
         printTokens(tokens);
         Tree *parseTree = newTree(tokens);
         if (parseTree->root) {

@@ -4,7 +4,7 @@ string createFileTokenEntry(StringIterator &it) {
     string ret;
     ret += it.advance();
     ret+= consumeSpaces(it);
-    ret+= consumeChars(it, true, false, false);
+    ret+= consumeChars(it, true, false, false, true);
     ret+= consumeSpaces(it);
     return ret;
 }
@@ -13,7 +13,7 @@ bool detectError(StringIterator &it) {
     return (it.peek() == '2') && (it.lookahead(1) == '>');
 }
 
-Token next(StringIterator &it) {
+Token next(StringIterator &it, bool escape) {
     Token ret;
     ret.lexeme = string();
     if (it.peek() == '&') {
@@ -43,17 +43,39 @@ Token next(StringIterator &it) {
                 ret.lexeme += it.advance();
             }
     }
+    else if (it.peek() == '$' && it.lookahead(1) == '{') {
+            stack <string> bracket;
+            bracket.push("${");
+            it.advance();
+            it.advance();
+            ret.type = ENV;
+            //string subshelltoken(*it.it);
+            //unsigned int index = subshelltoken.find_last_of(')') + it.pos;
+            while (it.pos < it.len) {
+                if (it.peek() == '$' && it.lookahead(1) == '{') {
+                    bracket.push("${");
+                }
+                if (it.peek() == '}') {
+                    bracket.pop();
+                }
+                if (bracket.empty()) {
+                    it.advance();
+                    break;
+                }
+                ret.lexeme += it.advance();
+            }
+    }
     else if (it.peek() == '\"') {
         ret.type = QUOTES;
         it.advance();
         consumeSpaces(it);
         while (it.pos < it.len) {
-            ret.lexeme += consumeChars(it, false, false, true);
+            ret.lexeme += consumeChars(it, true, false, true, escape);
             ret.lexeme += consumeSpaces(it);
             if (it.peek() == '\"') {
                 it.advance();
                 if (it.peek() == '\'' || it.peek() == '\"') {
-                    ret.lexeme += next(it).lexeme;
+                    ret.lexeme += next(it, escape).lexeme;
                 }
                 string spaces = consumeSpaces(it);
                 if (it.pos < it.len) {//not at the end
@@ -70,13 +92,13 @@ Token next(StringIterator &it) {
         it.advance();
         consumeSpaces(it);
         while (it.pos < it.len) {
-            ret.lexeme += consumeChars(it, false, true, false);
+            ret.lexeme += consumeChars(it, true, true, false, escape);
             //cout << it.peek() << endl;
             ret.lexeme += consumeSpaces(it);
             if (it.peek() == '\'') {
                 it.advance();
                 if (it.peek() == '\'' || it.peek() == '\"') {
-                    ret.lexeme += next(it).lexeme;
+                    ret.lexeme += next(it, escape).lexeme;
                 }
                 string spaces = consumeSpaces(it);
                 if (it.pos < it.len) {//not at the end
@@ -130,7 +152,7 @@ Token next(StringIterator &it) {
         //consumeSpaces(it);
         bool lookahead = it.lookahead(1) == '{' || it.lookahead(1) == '(';
         while (it.pos < it.len && it.peek() != '>' && it.peek() != '<' && it.peek() != '|' && it.peek() != '&' && (it.peek() != '$' || !lookahead) && it.peek() != '\'' && it.peek() != '\"') {
-            ret.lexeme += consumeChars(it, false, false, false);
+            ret.lexeme += consumeChars(it, false, false, false, escape);
             lookahead = it.pos < it.len - 1 ? it.lookahead(1) == '{' || it.lookahead(1) == '(' : false;
             if (it.pos == it.len || it.peek() == '>' || it.peek() == '<' || it.peek() == '|' || it.peek() == '&' || it.peek() == '\'' || it.peek() == '\"' || (it.peek() == '$' && lookahead))// reached end
                 break;
@@ -186,6 +208,9 @@ void Token::printToken() {
         case SUBSHELL:
             commandType = "SUBSHELL";
             break;
+        case ENV:
+            commandType = "ENV";
+            break;
         case ERROR:
             commandType = "ERROR";
             break;
@@ -194,12 +219,12 @@ void Token::printToken() {
     cout << commandType << "(" << this->lexeme << ")" << endl;
 }
 
-vector <Token> genTokens(string &line) {
+vector <Token> genTokens(string &line, bool escape) {
     vector <Token> ret;
     removeWhiteSpace(line);
     stringIterator it(line);
     while (it.pos < it.len) {
-        ret.push_back(next(it));
+        ret.push_back(next(it, escape));
     }
     //cout << ret.size() << endl;
     return ret;

@@ -53,7 +53,7 @@ vector <Token> expand_subshell(vector <Token> &tokens) {
             //cout << line2<< endl;
             // free(line_ptr);
             // fclose(input);
-            vector <Token> tokens2 = genTokens(line2);
+            vector <Token> tokens2 = genTokens(line2, true);
             // cout << tokens2.size() << endl;
             for (unsigned int j = 0; j < tokens2.size(); j++) {
                 //   cout << tokens2[j].lexeme << endl;
@@ -79,6 +79,45 @@ vector <Token> expand_subshell(vector <Token> &tokens) {
             }
         }
     }
+    return tokens;
+}
+
+vector <Token> expand_env(vector <Token> &tokens) {
+    for (unsigned int i = 0; i < tokens.size(); i++) {
+        if (tokens[i].type == ENV) {
+            string line2 = isEnviron((char *)tokens[i].lexeme.c_str()) ? getenv(tokens[i].lexeme.c_str()) : "";
+            tokens.erase(tokens.begin() + i);
+            i--;
+            vector <Token> tokens2 = genTokens(line2, false);
+            // cout << tokens2.size() << endl;
+            for (unsigned int j = 0; j < tokens2.size(); j++) {
+                //   cout << tokens2[j].lexeme << endl;
+                tokens2[j].flag = true;
+                if (tokens2[j].type == COMMAND) {
+                    if (tokens[i].type == COMMAND) {
+                        tokens[i].lexeme += tokens2[j].lexeme;
+                        tokens[i].flag = true;
+                    }
+                    else {
+                        //          cout << "insert" << endl;
+                        tokens.insert(tokens.begin() + i + 1, tokens2[j]);
+                        i++;
+                    }
+                }
+                else {
+            //        cout << "insert" << endl;
+                    tokens.insert(tokens.begin() + i + 1, tokens2[j]);
+                    i++;
+                }
+            }
+            if (i + 1 < tokens.size() && tokens[i+1].type == COMMAND && tokens[i].type == COMMAND) {
+                tokens[i].lexeme += tokens[i+1].lexeme;
+                tokens[i].flag = tokens[i+1].flag;
+                tokens.erase(tokens.begin() + i + 1);
+            }
+        }
+    }
+    //for (auto i: tokens) i.printToken();
     return tokens;
 }
 

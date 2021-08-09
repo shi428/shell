@@ -16,15 +16,20 @@ typedef enum tokenType {
     AMPERSAND = 8, //&
     QUOTES = 9, //' or "
     SUBSHELL = 10,
-    ERROR = 11,
+    ENV = 11,
+    ERROR = 12,
 }TokenType;
 
 typedef struct token {
+    token(){
+        flag = false;
+    }
     TokenType type;
+    bool flag;
     string lexeme;
     void printToken();
 }Token;
 
-Token next(StringIterator &it);
-vector <Token> genTokens(string &line);
+Token next(StringIterator &it, bool escape);
+vector <Token> genTokens(string &line, bool escape);
 #endif

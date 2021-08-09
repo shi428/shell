@@ -60,9 +60,9 @@ struct escape {
     bool dollar;
 };
 
-char consumeChar(StringIterator &it, bool parse, escape *escapeChars){
+char consumeChar(StringIterator &it, bool parse, escape *escapeChars, bool escapeFlag){
     char c = it.lookahead(1);
-    if (it.peek() == '\\') {
+    if (it.peek() == '\\' && escapeFlag) {
         if (parse) {
             it.advance();
             it.advance();
@@ -99,7 +99,7 @@ string consumeSpaces(StringIterator &it) {
     return ret;
 }
 
-string consumeChars(StringIterator &it, bool parse, bool singlequote, bool doublequote) {
+string consumeChars(StringIterator &it, bool parse, bool singlequote, bool doublequote, bool escapeFlag) {
     string ret = "";
     char c;
     escape escapeChars;
@@ -118,7 +118,7 @@ string consumeChars(StringIterator &it, bool parse, bool singlequote, bool doubl
         escapeChars.leftCarrot = false; 
         escapeChars.ampersand = false; 
         escapeChars.dollar = false; 
-        ret += consumeChar(it, parse, &escapeChars);
+        ret += consumeChar(it, parse, &escapeChars, escapeFlag);
         //       cout << it.pos << " " << it.len <<  " " << endl; //escapeQuote << endl;
         //it.advance();
     }
