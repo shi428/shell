@@ -381,6 +381,32 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, in
     pipe(fdin);
     pipe(fderr);
     if (isBuiltIn(ptr[0])) {
+            dup2(readfd, STDIN_FILENO);
+            dup2(writefd, STDOUT_FILENO);
+            if (files[0].size() > 1 || (readfd != STDIN_FILENO && files[0].size())) {
+                redirectIn(fdin, children, readfd, writefd, readfd != STDIN_FILENO);
+                dup2(fdin[0], STDIN_FILENO);
+                //close(fdin[1]);
+            }
+            else if (files[0].size() == 1) {
+                int fd = open(files[0][0].c_str(), O_RDONLY);
+                dup2(fd, STDIN_FILENO);
+                close(fd);
+            }
+            close(fdin[1]);
+            if (files[1].size() || files[4].size()) {
+                dup2(fdout[1], STDOUT_FILENO); 
+                //close(fdout[0]);
+            }
+            if ((files[3].size() || files[5].size()) && (writefd == STDOUT_FILENO) && !files[1].size() && !files[2].size() && !files[4].size()) {
+                dup2(fdout[1], STDOUT_FILENO);
+                dup2(fdout[1], STDERR_FILENO);
+               // close(fdout[0]);
+            }
+            if (files[2].size()) {
+                dup2(fderr[1], STDERR_FILENO); 
+                //close(fderr[0]);
+            }
         runBuiltInCommand(ptr, p);
     }
     /*if (true) {

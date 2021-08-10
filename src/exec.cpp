@@ -41,10 +41,19 @@ int exec_node(struct passwd *p, vector <pid_t> &children, Node *node, int *pipef
 int exec_pipe(struct passwd *p, vector <pid_t> &children, Node *node, int *pipefds, int readfd, int writefd, vector <string> &cmds) {
     int fds[2];
     pipe(fds);
+    int fdin = dup(STDIN_FILENO);
+    int fdout = dup(STDOUT_FILENO);
+    int fderr = dup(STDERR_FILENO);
     int left = exec_node(p, children, node->left, fds, readfd, fds[1], cmds);
+    dup2(fdin, STDIN_FILENO);
+    dup2(fdout, STDOUT_FILENO);
+    dup2(fderr, STDERR_FILENO);
     cmds.push_back(string("|"));
     close(fds[1]);
     int right = exec_node(p, children, node->right, pipefds, fds[0], writefd, cmds);
+    dup2(fdin, STDIN_FILENO);
+    dup2(fdout, STDOUT_FILENO);
+    dup2(fderr, STDERR_FILENO);
     close(fds[0]);
     return left + right;
 }
