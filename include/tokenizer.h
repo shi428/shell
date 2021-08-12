@@ -17,7 +17,8 @@ typedef enum tokenType {
     QUOTES = 9, //' or "
     SUBSHELL = 10,
     ENV = 11,
-    ERROR = 12,
+    TILDE = 12,
+    ERROR = 13,
 }TokenType;
 
 typedef struct token {

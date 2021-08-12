@@ -126,7 +126,7 @@ int runBuiltInCommand(char **cmd, struct passwd *p) {
         }
         if (!strcmp(cmd[0], "cd")){
             if (cmd[1] == NULL) {
-                string homedir = "/home/" + string(p->pw_name);
+                string homedir = getenv("HOME");
                 chdir(homedir.c_str());
             }
             else {

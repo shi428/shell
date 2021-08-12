@@ -144,12 +144,99 @@ vector <Token> expand_env(vector <Token> &tokens) {
     return tokens;
 }
 
+extern unordered_map<string, string> users;
+
+vector <Token> expand_tilde(vector <Token> &tokens) {
+    for (unsigned int i = 0; i < tokens.size(); i++) {
+        bool flag = false;
+        if (tokens[i].type == TILDE) {
+            string line2 = tokens[i].lexeme;
+            string user;
+            size_t slash_pos = tokens[i].lexeme.find('/');
+            if (slash_pos == string::npos) {
+                user = tokens[i].lexeme.substr(1);
+                line2.erase(0, user.length() + 1);
+                if (!user.compare("")) {
+                    line2.insert(0, users[string(getenv("USER"))]);
+                }
+                else {
+                    if (users.find(user) == users.end()) {
+                        tokens[i].type = COMMAND;
+                        flag = true;
+                    }
+                    else {
+                    line2.insert(0, users[user]);
+                    }
+                }
+            }
+            else {
+                user = tokens[i].lexeme.substr(1, slash_pos-1);
+                line2.erase(0, user.length() + 1);
+                if (!user.compare("")) {
+                    line2.insert(0, users[string(getenv("USER"))]);
+                }
+                else {
+                    if (users.find(user) == users.end()) {
+                        tokens[i].type = COMMAND;
+                        flag = true;
+                    }
+                    else {
+                    line2.insert(0, users[user]);
+                    }
+                }
+            }
+            if (!flag) {
+                tokens.erase(tokens.begin() + i);
+                i--;
+                vector <Token> tokens2 = genTokens(line2, false);
+                // cout << tokens2.size() << endl;
+                for (unsigned int j = 0; j < tokens2.size(); j++) {
+                    //   cout << tokens2[j].lexeme << endl;
+                    tokens2[j].flag = true;
+                    if (tokens2[j].type == COMMAND) {
+                        if (tokens[i].type == COMMAND) {
+                            tokens[i].lexeme += tokens2[j].lexeme;
+                            tokens[i].flag = true;
+                        }
+                        else {
+                            //          cout << "insert" << endl;
+                            tokens.insert(tokens.begin() + i + 1, tokens2[j]);
+                            i++;
+                        }
+                    }
+                    else {
+                        //        cout << "insert" << endl;
+                        tokens.insert(tokens.begin() + i + 1, tokens2[j]);
+                        i++;
+                    }
+                }
+            }
+            if (i + 1 < tokens.size() && tokens[i+1].type == COMMAND && tokens[i].type == COMMAND) {
+                tokens[i].lexeme += tokens[i+1].lexeme;
+                tokens[i].flag = tokens[i+1].flag;
+                tokens.erase(tokens.begin() + i + 1);
+            }
+        }
+    }
+    //for (auto i: tokens) i.printToken();
+    return tokens;
+}
 string expandPrompt(char *prompt) {
     string ret;
     while (*prompt) {
         if (*prompt == '\\') {
             if (prompt[1] == 'w') {
-                ret += getenv("PWD");
+                string user = getenv("USER");
+                string pwd = getenv("PWD");
+                /*cout << user << endl;
+                  cout << users[user] << endl;
+                  cout << pwd << endl;*/
+                size_t pos = pwd.find(users[user]);
+                if (pos != string::npos) { 
+                    pwd.erase(pwd.begin() + pos, pwd.begin() + pos + users[user].length());
+                    pwd.insert(pos, "~");
+                }
+                ret += pwd;
                 prompt++;
             }
             if (prompt[1] == 'u') {

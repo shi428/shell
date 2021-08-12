@@ -2,6 +2,7 @@
 #define MISC_H
 
 #include <bits/stdc++.h>
+
 using namespace std;
 typedef struct stringIterator {
     unordered_map<char, char> escapeChars;
@@ -16,11 +17,21 @@ typedef struct stringIterator {
     unsigned int len;
 }StringIterator;
 
+struct escape {
+    bool doubleQuote;
+    bool singleQuote;
+    bool rightCarrot;
+    bool leftCarrot;
+    bool ampersand;
+    bool pipe;
+    bool dollar;
+};
 void removeWhiteSpace(string &line);
 string consumeSpaces(StringIterator &it);
-char consumeChar(StringIterator &it, bool parse, bool *escapeQuote, bool escape);
+char consumeChar(StringIterator &it, bool parse, escape *escapeQuote, bool escape);
 string consumeChars(StringIterator &it, bool parse, bool singleQuote, bool doubleQuote, bool escape);
 bool isEnviron(char *String);
 void indent(int spaces);
 void initEscapeChars();
+unordered_map <string, string> getUsers(char *argv);
 #endif

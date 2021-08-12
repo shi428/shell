@@ -16,7 +16,19 @@ bool detectError(StringIterator &it) {
 Token next(StringIterator &it, bool escape) {
     Token ret;
     ret.lexeme = string();
-    if (it.peek() == '&') {
+    if (it.peek() == '~') {
+        ret.type = TILDE;
+        ret.lexeme = it.advance();
+        bool lookahead = it.lookahead(1) == '{' || it.lookahead(1) == '(';
+        while (it.pos < it.len && it.peek() != '>' && it.peek() != '<' && it.peek() != '|' && it.peek() != '&' && (it.peek() != '$' || !lookahead) && it.peek() != '\'' && it.peek() != '\"') {
+            ret.lexeme += consumeChar(it, true, NULL, true);
+            if (it.peek() == '~') {
+                ret.type = COMMAND;
+            }
+            lookahead = it.pos < it.len - 1 ? it.lookahead(1) == '{' || it.lookahead(1) == '(' : false;
+        }
+    }
+    else if (it.peek() == '&') {
         ret.lexeme = it.advance();
         ret.type = AMPERSAND;
         consumeSpaces(it);
@@ -137,7 +149,7 @@ Token next(StringIterator &it, bool escape) {
                 ret.lexeme += it.advance();
                 ret.lexeme += createFileTokenEntry(it);
             }
-            else {
+               else {
                 ret.type = FILE_APPEND;
                 ret.lexeme += createFileTokenEntry(it);
             }
@@ -161,6 +173,12 @@ Token next(StringIterator &it, bool escape) {
                 ret.type = ERROR;
                 ret.lexeme = "no spaces";
                 break;
+            }
+            else {
+                if (it.peek() == '~') {
+                    ret.lexeme += spaces;
+                    break;
+                }
             }
             if (detectError(it)) {
                 break;
@@ -210,6 +228,9 @@ void Token::printToken() {
             break;
         case ENV:
             commandType = "ENV";
+            break;
+        case TILDE:
+            commandType = "TILDE";
             break;
         case ERROR:
             commandType = "ERROR";

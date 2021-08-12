@@ -1,4 +1,7 @@
 #include <misc.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 StringIterator::stringIterator(string &line) {
     escapeChars = {
@@ -49,16 +52,6 @@ void removeWhiteSpace(string &line) {
         line.pop_back();
     }
 }
-
-struct escape {
-    bool doubleQuote;
-    bool singleQuote;
-    bool rightCarrot;
-    bool leftCarrot;
-    bool ampersand;
-    bool pipe;
-    bool dollar;
-};
 
 char consumeChar(StringIterator &it, bool parse, escape *escapeChars, bool escapeFlag){
     char c = it.lookahead(1);

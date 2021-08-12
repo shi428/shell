@@ -10,6 +10,7 @@ pid_t shell_pid;
 pid_t background_process;
 int return_code;
 string last_arg;
+unordered_map<string,string> users;
 
 void printPrompt() {
     if (isEnviron((char *)"PROMPT")) {
@@ -17,7 +18,7 @@ void printPrompt() {
         cout << expandPrompt(prompt);
     }
     else {
-    cout << "shell>";
+        cout << "shell>";
     }
 }
 
@@ -55,6 +56,55 @@ void sigchild_handler(int signum) {
     }
 }
 
+void getUsers(struct passwd *p) {
+/*    string cmd = "cat /etc/passwd | cut -d: -f1,6 > file";
+    string line;
+    vector <Token> tokens = genTokens(cmd, true);
+    Tree *parseTree = newTree(tokens);
+    //tokens.~vector <Token>();
+    if (parseTree->root) {
+        //        parseTree->root->traverse(0);
+        if (exec(p, parseTree->root, bPids, pos)) {
+            delete parseTree;
+        }
+        //last_arg = (bPids.back().second).back();
+    }
+    delete parseTree;
+    ifstream fin("file");
+    while (getline(fin, line)){
+        string user = line.substr(0, line.find(':'));
+        string homedir = line.substr(line.find(':') + 1);
+        users[user] = homedir;
+    }
+    fin.close();
+    cmd = "rm file";
+    tokens = genTokens(cmd, true);
+    parseTree = newTree(tokens);
+    //tokens.~vector <Token>();
+    if (parseTree->root) {
+        //        parseTree->root->traverse(0);
+        if (exec(p, parseTree->root, bPids, pos)) {
+            delete parseTree;
+        }
+        //last_arg = (bPids.back().second).back();
+    }
+    delete parseTree;*/
+    while (true) {
+        errno = 0; // so we can distinguish errors from no more entries
+        struct passwd* entry = getpwent();
+        if (!entry) {
+            if (errno) {
+                std::cerr << "Error reading password database\n";
+                return ;
+            }
+            break;
+        }
+        //std::cout << entry->pw_name << '\n';
+        users[string(entry->pw_name)] = string(entry->pw_dir);
+    }
+    endpwent();
+}
+
 int main(int argc, char *argv[]) {
     signal(SIGINT, sigint_handler);
     signal(SIGCHLD, sigchild_handler);
@@ -66,6 +116,7 @@ int main(int argc, char *argv[]) {
     const char *set_shell[4] = {"setenv", "SHELL", shell_path, NULL};
     runBuiltInCommand((char **)set_shell, p);
     free(shell_path);
+    getUsers(p);
     if (isatty(0)) {
         runBuiltInCommand((char **)source, p);
     }
@@ -79,21 +130,22 @@ int main(int argc, char *argv[]) {
         }
         tokens = expand_subshell(tokens);
         tokens = expand_env(tokens);
+        tokens = expand_tilde(tokens);
         //fix tokens
         for (unsigned int i = 0; i < tokens.size(); i++) {
-            if ((i < tokens.size() - 1) && ((tokens[i].type == QUOTES && (tokens[i+1].type == COMMAND)) || (tokens[i].type == QUOTES && tokens[i+1].type == QUOTES))) {
-            tokens[i].lexeme += tokens[i+1].lexeme;
-            tokens.erase(tokens.begin() + i + 1);
-            i--;
+            if ((i < tokens.size() - 1) && ((tokens[i].type == QUOTES && (tokens[i+1].type == COMMAND)) || (tokens[i].type == QUOTES && tokens[i+1].type == QUOTES) || (tokens[i].type == COMMAND && tokens[i+1].type == COMMAND))) {
+                tokens[i].lexeme += tokens[i+1].lexeme;
+                tokens.erase(tokens.begin() + i + 1);
+                i--;
             }
             /*if (i < tokens.size() - 1 && !(!i || (i && tokens[i-1].type == PIPE)) && tokens[i].type == COMMAND && tokens[i+1].type == QUOTES) {
-            tokens[i].lexeme += tokens[i+1].lexeme;
-            tokens[i].type = QUOTES;
-            tokens.erase(tokens.begin() + i + 1);
-            }*/
+              tokens[i].lexeme += tokens[i+1].lexeme;
+              tokens[i].type = QUOTES;
+              tokens.erase(tokens.begin() + i + 1);
+              }*/
         }
         if (isatty(0)) {
-           // for (auto i: tokens) i.printToken();
+        //     for (auto i: tokens) i.printToken();
         }
         Tree *parseTree = newTree(tokens);
         //tokens.~vector <Token>();

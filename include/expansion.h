@@ -7,6 +7,7 @@
 #include <built-in.h>
 vector <Token> expand_subshell(vector <Token> &tokens);
 vector <Token> expand_env(vector <Token> &tokens);
+vector <Token> expand_tilde(vector <Token> &tokens);
 string expandPrompt(char *prompt);
 char **expandAlias(char **cmd);
 #endif
