@@ -165,7 +165,7 @@ vector <Token> expand_tilde(vector <Token> &tokens) {
                         flag = true;
                     }
                     else {
-                    line2.insert(0, users[user]);
+                        line2.insert(0, users[user]);
                     }
                 }
             }
@@ -181,7 +181,7 @@ vector <Token> expand_tilde(vector <Token> &tokens) {
                         flag = true;
                     }
                     else {
-                    line2.insert(0, users[user]);
+                        line2.insert(0, users[user]);
                     }
                 }
             }
@@ -284,4 +284,114 @@ char **expandAlias(char **cmd) {
     ptr[aliased_length + length] = NULL;
     delete []aliased_cmd;
     return ptr;
+}
+
+string convert_to_regex(string &wildcard) {
+    string ret;
+    for (auto i: wildcard) {
+        if (i == '*') {
+            ret += ".*";
+        }
+        else if (i == '?') {
+            ret += '.';
+        }
+        else if (i == '.') {
+            ret += "\\.";
+        }
+        else if (i == '+') {
+            ret += "\\+";
+        }
+        else {
+            ret += i;
+        }
+    }
+    return ret;
+}
+
+void expandWildcardHelper(string &prefix, string &suffix, vector <string> &entries, bool pwd) {
+    string current_dir = prefix;
+    if (suffix.find('/', 1) == string::npos) {
+        DIR *directory = opendir(current_dir.c_str());
+        string reg_ex = convert_to_regex(suffix);
+        while (struct dirent *entry = readdir(directory)) {
+            string dir = string(entry->d_name);
+            string regex_substr = reg_ex.substr(1, reg_ex.find('/', 1) - 1);
+            //cout << dir << " " << regex_substr << " " << suffix << endl;
+            if (regex_match(dir, regex(regex_substr))) {
+                if (dir[0] == '.') {
+                    if (suffix.substr(suffix.find('/') + 1)[0] == '.') {
+                        if (pwd) {
+                            entries.push_back(dir);
+                        }
+                        else  {
+                            entries.push_back(prefix + dir);
+                        }
+                    }
+                }
+                else {
+                    if (pwd) {
+                        entries.push_back(dir);
+                    }
+                    else  {
+                        entries.push_back(prefix + dir);
+                    }
+                }
+            }
+        }
+        return ;
+    }
+    else {
+        DIR *directory = opendir(current_dir.c_str());
+        string reg_ex = convert_to_regex(suffix);
+        while (struct dirent *entry = readdir(directory)) {
+            string dir = string(entry->d_name);
+            string regex_substr = reg_ex.substr(1, reg_ex.find('/', 1) - 1);
+            //cout << dir << " " << regex_substr << endl;
+            string newPrefix = prefix + dir + "/";
+            if (regex_match(dir, regex(regex_substr))) {
+                if (dir[0] == '.') {
+                    if (suffix.substr(suffix.find('/') + 1)[0] == '.') {
+                        string newSuffix = suffix.substr(suffix.find('/',1));
+                        //cout << " " << newSuffix << endl;
+                        if (entry->d_type == DT_DIR) {
+                            expandWildcardHelper(newPrefix, newSuffix, entries, pwd);
+                        }
+                    }
+                }
+                else {
+                    string newSuffix = suffix.substr(suffix.find('/', 1));
+                    //cout << newPrefix <<  " " << newSuffix << endl;
+                    if (entry->d_type == DT_DIR) {
+                        expandWildcardHelper(newPrefix, newSuffix, entries, pwd);
+                    }
+                }
+            }
+        }
+    }
+}
+
+vector <string> expandWildcard(string &wildcard, bool pwd){
+    vector <string> ret;
+    string root_dir = "/";
+    expandWildcardHelper(root_dir, wildcard, ret, pwd);
+    /*DIR *directory = opendir(getenv("PWD"));
+      string reg_ex = convert_to_regex(wildcard);
+      while (struct dirent *entry = readdir(directory)) {
+      if (regex_match(entry->d_name, regex(reg_ex)) ) {
+      if (entry->d_name[0] == '.') {
+      if (wildcard[0] == '.')  {
+      ret.push_back(string(entry->d_name));
+      }
+    //cout << entry->d_name << endl;
+    }
+    else {
+    ret.push_back(string(entry->d_name));
+    }
+    }
+    //cout << entry->d_name << endl;
+    }
+    closedir(directory);*/
+    sort(ret.begin(), ret.end());
+
+    return ret;
 }

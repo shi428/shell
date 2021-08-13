@@ -29,6 +29,7 @@ void Command::parseCommand(vector <Token> &cmd) {
             }
 
             this->it = new StringIterator(cmd[i].lexeme); 
+            int counter = 0;
             while (this->it->pos < this->it->len) {
                 string a = consumeChars(*it, true, false, false, !cmd[i].flag);
                 string spaces = consumeSpaces(*it);
@@ -38,7 +39,26 @@ void Command::parseCommand(vector <Token> &cmd) {
                         i++;
                     }
                 }
+                if (counter < 1) {
                 args.push_back(a);
+                }
+                else {
+                    if (detectWildcard(a)) {
+                        bool pwd = !(a.find('/') == 0);
+                        string wildcard = !pwd? a : string(getenv("PWD")) +"/"+ a;
+                       vector <string> strings = expandWildcard(wildcard, pwd); 
+                       if (strings.size() == 0) {
+                           args.push_back(wildcard);
+                       }
+                       for  (auto i: strings) {
+                           args.push_back(i);
+                       }
+                    }
+                    else {
+                    args.push_back(a);
+                    }
+                }
+                counter++;
             }
             delete this->it;
         }

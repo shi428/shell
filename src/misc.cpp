@@ -53,6 +53,10 @@ void removeWhiteSpace(string &line) {
     }
 }
 
+bool detectWildcard(string &s) {
+    return s.find('*') != string::npos || s.find('?') != string::npos;
+}
+
 char consumeChar(StringIterator &it, bool parse, escape *escapeChars, bool escapeFlag){
     char c = it.lookahead(1);
     if (it.peek() == '\\' && escapeFlag) {

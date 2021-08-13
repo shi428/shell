@@ -31,6 +31,7 @@ string consumeSpaces(StringIterator &it);
 char consumeChar(StringIterator &it, bool parse, escape *escapeQuote, bool escape);
 string consumeChars(StringIterator &it, bool parse, bool singleQuote, bool doubleQuote, bool escape);
 bool isEnviron(char *String);
+bool detectWildcard(string &a);
 void indent(int spaces);
 void initEscapeChars();
 unordered_map <string, string> getUsers(char *argv);
