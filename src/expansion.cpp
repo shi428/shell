@@ -308,7 +308,7 @@ string convert_to_regex(string &wildcard) {
     return ret;
 }
 
-void expandWildcardHelper(string &prefix, string &suffix, vector <string> &entries, bool pwd) {
+void expandWildcardHelper(string &prefix, string &suffix, string &relative_dir, vector <string> &entries, bool relative_dir_flag, bool pwd) {
     string current_dir = prefix;
     if (suffix.find('/', 1) == string::npos) {
         DIR *directory = opendir(current_dir.c_str());
@@ -321,7 +321,7 @@ void expandWildcardHelper(string &prefix, string &suffix, vector <string> &entri
                 if (dir[0] == '.') {
                     if (suffix.substr(suffix.find('/') + 1)[0] == '.') {
                         if (pwd) {
-                            entries.push_back(dir);
+                            entries.push_back(relative_dir + dir);
                         }
                         else  {
                             entries.push_back(prefix + dir);
@@ -330,7 +330,7 @@ void expandWildcardHelper(string &prefix, string &suffix, vector <string> &entri
                 }
                 else {
                     if (pwd) {
-                        entries.push_back(dir);
+                        entries.push_back(relative_dir + dir);
                     }
                     else  {
                         entries.push_back(prefix + dir);
@@ -348,21 +348,36 @@ void expandWildcardHelper(string &prefix, string &suffix, vector <string> &entri
             string regex_substr = reg_ex.substr(1, reg_ex.find('/', 1) - 1);
             //cout << dir << " " << regex_substr << endl;
             string newPrefix = prefix + dir + "/";
+            //cout << dir << " " << regex_substr << endl;
             if (regex_match(dir, regex(regex_substr))) {
                 if (dir[0] == '.') {
                     if (suffix.substr(suffix.find('/') + 1)[0] == '.') {
                         string newSuffix = suffix.substr(suffix.find('/',1));
                         //cout << " " << newSuffix << endl;
-                        if (entry->d_type == DT_DIR) {
-                            expandWildcardHelper(newPrefix, newSuffix, entries, pwd);
+                        string pwd_str = string(getenv("PWD")) + "/";
+                        if (!prefix.compare(pwd_str) || relative_dir_flag) {
+                            string new_relative_dir = relative_dir + dir + "/";
+                            if (entry->d_type == DT_DIR)
+                            expandWildcardHelper(newPrefix, newSuffix, new_relative_dir, entries, pwd, pwd);
+                        }
+                        else {
+                            if (entry->d_type == DT_DIR)
+                            expandWildcardHelper(newPrefix, newSuffix, relative_dir, entries, relative_dir_flag, pwd);
                         }
                     }
                 }
                 else {
                     string newSuffix = suffix.substr(suffix.find('/', 1));
                     //cout << newPrefix <<  " " << newSuffix << endl;
-                    if (entry->d_type == DT_DIR) {
-                        expandWildcardHelper(newPrefix, newSuffix, entries, pwd);
+                    string pwd_str = string(getenv("PWD")) + "/";
+                    if (!prefix.compare(pwd_str) || relative_dir_flag) {
+                        string new_relative_dir = relative_dir + dir + "/";
+                            if (entry->d_type == DT_DIR)
+                        expandWildcardHelper(newPrefix, newSuffix, new_relative_dir, entries, pwd, pwd);
+                    }
+                    else {
+                            if (entry->d_type == DT_DIR)
+                        expandWildcardHelper(newPrefix, newSuffix, relative_dir, entries, relative_dir_flag, pwd);
                     }
                 }
             }
@@ -373,7 +388,8 @@ void expandWildcardHelper(string &prefix, string &suffix, vector <string> &entri
 vector <string> expandWildcard(string &wildcard, bool pwd){
     vector <string> ret;
     string root_dir = "/";
-    expandWildcardHelper(root_dir, wildcard, ret, pwd);
+    string relative_dir = "";
+    expandWildcardHelper(root_dir, wildcard, relative_dir, ret, false, pwd);
     /*DIR *directory = opendir(getenv("PWD"));
       string reg_ex = convert_to_regex(wildcard);
       while (struct dirent *entry = readdir(directory)) {
