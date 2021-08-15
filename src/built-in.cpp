@@ -183,6 +183,9 @@ int runBuiltInCommand(char **cmd, struct passwd *p) {
             }
             signal(SIGCHLD, sigchild_handler);
             while (getline(fin, line)) {
+                fflush(stdout);
+                fflush(stdin);
+                fflush(stderr);
                 if (isatty(0)) {
                     //                    printPrompt();
                 }
@@ -199,6 +202,9 @@ int runBuiltInCommand(char **cmd, struct passwd *p) {
                     }
                 }
                 delete parseTree;
+                fflush(stdout);
+                fflush(stdin);
+                fflush(stderr);
             }
             fin.close();
         }

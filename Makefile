@@ -2,12 +2,14 @@ INCDIR=include
 CPP = g++ -std=c++11 -g -I $(INCDIR) -Wall -Werror
 WORKDIR=work
 SRCDIR=src
-SHELLSRCS=shell_main.cpp tokenizer.cpp misc.cpp parser.cpp command.cpp exec.cpp built-in.cpp expansion.cpp cat.cpp
+SHELLSRCS=shell_main.cpp tokenizer.cpp misc.cpp parser.cpp command.cpp exec.cpp built-in.cpp expansion.cpp cat.cpp read_line.cpp
 TOKENSRCS=token_main.cpp tokenizer.cpp misc.cpp
 PARSERSRCS=parser.cpp tokenizer.cpp misc.cpp parser_main.cpp command.cpp exec.cpp cat.cpp
+READLINESRCS=read_line.cpp read_line_main.cpp
 SHELLOBJS=$(SHELLSRCS:%.cpp=%.o)
 TOKENOBJS=$(TOKENSRCS:%.cpp=%.o)
 PARSEROBJS=$(PARSERSRCS:%.cpp=%.o)
+READLINEOBJS=$(READLINESRCS:%.cpp=%.o)
 
 vpath %.cpp $(SRCDIR)/
 vpath %.o $(WORKDIR)/
@@ -29,7 +31,9 @@ compile_tokenizer: $(TOKENOBJS)
 	$(CPP) $(addprefix $(WORKDIR)/,  $(TOKENOBJS)) -o tokenizer
 compile_parser: $(PARSEROBJS)
 	$(CPP) $(addprefix $(WORKDIR)/, $(PARSEROBJS)) -o parser
+compile_readline: $(READLINEOBJS)
+	$(CPP) $(addprefix $(WORKDIR)/, $(READLINEOBJS)) -o readline
 %.o: %.cpp | $(WORKDIR)
 	$(CPP) -c $< -o $(WORKDIR)/$@ 
 clean:
-	rm -rf shell tokenizer parser work testing/*diff testing/out* testing/*.out testing/o* testing/f*
+	rm -rf shell tokenizer parser work readline testing/*diff testing/out* testing/*.out testing/o* testing/f*

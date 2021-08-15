@@ -4,6 +4,7 @@ extern int getLength(char **);
 vector <Token> expand_subshell(vector <Token> &tokens) {
     for (unsigned int i = 0; i < tokens.size(); i++) {
         if (tokens[i].type == SUBSHELL) {
+            tokens[i].lexeme += '\n';
             //      cout << "subshell" << endl;
             //cout << tokens[i].lexeme.c_str() << endl;
             pid_t child;

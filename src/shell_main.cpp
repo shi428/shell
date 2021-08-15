@@ -20,6 +20,7 @@ void printPrompt() {
     else {
         cout << "shell>";
     }
+    fflush(stdout);
 }
 
 void sigint_handler(int signum) {
@@ -105,6 +106,9 @@ void getUsers(struct passwd *p) {
     endpwent();
 }
 
+vector <string> history;
+extern string read_line();
+unsigned int ind;
 int main(int argc, char *argv[]) {
     signal(SIGINT, sigint_handler);
     signal(SIGCHLD, sigchild_handler);
@@ -114,7 +118,7 @@ int main(int argc, char *argv[]) {
     const char *source[3] = {"source", ".shellrc", NULL};
     char *shell_path = realpath(argv[0], NULL);
     const char *set_shell[4] = {"setenv", "SHELL", shell_path, NULL};
-    runBuiltInCommand((char **)set_shell, p);
+   runBuiltInCommand((char **)set_shell, p);
     free(shell_path);
     getUsers(p);
     if (isatty(0)) {
@@ -124,7 +128,13 @@ int main(int argc, char *argv[]) {
         if (isatty(0)) {
             printPrompt();
         }
-        if (!getline(cin, line)) break;
+        line = read_line();
+        if (line.compare("\n")) {
+            history.push_back(line);
+            ind = history.size();
+        }
+        line.pop_back();
+        //if (!getline(cin, line)) break;
         vector <Token> tokens = genTokens(line, true);
         if (isatty(0)) {//for (auto i: tokens) i.printToken();
         }
