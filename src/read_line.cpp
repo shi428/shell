@@ -90,7 +90,8 @@ string read_line() {
                     pos = ret.length();
                     write(1, ret.c_str(), ret.length());
                 }
-                if (ch1 == 91 && ch2 == 66 && ind < history.size() - 1 && history.size()) {
+                if (ch1 == 91 && ch2 == 66 && history.size()) {
+                   if ( ind < history.size() - 1) {
                     ind++;
                     for (unsigned int i = 0; i < ret.length() - pos; i++) {
                         char str[] = "\e[C";
@@ -108,6 +109,25 @@ string read_line() {
                     ret.pop_back();
                     pos = ret.length();
                     write(1, ret.c_str(), ret.length());
+                }
+                else {
+                    ind = history.size();
+                    for (unsigned int i = 0; i < ret.length() - pos; i++) {
+                        char str[] = "\e[C";
+                        write(1, str, strlen(str));
+                    }
+                    for (unsigned int i = 0; i < ret.length(); i++) {
+                        ch = '\b';
+                        write(1, &ch, 1);
+                        ch = ' ';
+                        write(1, &ch, 1);
+                        ch = '\b';
+                        write(1, &ch, 1);
+                    }
+                    ret = "";
+                    pos = 0;
+                    write(1, ret.c_str(), ret.length());
+                }
                 }
             }
             else {
