@@ -191,6 +191,7 @@ int test_redirect(vector <string> *files) {
     return !files[1].size() && !files[2].size() && !files[3].size() && !files[4].size() && !files[5].size();
 }
 
+int tty_reset();
 int Command::redirectOut(int *pipefd, int *pipefd2, int i, bool pipeflag, bool _append) {
     char **temp_cmd = NULL;
     int start = 1;

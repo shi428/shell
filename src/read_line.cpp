@@ -6,16 +6,11 @@
 using namespace std;
 extern unsigned int ind;
 extern vector <string> history;
+void set_tty_raw_mode();
+void tty_reset();
 string read_line() {
     string ret;
-    struct termios tty_attr;
-    tcgetattr(0,&tty_attr);
-
-    tty_attr.c_lflag &= (~(ICANON|ECHO));
-    tty_attr.c_cc[VTIME] = 0;
-    tty_attr.c_cc[VMIN] = 1;
-
-    tcsetattr(0,TCSANOW,&tty_attr);
+    set_tty_raw_mode();
     unsigned int pos = 0;
     errno = 0;
     while (1) {
@@ -134,5 +129,6 @@ string read_line() {
             }
         }
     }
+    tty_reset();
     return ret;
 }
