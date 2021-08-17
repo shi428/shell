@@ -129,6 +129,7 @@ int main(int argc, char *argv[]) {
             printPrompt();
         }
         line = read_line();
+        if (!line.compare("")) break;
         if (line.compare("\n")) {
             history.push_back(line);
             ind = history.size();

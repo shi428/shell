@@ -14,7 +14,7 @@ echo -e "\033[1;4;93m\ttest setenv \033[0m"
 echo -e "\033[1;4;93m\ttest setenv \033[0m" > $diffFile
 shell_in=$'setenv a b\n printenv'
 echo Processing Command: $shell_in>>&$diffFile
-grep a=b <(../shell <<< $shell_in 2>&1)>$diffFile
+grep a=b <(../shell <<< $shell_in 2>&1)>>&$diffFile
 check $shell_in $?
 shell_in=$'setenv a bbbbbb\n printenv'
 echo Processing Command: $shell_in>>&$diffFile

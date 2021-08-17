@@ -95,7 +95,7 @@ string read_line() {
                     pos = ret.length();
                     write(1, ret.c_str(), ret.length());
                 }
-                if (ch1 == 91 && ch2 == 66 && ind < history.size() - 1) {
+                if (ch1 == 91 && ch2 == 66 && ind < history.size() - 1 && history.size()) {
                     ind++;
                     for (unsigned int i = 0; i < ret.length() - pos; i++) {
                         char str[] = "\e[C";
