@@ -18,7 +18,8 @@ check() {
 }
 echo -e "\033[1;4;93m\ttest source \033[0m"
 echo -e "\033[1;4;93m\ttest source \033[0m" > $diffFile
-input_str=$'echo cat testall >>sourceFile\n echo pwd>>sourceFile\n source sourceFile'
+rm -rf sourceFile
+input_str=$'echo cat testall >sourceFile'
 run_cmd $input_str
 input_str=$'rm -f sourceFile\n source a'
 run_cmd $input_str
