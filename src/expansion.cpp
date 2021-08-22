@@ -118,19 +118,19 @@ vector <Token> expand_env(vector <Token> &tokens) {
                 //   cout << tokens2[j].lexeme << endl;
                 tokens2[j].flag = true;
                 if (tokens2[j].type == COMMAND) {
-                    if (tokens[i].type == COMMAND) {
-                        tokens[i].lexeme += tokens2[j].lexeme;
-                        tokens[i].flag = true;
+                    if (tokens[(int)i].type == COMMAND) {
+                        tokens[(int)i].lexeme += tokens2[j].lexeme;
+                        tokens[(int)i].flag = true;
                     }
                     else {
                         //          cout << "insert" << endl;
-                        tokens.insert(tokens.begin() + i + 1, tokens2[j]);
+                        tokens.insert(tokens.begin() + (int)i + 1, tokens2[j]);
                         i++;
                     }
                 }
                 else {
                     //        cout << "insert" << endl;
-                    tokens.insert(tokens.begin() + i + 1, tokens2[j]);
+                    tokens.insert(tokens.begin() + (int)i + 1, tokens2[j]);
                     i++;
                 }
             }
