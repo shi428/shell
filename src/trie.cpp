@@ -79,7 +79,7 @@ TrieNode* Trie::search(string &key) {
 string Trie::try_complete(string &input) {
     string ret = "";
     TrieNode *current = search(input);
-    while (current->n_children == 1) {
+    while (current && current->n_children == 1) {
         for (unsigned int i = 0; i < ALPHABET_LEN; i++) {
             if (current->children[i]) {
                 current = current->children[i];

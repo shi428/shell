@@ -38,7 +38,7 @@ string read_line() {
             pos += fill.length();
             write(1, fill.c_str(), fill.length());
             if (!fill.compare("")) {
-                if (node->n_children) {
+                if (node && node->n_children) {
                     ch = '\n';
                     write(1, &ch, 1);
                     trie->traverse(node, empty);

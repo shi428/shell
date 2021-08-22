@@ -461,7 +461,8 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, in
                 close(fderr[0]);
             }
             if (execvp(ptr[0], ptr) == -1) {
-                cerr << "\033[1;41mshell: command not found: " << ptr[0] << "\033[0m\n";
+                //cerr << "\033[1;41mshell: command not found: " << ptr[0] << "\033[0m\n";
+                cerr << "shell: command not found: " << ptr[0] << endl;
                 exit(EXIT_FAILURE);
             }
         }

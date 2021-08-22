@@ -4,6 +4,7 @@
 #include <built-in.h>
 #include <expansion.h>
 #include <sys/stat.h>
+#include <trie.h>
 vector <pair<pid_t, vector <string>>> bPids;
 vector <int> pos;
 pid_t shell_pid;
@@ -109,6 +110,7 @@ void getUsers(struct passwd *p) {
 vector <string> history;
 extern string read_line();
 unsigned int ind;
+Trie *trie;
 int main(int argc, char *argv[]) {
     signal(SIGINT, sigint_handler);
     signal(SIGCHLD, sigchild_handler);
