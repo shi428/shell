@@ -13,6 +13,7 @@ int return_code;
 string last_arg;
 unordered_map<string,string> users;
 
+Trie *buildTrie(const char *currentdir);
 void printPrompt() {
     if (isEnviron((char *)"PROMPT")) {
         char *prompt = getenv("PROMPT");
@@ -108,9 +109,9 @@ void getUsers(struct passwd *p) {
 }
 
 vector <string> history;
-extern string read_line();
+extern string read_line(bool *tab);
 unsigned int ind;
-Trie *trie;
+//Trie *trie;
 int main(int argc, char *argv[]) {
     signal(SIGINT, sigint_handler);
     signal(SIGCHLD, sigchild_handler);
@@ -120,17 +121,19 @@ int main(int argc, char *argv[]) {
     const char *source[3] = {"source", ".shellrc", NULL};
     char *shell_path = realpath(argv[0], NULL);
     const char *set_shell[4] = {"setenv", "SHELL", shell_path, NULL};
-   runBuiltInCommand((char **)set_shell, p);
+    runBuiltInCommand((char **)set_shell, p);
     free(shell_path);
     getUsers(p);
     if (isatty(0)) {
         runBuiltInCommand((char **)source, p);
     }
+    bool tab = false;
     while (1) {
+        //trie = buildTrie(getenv("PWD"));
         if (isatty(0)) {
             printPrompt();
         }
-        line = read_line();
+        line = read_line(&tab);
         if (!line.compare("")) break;
         if (line.compare("\n")) {
             history.push_back(line);

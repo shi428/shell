@@ -3,21 +3,40 @@
 #include <sys/types.h>
 #include <termios.h>
 #include <trie.h>
+#include <dirent.h>
 
 using namespace std;
 extern unsigned int ind;
 extern vector <string> history;
 void set_tty_raw_mode();
 void tty_reset();
-extern Trie *trie;
+//extern Trie *trie;
+Trie *trie;
+Trie *buildTrie(string &currentdir);
 string current;
-string read_line() {
+string read_line(bool *tab) {
+    string dir = string(getenv("PWD")) + '/';
     string ret = current;
     set_tty_raw_mode();
     unsigned int pos = ret.length();
     errno = 0;
     write(1, ret.c_str(), ret.length());
+    /*if (!*tab) {
+    trie = buildTrie(dir.c_str());
+    }*/
     while (1) {
+/*        if (ret.back() == '/') {
+            string current_dir = dir + '/' + ret;
+            if (DIR *d = opendir(current_dir.c_str())) {
+                //cout << "ok" << endl;
+                closedir(d);
+                delete trie;
+                trie = buildTrie(current_dir.c_str());
+            }
+            //cout << current_dir << endl;
+        }*/
+        string trie_str = ret;
+        trie = buildTrie(trie_str);
         errno = 0;
         char ch;
         if (read(0, &ch, 1) == 0){
@@ -31,9 +50,16 @@ string read_line() {
             break;
         }
         if (ch == '\t') {
-            string empty = ret;
-            string fill = trie->try_complete(ret);
-            TrieNode *node = trie->search(ret);
+            size_t slash_pos = ret.find_last_of('/');
+            size_t period = ret.find_last_of('.');
+            if (period == 0 && period == slash_pos - 1 && slash_pos < ret.length() - 1) {
+                string substr = ret.substr(0, period);
+                slash_pos = substr.find_last_of('/');
+            }
+            string filename = slash_pos != string::npos? ret.substr(slash_pos + 1) : ret;
+            string empty = filename;
+            string fill = trie->try_complete(filename);
+            TrieNode *node = trie->search(filename);
             ret += fill;
             pos += fill.length();
             write(1, fill.c_str(), fill.length());
@@ -44,7 +70,9 @@ string read_line() {
                     trie->traverse(node, empty);
                     current = ret;
                     ret = ch;
-                    break;
+                    *tab = true;
+                    tty_reset();
+                    return ret;
                 }
                 else {
                     current = "";
@@ -174,6 +202,8 @@ string read_line() {
                 }
             }
         }
+        *tab = false;
+        delete trie;
     }
     tty_reset();
     return ret;
