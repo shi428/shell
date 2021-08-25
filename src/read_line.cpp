@@ -54,7 +54,7 @@ int getIndex(unsigned int pos) {
 }
 
 unsigned int position;
-string read_line(bool *tab) {
+string read_line() {
     string dir = string(getenv("PWD")) + '/';
     string ret = current;
     set_tty_raw_mode();
@@ -79,8 +79,9 @@ string read_line(bool *tab) {
         }
         //cout << current_dir << endl;
         }*/
-        splitString(ret);
         string trie_str = ret;
+        if (isatty(0)) {
+        splitString(ret);
         if (args.size()) {
             int index = getIndex(position);
             //cout << index << " " << args.size() <<  endl;
@@ -89,6 +90,7 @@ string read_line(bool *tab) {
         }
         // cout << trie_str << endl;
         trie = buildTrie(trie_str);
+        }
         errno = 0;
         char ch;
         if (read(0, &ch, 1) == 0){
@@ -129,7 +131,6 @@ string read_line(bool *tab) {
                     trie->traverse(node, empty);
                     current = ret;
                     ret = ch;
-                    *tab = true;
                     tty_reset();
                     return ret;
                 }
@@ -261,7 +262,6 @@ string read_line(bool *tab) {
                 }
             }
         }
-        *tab = false;
         delete trie;
         args.clear();
     }

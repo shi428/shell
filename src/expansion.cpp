@@ -283,7 +283,9 @@ char **expandAlias(char **cmd) {
         ptr[i] = cmd[i - aliased_length + 1];
     }
     ptr[aliased_length + length] = NULL;
+    if (aliases[string(cmd[0])].first != aliased_cmd) {
     delete []aliased_cmd;
+    }
     return ptr;
 }
 

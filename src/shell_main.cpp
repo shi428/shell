@@ -109,7 +109,7 @@ void getUsers(struct passwd *p) {
 }
 
 vector <string> history;
-extern string read_line(bool *tab);
+extern string read_line();
 unsigned int ind;
 //Trie *trie;
 int main(int argc, char *argv[]) {
@@ -127,13 +127,12 @@ int main(int argc, char *argv[]) {
     if (isatty(0)) {
         runBuiltInCommand((char **)source, p);
     }
-    bool tab = false;
     while (1) {
         //trie = buildTrie(getenv("PWD"));
         if (isatty(0)) {
             printPrompt();
         }
-        line = read_line(&tab);
+        line = read_line();
         if (!line.compare("")) break;
         if (line.compare("\n")) {
             history.push_back(line);
