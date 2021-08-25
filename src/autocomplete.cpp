@@ -50,15 +50,25 @@ Trie *buildTrie(string &str) {
     //cout << currFile.length() << endl;
     while (struct dirent *entry = readdir(dir)) {
         string file_name = entry->d_name;
+        string newFile;
+        for (auto i: file_name) {
+            if (i == ' ') {
+                newFile += "\\ ";
+            }
+            else {
+                newFile += i;
+            }
+        }
+        file_name = newFile;
         //cout << file_name << endl;
-        string full_path = string(currentDir) + '/' + string(entry->d_name);
-        if (access(full_path.c_str(), F_OK | X_OK) != -1 && !strcmp(currentDir.c_str(), getenv("PWD"))) {
+        string full_path = string(currentDir) + '/' + string(file_name);
+        if (entry->d_type == DT_DIR) {
+            file_name = string(file_name) + '/';
+        }
+        else if (access(full_path.c_str(), F_OK | X_OK) != -1 && !strcmp(currentDir.c_str(), getenv("PWD"))) {
             if (!currentDir.compare(getenv("PWD"))) {
             file_name = "./" + string(entry->d_name);
             }
-        }
-        if (entry->d_type == DT_DIR) {
-            file_name = string(entry->d_name) + '/';
         }
         //cout << strncmp(currFile.c_str(), file_name.c_str(), currFile.length()) << endl;
         if (!strncmp(currFile.c_str(), file_name.c_str(), currFile.length())) {
