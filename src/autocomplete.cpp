@@ -60,7 +60,7 @@ Trie *buildTrie(string &str) {
         if (entry->d_type == DT_DIR) {
             file_name = string(entry->d_name) + '/';
         }
-      //  cout << strncmp(currFile.c_str(), file_name.c_str(), currFile.length()) << endl;
+        //cout << strncmp(currFile.c_str(), file_name.c_str(), currFile.length()) << endl;
         if (!strncmp(currFile.c_str(), file_name.c_str(), currFile.length())) {
         ret->insert(file_name);
         }

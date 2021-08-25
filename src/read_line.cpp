@@ -4,6 +4,7 @@
 #include <termios.h>
 #include <trie.h>
 #include <dirent.h>
+#include <misc.h>
 
 using namespace std;
 extern unsigned int ind;
@@ -14,28 +15,79 @@ void tty_reset();
 Trie *trie;
 Trie *buildTrie(string &currentdir);
 string current;
+vector <pair <unsigned int, string>> args;
+void splitString(string &line) {
+    StringIterator it(line);
+    while (it.pos < it.len) {
+        string spaces = consumeSpaces(it);
+        string arg = "";
+        unsigned int pos = it.pos;
+        if (spaces.length() && it.pos == it.len) {
+            args.push_back(pair<unsigned int, string>(pos, ""));
+            break;
+        }
+        while (it.pos < it.len && it.peek() != ' ') {
+            arg += it.advance();
+        }
+        args.push_back(pair<unsigned int, string>(pos, arg));
+    }
+}
+
+int getIndex(unsigned int pos) {
+    for (unsigned int i = 0; i < args.size(); i++) {
+        //cout << pos << " " <<  args[i].first << " " << args[i].first + args[i].second.length() << endl;
+        if (pos >= args[i].first && pos <= args[i].second.length() + args[i].first) {
+            return i;
+        }
+        else {
+            if (i < args.size() - 1 && pos < args[i+1].first){
+                if (pos - (args[i].second.length() + args[i].first) < args[i+1].first - pos) {
+                    return i;
+                }
+                else {
+                    return i + 1;
+                }
+            }
+        }
+    }
+    return -1;
+}
+
+unsigned int position;
 string read_line(bool *tab) {
     string dir = string(getenv("PWD")) + '/';
     string ret = current;
     set_tty_raw_mode();
-    unsigned int pos = ret.length();
+    //unsigned int position = ret.length();
     errno = 0;
     write(1, ret.c_str(), ret.length());
+    for (unsigned int i= 0; i < ret.length() - position; i++) {
+        char ch = '\b';
+        write(1, &ch, 1);
+    }
     /*if (!*tab) {
-    trie = buildTrie(dir.c_str());
-    }*/
+      trie = buildTrie(dir.c_str());
+      }*/
     while (1) {
-/*        if (ret.back() == '/') {
-            string current_dir = dir + '/' + ret;
-            if (DIR *d = opendir(current_dir.c_str())) {
-                //cout << "ok" << endl;
-                closedir(d);
-                delete trie;
-                trie = buildTrie(current_dir.c_str());
-            }
-            //cout << current_dir << endl;
+        /*        if (ret.back() == '/') {
+                  string current_dir = dir + '/' + ret;
+                  if (DIR *d = opendir(current_dir.c_str())) {
+        //cout << "ok" << endl;
+        closedir(d);
+        delete trie;
+        trie = buildTrie(current_dir.c_str());
+        }
+        //cout << current_dir << endl;
         }*/
+        splitString(ret);
         string trie_str = ret;
+        if (args.size()) {
+            int index = getIndex(position);
+            //cout << index << " " << args.size() <<  endl;
+            if (index == -1) break;
+            trie_str = args[index].second;
+        }
+        // cout << trie_str << endl;
         trie = buildTrie(trie_str);
         errno = 0;
         char ch;
@@ -47,22 +99,29 @@ string read_line(bool *tab) {
                 write(1, &ch, 1);
             ret.push_back(ch);
             current = "";
+            position = 0;
             break;
         }
         if (ch == '\t') {
-            size_t slash_pos = ret.find_last_of('/');
-            size_t period = ret.find_last_of('.');
-            if (period == 0 && period == slash_pos - 1 && slash_pos < ret.length() - 1) {
-                string substr = ret.substr(0, period);
+            size_t slash_pos = trie_str.find_last_of('/');
+            size_t period = trie_str.find_last_of('.');
+            if (period == 0 && period == slash_pos - 1 && slash_pos < trie_str.length() - 1) {
+                string substr = trie_str.substr(0, period);
                 slash_pos = substr.find_last_of('/');
             }
-            string filename = slash_pos != string::npos? ret.substr(slash_pos + 1) : ret;
+            string filename = slash_pos != string::npos? trie_str.substr(slash_pos + 1) : trie_str;
             string empty = filename;
             string fill = trie->try_complete(filename);
             TrieNode *node = trie->search(filename);
-            ret += fill;
-            pos += fill.length();
+            //ret += fill;
+            ret.insert(position, fill);
+            position += fill.length();
             write(1, fill.c_str(), fill.length());
+            write(1, ret.substr(position).c_str(), ret.length()-position);
+            for (unsigned int i= 0; i < ret.length() - position; i++) {
+                ch = '\b';
+                write(1, &ch, 1);
+            }
             if (!fill.compare("")) {
                 if (node && node->n_children) {
                     ch = '\n';
@@ -80,12 +139,12 @@ string read_line(bool *tab) {
             }
         }
         if (ch == 127) {
-            if (pos > 0) {
-                for (unsigned int i = 0; i < ret.length() - pos; i++) {
+            if (position > 0) {
+                for (unsigned int i = 0; i < ret.length() - position; i++) {
                     char str[] = "\e[C";
                     write(1, str, strlen(str));
                 }
-                for (unsigned int i = 0; i < ret.length() - pos; i++) {
+                for (unsigned int i = 0; i < ret.length() - position; i++) {
                     ch = '\b';
                     write(1, &ch, 1);
                     ch = ' ';
@@ -93,15 +152,15 @@ string read_line(bool *tab) {
                     ch = '\b';
                     write(1, &ch, 1);
                 }
-                ret.erase(ret.begin() + --pos);
+                ret.erase(ret.begin() + --position);
                 ch = '\b';
                 write(1, &ch, 1);
                 ch = ' ';
                 write(1, &ch, 1);
                 ch = '\b';
                 write(1, &ch, 1);
-                write(1, ret.substr(pos).c_str(), ret.length()-pos);
-                for (unsigned int i= 0; i < ret.length() - pos; i++) {
+                write(1, ret.substr(position).c_str(), ret.length()-position);
+                for (unsigned int i= 0; i < ret.length() - position; i++) {
                     ch = '\b';
                     write(1, &ch, 1);
                 }
@@ -115,19 +174,19 @@ string read_line(bool *tab) {
                 char ch2;
                 read(0, &ch1, 1);
                 read(0, &ch2, 1);
-                if (ch1 == 91 && ch2 == 68 && pos > 0) {
+                if (ch1 == 91 && ch2 == 68 && position > 0) {
                     ch = '\b';
                     write(1, &ch, 1);
-                    pos--;
+                    position--;
                 }
-                if (ch1 == 91 && ch2 == 67 && pos < ret.length()) {
+                if (ch1 == 91 && ch2 == 67 && position < ret.length()) {
                     char str[] = "\e[C";
                     write(1, str, strlen(str));
-                    pos++;
+                    position++;
                 }
                 if (ch1 == 91 && ch2 == 65 && ind > 0) {
                     ind--;
-                    for (unsigned int i = 0; i < ret.length() - pos; i++) {
+                    for (unsigned int i = 0; i < ret.length() - position; i++) {
                         char str[] = "\e[C";
                         write(1, str, strlen(str));
                     }
@@ -141,13 +200,13 @@ string read_line(bool *tab) {
                     }
                     ret = history[ind];
                     ret.pop_back();
-                    pos = ret.length();
+                    position = ret.length();
                     write(1, ret.c_str(), ret.length());
                 }
                 if (ch1 == 91 && ch2 == 66 && history.size()) {
                     if ( ind < history.size() - 1) {
                         ind++;
-                        for (unsigned int i = 0; i < ret.length() - pos; i++) {
+                        for (unsigned int i = 0; i < ret.length() - position; i++) {
                             char str[] = "\e[C";
                             write(1, str, strlen(str));
                         }
@@ -161,12 +220,12 @@ string read_line(bool *tab) {
                         }
                         ret = history[ind];
                         ret.pop_back();
-                        pos = ret.length();
+                        position = ret.length();
                         write(1, ret.c_str(), ret.length());
                     }
                     else {
                         ind = history.size();
-                        for (unsigned int i = 0; i < ret.length() - pos; i++) {
+                        for (unsigned int i = 0; i < ret.length() - position; i++) {
                             char str[] = "\e[C";
                             write(1, str, strlen(str));
                         }
@@ -179,24 +238,24 @@ string read_line(bool *tab) {
                             write(1, &ch, 1);
                         }
                         ret = "";
-                        pos = 0;
+                        position = 0;
                         write(1, ret.c_str(), ret.length());
                     }
                 }
             }
             else if (ch >= 0x20) {
-                if (pos == ret.length()) {
+                if (position == ret.length()) {
                     ret.push_back(ch);
-                    pos++;
+                    position++;
                 }
                 else {
-                    ret.insert(ret.begin() + pos, ch);
-                    pos++;
+                    ret.insert(ret.begin() + position, ch);
+                    position++;
                 }
                 if (isatty(0))
                     write(1, &ch, 1);
-                write(1, ret.substr(pos).c_str(), ret.length()-pos);
-                for (unsigned int i= 0; i < ret.length() - pos; i++) {
+                write(1, ret.substr(position).c_str(), ret.length()-position);
+                for (unsigned int i= 0; i < ret.length() - position; i++) {
                     ch = '\b';
                     write(1, &ch, 1);
                 }
@@ -204,6 +263,7 @@ string read_line(bool *tab) {
         }
         *tab = false;
         delete trie;
+        args.clear();
     }
     tty_reset();
     return ret;
