@@ -17,6 +17,18 @@ Trie *buildTrie(string &str) {
     currentDir = str.substr(0, str.find_last_of('/'));
     currFile = str.substr(str.find_last_of('/') + 1);
     }*/
+    if (str.length() && str[0] == '/') {
+        size_t pos = str.find_last_of('/');
+        if (pos == 0) {
+            currentDir = str[0];
+            currFile = str.substr(pos + 1);
+        }
+        else {
+            currentDir = str.substr(0, pos);
+            currFile = str.substr(pos + 1);
+        }
+    }
+    else {
     if (!period && period == slash - 1 && slash < str.length() - 1) {
         string substr = str.substr(0, period);
         currentDir = substr.substr(0, substr.find_last_of('/'));
@@ -29,6 +41,7 @@ Trie *buildTrie(string &str) {
     }
     if (!currentDir.compare("")) {
         currentDir = getenv("PWD");
+    }
     }
     //cout << currentDir << endl;
     DIR *dir = opendir(currentDir.c_str());
