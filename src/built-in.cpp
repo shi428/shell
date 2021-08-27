@@ -10,7 +10,8 @@
 #include <expansion.h>
 
 extern char **environ;
-const char *built_in[6] = {"alias", "cd", "printenv", "setenv", "source", "unsetenv"};
+const char *built_in[7] = {"alias", "cd", "help", "printenv", "setenv", "source", "unsetenv"};
+const char *built_in_desc[7] = {"[name] [value]", "[dir]", "", "", "[name] [value]", "[file]", "[name]"};
 unordered_map<string, pair<char **, int>> aliases;
 
 vector <char **> alias_ptrs;
@@ -42,7 +43,7 @@ void sigchild_handler2(int signum) {
     }
 }
 bool isBuiltIn(char *cmd) {
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 7; i++) {
         if (!strcmp(cmd, built_in[i])) return true;
     }
     return false;
@@ -87,6 +88,9 @@ bool checkSyntax(char **cmd) {
     if (!strcmp(cmd[0], "printenv")) {
         return args == 1;
     }
+    if (!strcmp(cmd[0], "help")) {
+        return args == 1;
+    }
     return true;
 }
 
@@ -116,6 +120,12 @@ int runBuiltInCommand(char **cmd, struct passwd *p) {
                 /*else {
                     it->second = pair<char **, int>(&ptr[1], getLength(&cmd[2]));
                 }*/
+            }
+        }
+        if (!strcmp(cmd[0], "help")) {
+            cout << "List of built-in commands" << endl;
+            for (int i = 0; i < 7; i++) {
+                cout << '\t' << built_in[i] << " " << built_in_desc[i] << endl;
             }
         }
         if (!strcmp(cmd[0], "printenv")) {

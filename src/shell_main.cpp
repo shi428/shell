@@ -118,7 +118,8 @@ int main(int argc, char *argv[]) {
     shell_pid = getpid();
     string line;
     struct passwd *p = getpwuid(getuid());
-    const char *source[3] = {"source", ".shellrc", NULL};
+    string shellrc_loc = string(getenv("HOME")) + string("/.shellrc");
+    const char *source[3] = {"source", shellrc_loc.c_str(), NULL};
     char *shell_path = realpath(argv[0], NULL);
     const char *set_shell[4] = {"setenv", "SHELL", shell_path, NULL};
     runBuiltInCommand((char **)set_shell, p);
