@@ -102,6 +102,7 @@ string read_line() {
             ret.push_back(ch);
             current = "";
             position = 0;
+            delete trie;
             break;
         }
         if (ch == '\t') {
@@ -132,6 +133,7 @@ string read_line() {
                     current = ret;
                     ret = ch;
                     tty_reset();
+                    delete trie;
                     return ret;
                 }
                 else {
@@ -262,7 +264,9 @@ string read_line() {
                 }
             }
         }
+        if (isatty(0)) {
         delete trie;
+        }
         args.clear();
     }
     tty_reset();

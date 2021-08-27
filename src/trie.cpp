@@ -14,14 +14,15 @@ Trie::Trie() {
 }
 
 void deleteHelper(TrieNode *root) {
-    if (!root->n_children) {
+    if (!root) return;
+  /*  if (!root->n_children) {
         delete root;
         return ;
-    }
+    }*/
     for (int i = 0; i < ALPHABET_LEN; i++) {
-        if (root->children[i]) {
+      //  if (root->children[i]) {
         deleteHelper(root->children[i]);
-        }
+       // }
     }
     delete root;
 }

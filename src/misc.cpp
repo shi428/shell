@@ -5,9 +5,10 @@
 
 StringIterator::stringIterator(string &line) {
     escapeChars = {
-        {'0', '\0'},
+        {' ', ' '},
         {'a', '\a'},
         {'b', '\b'},
+        {'e', '\e'},
         {'f', '\f'},
         {'n', '\n'},
         {'t', '\t'},

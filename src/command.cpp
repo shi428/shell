@@ -375,7 +375,7 @@ int Command::redirectIn(int *pipefd, vector <pid_t> &children, int readfd, int w
     return 1;
 }
 
-int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, int readfd, int writefd, vector <string> &cmds) {
+int Command::execute(Tree *tr, struct passwd *p, vector <pid_t> &children, int *pipefd, int readfd, int writefd, vector <string> &cmds) {
     int i = 0;
     /*    if (strcmp(cmd[0], "cd") == 0) {
           if (cmd[1] == NULL) {
@@ -463,6 +463,9 @@ int Command::execute(struct passwd *p, vector <pid_t> &children, int *pipefd, in
             if (execvp(ptr[0], ptr) == -1) {
                 //cerr << "\033[1;41mshell: command not found: " << ptr[0] << "\033[0m\n";
                 cerr << "shell: command not found: " << ptr[0] << endl;
+                delete tr;
+        //        if (aliased_cmd != cmd) delete [] ptr;
+                deleteAliasedCommands();
                 exit(EXIT_FAILURE);
             }
         }

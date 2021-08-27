@@ -166,7 +166,7 @@ int main(int argc, char *argv[]) {
         //tokens.~vector <Token>();
         if (parseTree->root) {
             //        parseTree->root->traverse(0);
-            if (exec(p, parseTree->root, bPids, pos)) {
+            if (exec(parseTree, p, parseTree->root, bPids, pos)) {
                 delete parseTree;
                 break;
             }
