@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
     struct passwd *p = getpwuid(getuid());
     string shellrc_loc = string(getenv("HOME")) + string("/.shellrc");
     const char *source[3] = {"source", shellrc_loc.c_str(), NULL};
-    char *shell_path = realpath(argv[0], NULL);
+    char *shell_path = realpath("/proc/self/exe", NULL);
     const char *set_shell[4] = {"setenv", "SHELL", shell_path, NULL};
     runBuiltInCommand((char **)set_shell, p);
     free(shell_path);
