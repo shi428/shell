@@ -414,7 +414,7 @@ int Command::execute(Tree *tr, struct passwd *p, vector <pid_t> &children, int *
                 dup2(fd, STDIN_FILENO);
                 close(fd);
             }
-            close(fdin[1]);
+          //  close(fdin[1]);
             if (files[1].size() || files[4].size()) {
                 dup2(fdout[1], STDOUT_FILENO); 
                 //close(fdout[0]);
@@ -446,7 +446,7 @@ int Command::execute(Tree *tr, struct passwd *p, vector <pid_t> &children, int *
                 dup2(fd, STDIN_FILENO);
                 close(fd);
             }
-            close(fdin[1]);
+           // close(fdin[1]);
             if (files[1].size() || files[4].size()) {
                 dup2(fdout[1], STDOUT_FILENO); 
                 close(fdout[0]);
