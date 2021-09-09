@@ -1,0 +1,52 @@
+TOKENS:
+    SPACE
+    AMPERSAND
+    PIPE
+    SUBSHELL
+    RIGHT PAREN
+    GREAT
+    GREATGREAT
+    GREATGREATAND
+    IOERR
+    LESS
+    DQUOTE
+    SQUOTE
+RULES:
+    command_line: simple_command files
+    command_line: space command space PIPE command_line space AMPERSAND space
+    command: simple_command pipe_files
+    files: pipe_files 
+    files: out_err_files
+    simple_command: arg 
+    simple_command: arg SPACE simple_command
+    arg: dquote 
+    arg: dquote arg
+    arg: squote 
+    arg: squote arg
+    arg: word
+    arg: word arg
+    arg: subshell
+    arg: subshell arg
+    arg: env_expansion
+    arg: env_expansion arg
+    inner_dquote: lambda
+    inner_dquote: word
+    inner_dquote: subshell
+    inner_dquote: env_expansion
+    inner_dquote: any token except D_QUOTE
+    inner_dquote: word inner_dquote
+    inner_dquote: subshell inner_dquote
+    inner_dquote: env_expansion inner_dquote
+    inner_dquote: any token except D_QUOTE inner_dquote
+    dquote: DQUOTE inner_dquote DQUOTE
+    inner_squote: lambda
+    inner_squote: word
+    inner_squote: subshell
+    inner_squote: env_expansion
+    inner_squote: any token except S_QUOTE
+    inner_squote: word inner_squote
+    inner_squote: subshell inner_squote
+    inner_squote: env_expansion inner_squote
+    inner_squote: any token except S_QUOTE inner_squote
+    squote: SQUOTE inner_squote SQUOTE
+
