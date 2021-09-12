@@ -5,20 +5,26 @@
 
 using namespace std;
 typedef enum tokenType {
-    COMMAND = 0,
-    FILE_IN = 1, // <
-    FILE_OUT = 2, // >
-    FILE_ERR = 3, // 2>
-    FILE_OUT_ERR = 4, // >&
-    FILE_APPEND = 5, //>>
-    FILE_APPEND_ERR = 6, //>>&
-    PIPE = 7, //|
-    AMPERSAND = 8, //&
-    QUOTES = 9, //' or "
-    SUBSHELL = 10,
-    ENV = 11,
-    TILDE = 12,
-    ERROR = 13,
+    CHAR = 1,
+    ESCAPE_CHAR = 2,
+    SPACE = 3,
+    AMPERSAND = 4,
+    PIPE = 5,
+    SUBSHELL = 6,
+    ENV = 7,
+    LEFT_PAREN = 8,
+    RIGHT_PAREN = 9,
+    GREAT = 10,
+    GREATAND = 11,
+    GREATGREAT = 12,
+    GREATGREATAND = 13,
+    IOERR = 14,
+    LESS = 15, //|
+    DQUOTE = 16, //' or "
+    SQUOTE = 17,
+    LEFT_BRACE = 18,
+    RIGHT_BRACE = 19,
+    NEWLINE = 20,
 }TokenType;
 
 typedef struct token {

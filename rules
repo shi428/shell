@@ -1,16 +1,25 @@
 TOKENS:
+    CHAR
+    ESCAPE_CHAR
     SPACE
     AMPERSAND
     PIPE
     SUBSHELL
+    ENV
     RIGHT PAREN
     GREAT
+    GREATAND
     GREATGREAT
     GREATGREATAND
     IOERR
     LESS
     DQUOTE
     SQUOTE
+    LEFT_PAREN
+    LEFT_BRACE
+    RIGHT_PAREN
+    RIGHT_BRACE
+    TILDE
 RULES:
     command_line: simple_command files
     command_line: space command space PIPE command_line space AMPERSAND space
@@ -49,4 +58,6 @@ RULES:
     inner_squote: env_expansion inner_squote
     inner_squote: any token except S_QUOTE inner_squote
     squote: SQUOTE inner_squote SQUOTE
-
+    subshell: SUBSHELL everything up to last ) RIGHT_PAREN
+    env_expansion: ENV everything up to last } RIGHT_BRACE
+    space: lambda
