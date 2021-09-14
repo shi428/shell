@@ -1,6 +1,6 @@
 %{
 #include <bits/stdc++.h>
-#include <tokenizer.h>
+#include "yacc.yy.hpp"
 %}
 
 %option nounput
@@ -59,9 +59,11 @@
     return RIGHT_BRACE;
 }
 [^ \t\n] { 
+    yylval.ch = *yytext;
     return CHAR;
 }
 \\[^ \t\n] { 
+    yylval.str = new std::string(yytext);
     return ESCAPE_CHAR;
 }
 %%

@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
-#include <tokenizer.h>
 #include <misc.h>
 #include <trie.h>
+#include "yacc.yy.hpp"
 
 using namespace std;
 

@@ -34,5 +34,6 @@ bool isEnviron(char *String);
 bool detectWildcard(string &a);
 void indent(int spaces);
 void initEscapeChars();
+char convertEscapeChar(string &escapeCh);
 unordered_map <string, string> getUsers(char *argv);
 #endif

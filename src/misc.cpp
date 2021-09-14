@@ -26,6 +26,14 @@ StringIterator::stringIterator(string &line) {
     this->len = line.length();
 }
 
+char convertEscapeChar(string &escapeCh) {
+    StringIterator it(escapeCh);
+    unordered_map<char, char> escapeChars = it.escapeChars;
+    if (escapeChars.find(escapeCh[1]) != escapeChars.end()) {
+        return escapeChars[escapeCh[1]];
+    }
+    return escapeCh[1];
+}
 StringIterator::~stringIterator() {
     delete this->it;
 }
