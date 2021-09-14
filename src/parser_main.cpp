@@ -32,7 +32,6 @@ int main(int argc, char *argv[]) {
         }
         YY_BUFFER_STATE  buffer = yy_scan_string((char *)line.c_str());
         yyparse();
-        cout << yytext << endl;
         /*vector <Token> tokens = genTokens(line, true);
         printTokens(tokens);
         Tree *parseTree = newTree(tokens);
@@ -41,6 +40,7 @@ int main(int argc, char *argv[]) {
             parseTree->root->traverse(0);
         }
         delete parseTree;*/
+        //exit(EXIT_SUCCESS);
         yy_delete_buffer(buffer);
     }
     return EXIT_SUCCESS;

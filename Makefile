@@ -28,11 +28,11 @@ debug_%: compile_%
 memory_%: compile_%
 	valgrind --show-leak-kinds=all --leak-check=full ./$*
 lex.yy.cpp: lex.l
-	lex  -o $(SRCDIR)/$@ $< 
+	lex  -l -o $(SRCDIR)/$@ $< 
 lex.yy.o: lex.yy.cpp
 	$(CPP) -c $(SRCDIR)/$< -o $(WORKDIR)/$@ 
 yacc.yy.cpp: yacc.y
-	yacc -d -o $(SRCDIR)/$@ $< 
+	yacc -d -y -t --debug -o $(SRCDIR)/$@ $< 
 yacc.yy.o: yacc.yy.cpp
 	$(CPP) -c $(SRCDIR)/$< -o $(WORKDIR)/$@ 
 compile_shell: $(SHELLOBJS)
@@ -46,4 +46,4 @@ compile_readline: $(READLINEOBJS)
 %.o: %.cpp | $(WORKDIR)
 	$(CPP) -c $< -o $(WORKDIR)/$@ 
 clean:
-	rm -rf shell tokenizer parser work readline testing/*diff testing/out* testing/*.out testing/o* testing/f* src/lex.yy.cpp src/yacc.yy.cpp src/y.tab.hpp
+	rm -rf shell tokenizer parser work readline testing/*diff testing/out* testing/*.out testing/o* testing/f* src/lex.yy.cpp src/yacc.yy.cpp src/yacc.yy.hpp

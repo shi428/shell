@@ -5,7 +5,8 @@
 
 %option nounput
 %%
-[ \t] {
+[ \t]+ {
+    return SPACE;
 }
 [\n] {
     return NEWLINE;
