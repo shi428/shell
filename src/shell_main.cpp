@@ -117,8 +117,10 @@ extern int yyparse();
 typedef struct yy_buffer_state * YY_BUFFER_STATE;
 extern YY_BUFFER_STATE yy_scan_string(const char * str);
 extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
+extern int yylex_destroy();
 extern char *yytext;
 YY_BUFFER_STATE  buffer;
+extern int exit_flag;
 int main(int argc, char *argv[]) {
     signal(SIGINT, sigint_handler);
     signal(SIGCHLD, sigchild_handler);
@@ -134,7 +136,7 @@ int main(int argc, char *argv[]) {
     if (isatty(0)) {
      //   runBuiltInCommand((char **)source, p);
     }
-    while (1) {
+    while (!exit_flag) {
         //trie = buildTrie(getenv("PWD"));
         if (isatty(0)) {
             printPrompt();
@@ -149,7 +151,8 @@ int main(int argc, char *argv[]) {
         buffer = yy_scan_string((char *)line.c_str());
         if (yyparse()) cout << "ERROR" << endl;
         //if (!getline(cin, line)) break;
-        yy_delete_buffer(buffer);
+        //yy_delete_buffer(buffer);
+        yylex_destroy();
         /*vector <Token> tokens = genTokens(line, true);
         if (isatty(0)) {//for (auto i: tokens) i.printToken();
         }

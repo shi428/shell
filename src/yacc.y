@@ -13,6 +13,8 @@ extern std::vector <int> pos;
 typedef struct yy_buffer_state * YY_BUFFER_STATE;
 extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
 extern YY_BUFFER_STATE  buffer;
+int exit_flag;
+Command *currentCommand;
 #define YYERROR_VERBOSE 1
 std::vector <std::string> args_vec;
 %}
@@ -43,33 +45,28 @@ std::vector <std::string> args_vec;
 %type <ch> ch
 %type <str> word;
 %type <node> no_arg_command;
+%type <node> simple_command;
 %%
 
-goal: no_arg_command NEWLINE {
+goal: simple_command NEWLINE {
     Tree *tr = new Tree;
     tr->root = $1;
     if (tr->root) {
         //        parseTree->root->traverse(0);
         if (exec(tr, p, tr->root, bPids, pos)) {
-        delete tr;
-        deleteAliasedCommands();
-        yy_delete_buffer(buffer);
-        exit(EXIT_SUCCESS);
+        exit_flag = 1;
         }
             //last_arg = (bPids.back().second).back();
     }
     delete tr;
 }
-| SPACE no_arg_command NEWLINE {
+| SPACE simple_command NEWLINE {
     Tree *tr = new Tree;
     tr->root = $2;
     if (tr->root) {
         //        parseTree->root->traverse(0);
         if (exec(tr, p, tr->root, bPids, pos)) {
-        delete tr;
-        deleteAliasedCommands();
-        yy_delete_buffer(buffer);
-        exit(EXIT_SUCCESS);
+        exit_flag = 1;
         }
             //last_arg = (bPids.back().second).back();
     }
@@ -79,11 +76,31 @@ goal: no_arg_command NEWLINE {
   | error NEWLINE { yyerrok; }
  
 ;
+
+simple_command: no_arg_command iomodifier {
+              $$=$1;
+              }
+
+iomodifier: GREAT SPACE word iomodifier {
+            currentCommand->addFile(1, *$3);
+          }
+          | GREAT word iomodifier {
+            currentCommand->addFile(1, *$2);
+            }
+          | GREAT word SPACE iomodifier {
+            currentCommand->addFile(1, *$2);
+            }
+          | GREAT SPACE word SPACE iomodifier {
+            currentCommand->addFile(1, *$3);
+}
+        |;
+
 no_arg_command: args {
     //for (auto i: args_vec) std::cout << i << std::endl;
     $$=new Node();
     $$->type = COMMAND_NODE;
     $$->obj = new Command();
+    currentCommand = (Command *)$$->obj;
     ((Command *)($$->obj))->createArgs(args_vec);
     args_vec.clear();
 }

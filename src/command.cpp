@@ -11,6 +11,7 @@
 #include <expansion.h>
 
 extern int fdin[2];
+extern int yylex_destroy();
 Command::~Command() {
     int i = 0;
     while (cmd[i]) {
@@ -29,58 +30,11 @@ void Command::createArgs(vector <string> &cmd) {
     this->cmd[cmd.size()] = NULL;
 }
 
-/*string parseFile(Token &file) {
-    removeWhiteSpace(file.lexeme);
-    StringIterator it(file.lexeme);
-    string ret;
-    switch (file.type) {
-        case FILE_OUT:
-            it.advance();
-            consumeSpaces(it);
-            ret += string(*it.it);
-            break;
-        case FILE_IN:
-            it.advance();
-            consumeSpaces(it);
-            ret += string(*it.it);
-            break;
-        case FILE_ERR:
-            it.advance();
-            it.advance();
-            consumeSpaces(it);
-            ret += string(*it.it);
-            break;
-        case FILE_OUT_ERR: 
-            it.advance();
-            it.advance();
-            consumeSpaces(it);
-            ret += string(*it.it);
-            break;
-        case FILE_APPEND:
-            it.advance();
-            it.advance();
-            consumeSpaces(it);
-            ret += string(*it.it);
-            break;
-        case FILE_APPEND_ERR:
-            it.advance();
-            it.advance();
-            it.advance();
-            consumeSpaces(it);
-            ret += string(*it.it);
-            break;
-        default: break;
-    }
-    return ret;
+void Command::addFile(int id, string &filename) {
+    files[id].push_back(filename);
 }
 
-void Command::parseFileList(vector <Token> &files) {
-    for (auto i: files) {
-        this->files[i.type - 1].push_back(parseFile(i));
-    }
-}
-
-void Command::printCommand(int spaces) {
+/*void Command::printCommand(int spaces) {
     indent(spaces);
     cout << "COMMAND = [";
     int i = 0;
@@ -418,6 +372,7 @@ int Command::execute(Tree *tr, struct passwd *p, vector <pid_t> &children, int *
                 delete tr;
         //        if (aliased_cmd != cmd) delete [] ptr;
                 deleteAliasedCommands();
+                yylex_destroy();
                 exit(EXIT_FAILURE);
             }
         }
