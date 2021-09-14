@@ -1,26 +1,14 @@
 #include <parser.h>
 #include <command.h>
-
-Node::node(vector <Token> &t, vector <Token> &files) {
-    background = 0;
-    if (t[0].type == COMMAND || t[0].type == QUOTES) {
-        token.type = COMMAND;
-        obj = new Command();
-        ((Command *)obj)->parseCommand(t);
-        ((Command *)obj)->parseFileList(files);
-    }
-    else {
-        token.type = PIPE;
-        obj = new char[t[0].lexeme.length() + 1];
-        strcpy((char *)obj, t[0].lexeme.c_str());
-    }
+Node::node() {
+    obj = NULL;
     left = NULL;
     right = NULL;
+    background = 0;
 }
-
 void Node::traverse(int spaces) {
-    indent(spaces);
-    if (this->token.type == PIPE) {
+    //indent(spaces);
+    /*if (this->token.type == PIPE) {
         cout << "PIPE(" << endl;
         this->left->traverse(spaces + 2);
         this->right->traverse(spaces + 2);
@@ -32,16 +20,14 @@ void Node::traverse(int spaces) {
         ((Command *)obj)->printCommand(spaces + 2);
         indent(spaces);
         cout << ")" << endl;
-    }
+    }*/
 }
 
 Node::~node() {
-    if (token.type == COMMAND)
-        delete (Command *)obj; 
-    else delete [] (char *)obj;
+    if (obj) delete (Command *)obj;
 }
 
-Node *parseCommand(vector <Token> &tokens, unsigned int *index) {
+/*Node *parseCommand(vector <Token> &tokens, unsigned int *index) {
     vector <Token> files;
     vector <Token> command;
     bool flag = 0;
@@ -100,7 +86,7 @@ Node *parsePipe(vector <Token> &tokens, unsigned int *index) {
     if (token.type != PIPE) return NULL;
     (*index)++;
     return new Node(ts, tokens);
-}
+}*/
 
 Tree::tree() {
     root = NULL;
@@ -117,7 +103,7 @@ Tree::~tree() {
     freeNodes(root); 
 }
 
-Tree* newTree(vector <Token> &t) {
+/*Tree* newTree(vector <Token> &t) {
     Tree *ret = new Tree;
     Node *left = NULL;
     unsigned int index = 0;
@@ -136,4 +122,4 @@ Tree* newTree(vector <Token> &t) {
         }
     }
     return ret;
-}
+}*/

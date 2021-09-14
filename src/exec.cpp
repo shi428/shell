@@ -30,11 +30,11 @@ int exec_node(Tree *tr, struct passwd *p, vector <pid_t> &children, Node *node, 
     int fdout = dup(STDOUT_FILENO);
     int fderr = dup(STDERR_FILENO);
     int ret = 0;
-    if (node->token.type == COMMAND) {
+    if (node->type == COMMAND_NODE) {
         // cerr << "CMD" << endl;
         ret = ((Command *)node->obj)->execute(tr, p, children, pipefds, readfd, writefd, cmds);
     }
-    if (node->token.type == PIPE) {
+    if (node->type == PIPE_NODE) {
         //cerr << "PIPE" << endl;
         //return ((Command *)node->obj)->execute(p, readfd, writefd);
         ret =  exec_pipe(tr, p, children, node, pipefds, readfd, writefd, cmds);

@@ -185,7 +185,7 @@ int runBuiltInCommand(char **cmd, struct passwd *p) {
             }
         }
         if (!strcmp(cmd[0], "source")) {
-            string line;
+            /*string line;
             ifstream fin(cmd[1]);
             if (!fin.good()) {
                 cerr << "source: no such file or directory: " << cmd[1] << endl;
@@ -216,7 +216,7 @@ int runBuiltInCommand(char **cmd, struct passwd *p) {
                 fflush(stdin);
                 fflush(stderr);
             }
-            fin.close();
+            fin.close();*/
         }
         return 0;
     }

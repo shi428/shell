@@ -4,7 +4,7 @@ WORKDIR=work
 SRCDIR=src
 SHELLSRCS=shell_main.cpp tokenizer.cpp misc.cpp parser.cpp command.cpp exec.cpp built-in.cpp expansion.cpp cat.cpp read_line.cpp tty_raw_mode.cpp trie.cpp autocomplete.cpp
 TOKENSRCS=token_main.cpp misc.cpp read_line.cpp trie.cpp tty_raw_mode.cpp autocomplete.cpp
-PARSERSRCS=tokenizer.cpp misc.cpp parser_main.cpp trie.cpp tty_raw_mode.cpp autocomplete.cpp read_line.cpp
+PARSERSRCS=tokenizer.cpp misc.cpp parser_main.cpp trie.cpp tty_raw_mode.cpp autocomplete.cpp read_line.cpp command.cpp parser.cpp built-in.cpp
 READLINESRCS=read_line.cpp read_line_main.cpp trie.cpp tty_raw_mode.cpp
 SHELLOBJS=$(SHELLSRCS:%.cpp=%.o)
 TOKENOBJS=$(TOKENSRCS:%.cpp=%.o)
@@ -35,8 +35,8 @@ yacc.yy.cpp: yacc.y
 	yacc -d -y -t --debug -o $(SRCDIR)/$@ $< 
 yacc.yy.o: yacc.yy.cpp
 	$(CPP) -c $(SRCDIR)/$< -o $(WORKDIR)/$@ 
-compile_shell: $(SHELLOBJS)
-	$(CPP) $(addprefix $(WORKDIR)/, $(SHELLOBJS)) -o shell
+compile_shell: $(SHELLOBJS) lex.yy.o yacc.yy.o
+	$(CPP) $(addprefix $(WORKDIR)/, $(SHELLOBJS) lex.yy.o yacc.yy.o) -o shell
 compile_tokenizer: $(TOKENOBJS) lex.yy.o
 	$(CPP) $(addprefix $(WORKDIR)/,  $(TOKENOBJS) lex.yy.o) -o tokenizer
 compile_parser: $(PARSEROBJS) lex.yy.o yacc.yy.o

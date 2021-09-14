@@ -111,22 +111,28 @@ void getUsers(struct passwd *p) {
 vector <string> history;
 extern string read_line();
 unsigned int ind;
-//Trie *trie;
+struct passwd *p;
+extern int yylex();
+extern int yyparse();
+typedef struct yy_buffer_state * YY_BUFFER_STATE;
+extern YY_BUFFER_STATE yy_scan_string(const char * str);
+extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
+extern char *yytext;
+YY_BUFFER_STATE  buffer;
 int main(int argc, char *argv[]) {
     signal(SIGINT, sigint_handler);
     signal(SIGCHLD, sigchild_handler);
     shell_pid = getpid();
     string line;
-    struct passwd *p = getpwuid(getuid());
+    p = getpwuid(getuid());
     string shellrc_loc = string(getenv("HOME")) + string("/.shellrc");
-    const char *source[3] = {"source", shellrc_loc.c_str(), NULL};
-    char *shell_path = realpath("/proc/self/exe", NULL);
-    const char *set_shell[4] = {"setenv", "SHELL", shell_path, NULL};
-    runBuiltInCommand((char **)set_shell, p);
-    free(shell_path);
-    getUsers(p);
+    //const char *source[3] = {"source", shellrc_loc.c_str(), NULL};
+    //char *shell_path = realpath("/proc/self/exe", NULL);
+    //const char *set_shell[4] = {"setenv", "SHELL", shell_path, NULL};
+    //runBuiltInCommand((char **)set_shell, p);
+    //free(shell_path);
     if (isatty(0)) {
-        runBuiltInCommand((char **)source, p);
+     //   runBuiltInCommand((char **)source, p);
     }
     while (1) {
         //trie = buildTrie(getenv("PWD"));
@@ -139,9 +145,12 @@ int main(int argc, char *argv[]) {
             history.push_back(line);
             ind = history.size();
         }
-        line.pop_back();
+
+        buffer = yy_scan_string((char *)line.c_str());
+        if (yyparse()) cout << "ERROR" << endl;
         //if (!getline(cin, line)) break;
-        vector <Token> tokens = genTokens(line, true);
+        yy_delete_buffer(buffer);
+        /*vector <Token> tokens = genTokens(line, true);
         if (isatty(0)) {//for (auto i: tokens) i.printToken();
         }
         tokens = expand_subshell(tokens);
@@ -154,11 +163,11 @@ int main(int argc, char *argv[]) {
                 tokens.erase(tokens.begin() + i + 1);
                 i--;
             }
-            /*if (i < tokens.size() - 1 && !(!i || (i && tokens[i-1].type == PIPE)) && tokens[i].type == COMMAND && tokens[i+1].type == QUOTES) {
+            if (i < tokens.size() - 1 && !(!i || (i && tokens[i-1].type == PIPE)) && tokens[i].type == COMMAND && tokens[i+1].type == QUOTES) {
               tokens[i].lexeme += tokens[i+1].lexeme;
               tokens[i].type = QUOTES;
               tokens.erase(tokens.begin() + i + 1);
-              }*/
+              }
         }
         if (isatty(0)) {
         //     for (auto i: tokens) i.printToken();
@@ -173,7 +182,7 @@ int main(int argc, char *argv[]) {
             }
             //last_arg = (bPids.back().second).back();
         }
-        delete parseTree;
+        delete parseTree;*/
     }
     deleteAliasedCommands();
     return EXIT_SUCCESS;

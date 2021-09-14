@@ -1,5 +1,6 @@
 %{
 #include <bits/stdc++.h>
+#include <parser.h>
 #include "yacc.yy.hpp"
 %}
 

@@ -1,15 +1,9 @@
 #include <parser.h>
-#include <tokenizer.h>
 
+using namespace std;
 void printPrompt() {
     cout << "parser>";
     fflush(stdout);
-}
-
-void printTokens(vector <Token> &tokens) {
-    for (auto i: tokens) {
-        i.printToken();
-    }
 }
 
 vector <string> history;
@@ -31,7 +25,7 @@ int main(int argc, char *argv[]) {
             ind = history.size();
         }
         YY_BUFFER_STATE  buffer = yy_scan_string((char *)line.c_str());
-        yyparse();
+        if (yyparse()) cout << "ERROR" << endl;
         /*vector <Token> tokens = genTokens(line, true);
         printTokens(tokens);
         Tree *parseTree = newTree(tokens);

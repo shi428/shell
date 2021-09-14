@@ -20,64 +20,16 @@ Command::~Command() {
     delete [] cmd;
 }
 
-void Command::parseCommand(vector <Token> &cmd) {
-    vector <string> args;
+void Command::createArgs(vector <string> &cmd) {
+    this->cmd = new char*[cmd.size() + 1];
     for (unsigned int i = 0; i < cmd.size(); i++) {
-        if (cmd[i].type == COMMAND) {
-            while (cmd[i].lexeme.front() == ' ') {
-                cmd[i].lexeme.erase(cmd[i].lexeme.begin());
-            }
-
-            this->it = new StringIterator(cmd[i].lexeme); 
-            int counter = 0;
-            while (this->it->pos < this->it->len) {
-                string a = consumeChars(*it, true, false, false, !cmd[i].flag);
-                string spaces = consumeSpaces(*it);
-                if (strcmp(spaces.c_str(),"") == 0) {
-                    if (i < cmd.size() - 1 && cmd[i+1].type == QUOTES) {
-                        a += cmd[i+1].lexeme;
-                        i++;
-                    }
-                }
-                if (counter < 1) {
-                args.push_back(a);
-                }
-                else {
-                    if (detectWildcard(a)) {
-                        bool pwd = !(a.find('/') == 0);
-                        string wildcard = !pwd? a : string(getenv("PWD")) +"/"+ a;
-                       vector <string> strings = expandWildcard(wildcard, pwd); 
-                       if (strings.size() == 0) {
-                           args.push_back(wildcard);
-                       }
-                       for  (auto i: strings) {
-                           args.push_back(i);
-                       }
-                    }
-                    else {
-                    args.push_back(a);
-                    }
-                }
-                counter++;
-            }
-            delete this->it;
-        }
-        else if (cmd[i].type == ERROR) {
-            return ;
-        }
-        else {
-            args.push_back(cmd[i].lexeme);
-        }
+        this->cmd[i] = new char[cmd[i].length() + 1];
+        strcpy(this->cmd[i], cmd[i].c_str());
     }
-    this->cmd = new char*[args.size() + 1];
-    for (unsigned int i = 0; i < args.size(); i++) {
-        this->cmd[i] = new char[args[i].length() + 1];
-        strcpy(this->cmd[i], args[i].c_str());
-    }
-    this->cmd[args.size()] = NULL;
+    this->cmd[cmd.size()] = NULL;
 }
 
-string parseFile(Token &file) {
+/*string parseFile(Token &file) {
     removeWhiteSpace(file.lexeme);
     StringIterator it(file.lexeme);
     string ret;
@@ -177,7 +129,7 @@ void Command::printCommand(int spaces) {
         }
         cout << endl;
     }
-}
+}*/
 
 int test_out(vector <string> *files) {
     return files[1].size() || files[3].size() || files[4].size() || files[5].size();

@@ -85,7 +85,7 @@ string read_line() {
         if (args.size()) {
             int index = getIndex(position);
             //cout << index << " " << args.size() <<  endl;
-            if (index == -1) break;
+            //if (index == -1) break;
             trie_str = args[index].second;
         }
         // cout << trie_str << endl;
@@ -270,5 +270,6 @@ string read_line() {
         args.clear();
     }
     tty_reset();
+    args.clear();
     return ret;
 }

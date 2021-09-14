@@ -1,14 +1,23 @@
 %{
 #include <bits/stdc++.h>
 #include <misc.h>
-using namespace std;
+#include <command.h>
+#include <built-in.h>
+#include <exec.h>
 int yylex();
 void yyerror(const char *s);
+extern unsigned int ind;
+extern struct passwd *p;
+extern std::vector <pair<pid_t, std::vector <std::string>>> bPids;
+extern std::vector <int> pos;
+typedef struct yy_buffer_state * YY_BUFFER_STATE;
+extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
+extern YY_BUFFER_STATE  buffer;
 #define YYERROR_VERBOSE 1
 std::vector <std::string> args_vec;
 %}
 
-%union {char ch; std::string* str;}
+%union {char ch; std::string* str; Node *node;}
 %start goal
 %token <ch> CHAR
 %token <str> ESCAPE_CHAR
@@ -33,20 +42,51 @@ std::vector <std::string> args_vec;
 %token SPACE;
 %type <ch> ch
 %type <str> word;
+%type <node> no_arg_command;
 %%
 
-goal: args NEWLINE {
-    for (auto i: args_vec) cout << i << endl;
-    args_vec.clear();
+goal: no_arg_command NEWLINE {
+    Tree *tr = new Tree;
+    tr->root = $1;
+    if (tr->root) {
+        //        parseTree->root->traverse(0);
+        if (exec(tr, p, tr->root, bPids, pos)) {
+        delete tr;
+        deleteAliasedCommands();
+        yy_delete_buffer(buffer);
+        exit(EXIT_SUCCESS);
+        }
+            //last_arg = (bPids.back().second).back();
+    }
+    delete tr;
 }
-| SPACE args NEWLINE {
-    for (auto i: args_vec) cout << i << endl;
-    args_vec.clear();
+| SPACE no_arg_command NEWLINE {
+    Tree *tr = new Tree;
+    tr->root = $2;
+    if (tr->root) {
+        //        parseTree->root->traverse(0);
+        if (exec(tr, p, tr->root, bPids, pos)) {
+        delete tr;
+        deleteAliasedCommands();
+        yy_delete_buffer(buffer);
+        exit(EXIT_SUCCESS);
+        }
+            //last_arg = (bPids.back().second).back();
+    }
+        delete tr;
 }
   | NEWLINE 
   | error NEWLINE { yyerrok; }
  
 ;
+no_arg_command: args {
+    //for (auto i: args_vec) std::cout << i << std::endl;
+    $$=new Node();
+    $$->type = COMMAND_NODE;
+    $$->obj = new Command();
+    ((Command *)($$->obj))->createArgs(args_vec);
+    args_vec.clear();
+}
 args: 
    word {
    if (($1)->length()) {
