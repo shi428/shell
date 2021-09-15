@@ -46,9 +46,12 @@ std::vector <std::string> args_vec;
 %type <str> word;
 %type <node> no_arg_command;
 %type <node> simple_command;
+%type <node> simpler_command;
+%type <node> command_line;
+%type <node> full_command_line;
 %%
 
-goal: simple_command NEWLINE {
+goal: full_command_line NEWLINE {
     Tree *tr = new Tree;
     tr->root = $1;
     if (tr->root) {
@@ -60,7 +63,31 @@ goal: simple_command NEWLINE {
     }
     delete tr;
 }
-| SPACE simple_command NEWLINE {
+| full_command_line SPACE NEWLINE {
+    Tree *tr = new Tree;
+    tr->root = $1;
+    if (tr->root) {
+        //        parseTree->root->traverse(0);
+        if (exec(tr, p, tr->root, bPids, pos)) {
+        exit_flag = 1;
+        }
+            //last_arg = (bPids.back().second).back();
+    }
+    delete tr;
+}
+| SPACE full_command_line SPACE NEWLINE {
+    Tree *tr = new Tree;
+    tr->root = $2;
+    if (tr->root) {
+        //        parseTree->root->traverse(0);
+        if (exec(tr, p, tr->root, bPids, pos)) {
+        exit_flag = 1;
+        }
+            //last_arg = (bPids.back().second).back();
+    }
+        delete tr;
+}
+| SPACE full_command_line NEWLINE {
     Tree *tr = new Tree;
     tr->root = $2;
     if (tr->root) {
@@ -77,11 +104,67 @@ goal: simple_command NEWLINE {
  
 ;
 
+full_command_line: command_line AMPERSAND {
+                $$=$1;
+                $$->background = 1;
+                 } |
+                 command_line;
+command_line: simple_command PIPE command_line {
+            $$=new Node();
+            $$->type = PIPE_NODE;
+            $$->left = $1;
+            $$->right = $3;
+            }
+            |
+            simple_command {
+            $$=$1;
+            }
+            |
+            simpler_command {
+            if (yychar == PIPE) {
+                yyerrok;
+            }
+            else {
+            $$=$1;
+            }
+            }
 simple_command: no_arg_command iomodifier {
               $$=$1;
-              }
+              };
 
-iomodifier: GREAT SPACE word iomodifier {
+simpler_command: no_arg_command simple_iomodifier {
+              $$=$1;
+               };
+
+simple_iomodifier: 
+          GREATAND SPACE word simple_iomodifier {
+            currentCommand->addFile(3, *$3);
+          }
+          | GREATAND word simple_iomodifier {
+            currentCommand->addFile(3, *$2);
+            }
+          | GREATAND word SPACE simple_iomodifier {
+            currentCommand->addFile(3, *$2);
+            }
+          | GREATAND SPACE word SPACE simple_iomodifier {
+            currentCommand->addFile(3, *$3);
+            }
+            |
+          GREATGREATAND SPACE word simple_iomodifier {
+            currentCommand->addFile(5, *$3);
+          }
+          | GREATGREATAND word simple_iomodifier {
+            currentCommand->addFile(5, *$2);
+            }
+          | GREATGREATAND word SPACE simple_iomodifier {
+            currentCommand->addFile(5, *$2);
+            }
+          | GREATGREATAND SPACE word SPACE simple_iomodifier {
+            currentCommand->addFile(5, *$3);
+            }|
+            ;
+iomodifier: 
+          GREAT SPACE word iomodifier {
             currentCommand->addFile(1, *$3);
           }
           | GREAT word iomodifier {
@@ -92,6 +175,45 @@ iomodifier: GREAT SPACE word iomodifier {
             }
           | GREAT SPACE word SPACE iomodifier {
             currentCommand->addFile(1, *$3);
+}
+|
+          LESS SPACE word iomodifier {
+            currentCommand->addFile(0, *$3);
+          }
+          | LESS word iomodifier {
+            currentCommand->addFile(0, *$2);
+            }
+          | LESS word SPACE iomodifier {
+            currentCommand->addFile(0, *$2);
+            }
+          | LESS SPACE word SPACE iomodifier {
+            currentCommand->addFile(0, *$3);
+}
+|
+          IOERR SPACE word iomodifier {
+            currentCommand->addFile(2, *$3);
+          }
+          | IOERR word iomodifier {
+            currentCommand->addFile(2, *$2);
+            }
+          | IOERR word SPACE iomodifier {
+            currentCommand->addFile(2, *$2);
+            }
+          | IOERR SPACE word SPACE iomodifier {
+            currentCommand->addFile(2, *$3);
+}
+|
+          GREATGREAT SPACE word iomodifier {
+            currentCommand->addFile(4, *$3);
+          }
+          | GREATGREAT word iomodifier {
+            currentCommand->addFile(4, *$2);
+            }
+          | GREATGREAT word SPACE iomodifier {
+            currentCommand->addFile(4, *$2);
+            }
+          | GREATGREAT SPACE word SPACE iomodifier {
+            currentCommand->addFile(4, *$3);
 }
         |;
 

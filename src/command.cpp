@@ -276,6 +276,7 @@ int Command::redirectIn(int *pipefd, vector <pid_t> &children, int readfd, int w
     close(pipefd[1]);
     children.push_back(child);*/
     //close(writefd);
+    reverse(files[0].begin(), files[0].end());
     myCat(readfd, pipefd[1], files[0], pipeflag);
     close(pipefd[1]);
     return 1;

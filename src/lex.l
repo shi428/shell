@@ -42,7 +42,7 @@
 ">>&" { 
     return GREATGREATAND;
 }
-">2" { 
+"2>" { 
     return IOERR;
 }
 "<" { 
