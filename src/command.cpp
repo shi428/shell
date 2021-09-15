@@ -22,12 +22,29 @@ Command::~Command() {
 }
 
 void Command::createArgs(vector <string> &cmd) {
-    this->cmd = new char*[cmd.size() + 1];
+    vector <string> args;
     for (unsigned int i = 0; i < cmd.size(); i++) {
-        this->cmd[i] = new char[cmd[i].length() + 1];
-        strcpy(this->cmd[i], cmd[i].c_str());
+        if (detectWildcard(cmd[i])) {
+            bool pwd = !(cmd[i].find('/') == 0);
+            string wildcard = !pwd? cmd[i] : string(getenv("PWD")) +"/"+ cmd[i];
+            vector <string> strings = expandWildcard(wildcard, pwd); 
+            if (strings.size() == 0) {
+                args.push_back(wildcard);
+            }
+            for  (auto i: strings) {
+                args.push_back(i);
+            }
+        }
+        else {
+            args.push_back(cmd[i]);
+        }
     }
-    this->cmd[cmd.size()] = NULL;
+    this->cmd = new char*[args.size() + 1];
+    for (unsigned int i = 0; i < args.size(); i++) {
+        this->cmd[i] = new char[args[i].length() + 1];
+        strcpy(this->cmd[i], args[i].c_str());
+    }
+    this->cmd[args.size()] = NULL;
 }
 
 void Command::addFile(int id, string &filename) {
@@ -35,55 +52,55 @@ void Command::addFile(int id, string &filename) {
 }
 
 /*void Command::printCommand(int spaces) {
-    indent(spaces);
-    cout << "COMMAND = [";
-    int i = 0;
-    while (cmd[i]) {
-        if (cmd[i+1] == NULL) {
-            cout << cmd[i] << "]" << endl;
-        }
-        else {
-            cout << cmd[i] << ", ";
-        }
-        i++;
-    }
-    indent(spaces);
-    cout << "FILES = {" << endl;
-    for (int i = 0; i < 6; i++) {
-        indent(spaces);
-        string commandType;
-        switch (i + 1) {
-            case FILE_OUT:
-                commandType = "FILE_OUT";
-                break;
-            case FILE_IN: 
-                commandType = "FILE_IN";
-                break;
-            case FILE_ERR:
-                commandType = "FILE_ERR";
-                break;
-            case FILE_OUT_ERR:
-                commandType = "FILE_OUT_ERR";
-                break;
-            case FILE_APPEND:
-                commandType = "FILE_APPEND";
-                break;
-            case FILE_APPEND_ERR:
-                commandType = "FILE_APPEND_ERR";
-                break;
-        }
-        cout << commandType << " : ";
-        for (unsigned int j = 0; j < files[i].size(); j++) {
-            if (j == files[i].size() - 1) {
-                cout << files[i][j];
-            }
-            else {
-                cout << files[i][j] << " , ";
-            }
-        }
-        cout << endl;
-    }
-}*/
+  indent(spaces);
+  cout << "COMMAND = [";
+  int i = 0;
+  while (cmd[i]) {
+  if (cmd[i+1] == NULL) {
+  cout << cmd[i] << "]" << endl;
+  }
+  else {
+  cout << cmd[i] << ", ";
+  }
+  i++;
+  }
+  indent(spaces);
+  cout << "FILES = {" << endl;
+  for (int i = 0; i < 6; i++) {
+  indent(spaces);
+  string commandType;
+  switch (i + 1) {
+  case FILE_OUT:
+  commandType = "FILE_OUT";
+  break;
+  case FILE_IN: 
+  commandType = "FILE_IN";
+  break;
+  case FILE_ERR:
+  commandType = "FILE_ERR";
+  break;
+  case FILE_OUT_ERR:
+  commandType = "FILE_OUT_ERR";
+  break;
+  case FILE_APPEND:
+  commandType = "FILE_APPEND";
+  break;
+  case FILE_APPEND_ERR:
+  commandType = "FILE_APPEND_ERR";
+  break;
+  }
+  cout << commandType << " : ";
+  for (unsigned int j = 0; j < files[i].size(); j++) {
+  if (j == files[i].size() - 1) {
+  cout << files[i][j];
+  }
+  else {
+  cout << files[i][j] << " , ";
+  }
+  }
+  cout << endl;
+  }
+  }*/
 
 int test_out(vector <string> *files) {
     return files[1].size() || files[3].size() || files[4].size() || files[5].size();
@@ -309,32 +326,32 @@ int Command::execute(Tree *tr, struct passwd *p, vector <pid_t> &children, int *
     pipe(fdin);
     pipe(fderr);
     if (isBuiltIn(ptr[0])) {
-            dup2(readfd, STDIN_FILENO);
-            dup2(writefd, STDOUT_FILENO);
-            if (files[0].size() > 1 || (readfd != STDIN_FILENO && files[0].size())) {
-                redirectIn(fdin, children, readfd, writefd, readfd != STDIN_FILENO);
-                dup2(fdin[0], STDIN_FILENO);
-                //close(fdin[1]);
-            }
-            else if (files[0].size() == 1) {
-                int fd = open(files[0][0].c_str(), O_RDONLY);
-                dup2(fd, STDIN_FILENO);
-                close(fd);
-            }
-          //  close(fdin[1]);
-            if (files[1].size() || files[4].size()) {
-                dup2(fdout[1], STDOUT_FILENO); 
-                //close(fdout[0]);
-            }
-            if ((files[3].size() || files[5].size()) && (writefd == STDOUT_FILENO) && !files[1].size() && !files[2].size() && !files[4].size()) {
-                dup2(fdout[1], STDOUT_FILENO);
-                dup2(fdout[1], STDERR_FILENO);
-               // close(fdout[0]);
-            }
-            if (files[2].size()) {
-                dup2(fderr[1], STDERR_FILENO); 
-                //close(fderr[0]);
-            }
+        dup2(readfd, STDIN_FILENO);
+        dup2(writefd, STDOUT_FILENO);
+        if (files[0].size() > 1 || (readfd != STDIN_FILENO && files[0].size())) {
+            redirectIn(fdin, children, readfd, writefd, readfd != STDIN_FILENO);
+            dup2(fdin[0], STDIN_FILENO);
+            //close(fdin[1]);
+        }
+        else if (files[0].size() == 1) {
+            int fd = open(files[0][0].c_str(), O_RDONLY);
+            dup2(fd, STDIN_FILENO);
+            close(fd);
+        }
+        //  close(fdin[1]);
+        if (files[1].size() || files[4].size()) {
+            dup2(fdout[1], STDOUT_FILENO); 
+            //close(fdout[0]);
+        }
+        if ((files[3].size() || files[5].size()) && (writefd == STDOUT_FILENO) && !files[1].size() && !files[2].size() && !files[4].size()) {
+            dup2(fdout[1], STDOUT_FILENO);
+            dup2(fdout[1], STDERR_FILENO);
+            // close(fdout[0]);
+        }
+        if (files[2].size()) {
+            dup2(fderr[1], STDERR_FILENO); 
+            //close(fderr[0]);
+        }
         runBuiltInCommand(ptr, p);
     }
     /*if (true) {
@@ -353,7 +370,7 @@ int Command::execute(Tree *tr, struct passwd *p, vector <pid_t> &children, int *
                 dup2(fd, STDIN_FILENO);
                 close(fd);
             }
-           // close(fdin[1]);
+            // close(fdin[1]);
             if (files[1].size() || files[4].size()) {
                 dup2(fdout[1], STDOUT_FILENO); 
                 close(fdout[0]);
@@ -371,7 +388,7 @@ int Command::execute(Tree *tr, struct passwd *p, vector <pid_t> &children, int *
                 //cerr << "\033[1;41mshell: command not found: " << ptr[0] << "\033[0m\n";
                 cerr << "shell: command not found: " << ptr[0] << endl;
                 delete tr;
-        //        if (aliased_cmd != cmd) delete [] ptr;
+                //        if (aliased_cmd != cmd) delete [] ptr;
                 deleteAliasedCommands();
                 yylex_destroy();
                 exit(EXIT_FAILURE);
