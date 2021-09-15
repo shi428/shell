@@ -23,8 +23,10 @@ std::vector <std::string> args_vec;
 %start goal
 %token <ch> CHAR
 %token <str> ESCAPE_CHAR
-%token <ch> AMPERSAND
-%token <ch> PIPE
+%token AMPERSAND
+%token AND
+%token PIPE
+%token OR
 %token SUBSHELL
 %token ENV
 %token <ch> LEFT_PAREN
@@ -49,45 +51,11 @@ std::vector <std::string> args_vec;
 %type <node> simpler_command;
 %type <node> command_line;
 %type <node> full_command_line;
+%type space;
 %%
 
-goal: full_command_line NEWLINE {
-    Tree *tr = new Tree;
-    tr->root = $1;
-    if (tr->root) {
-        //        parseTree->root->traverse(0);
-        if (exec(tr, p, tr->root, bPids, pos)) {
-        exit_flag = 1;
-        }
-            //last_arg = (bPids.back().second).back();
-    }
-    delete tr;
-}
-| full_command_line SPACE NEWLINE {
-    Tree *tr = new Tree;
-    tr->root = $1;
-    if (tr->root) {
-        //        parseTree->root->traverse(0);
-        if (exec(tr, p, tr->root, bPids, pos)) {
-        exit_flag = 1;
-        }
-            //last_arg = (bPids.back().second).back();
-    }
-    delete tr;
-}
-| SPACE full_command_line SPACE NEWLINE {
-    Tree *tr = new Tree;
-    tr->root = $2;
-    if (tr->root) {
-        //        parseTree->root->traverse(0);
-        if (exec(tr, p, tr->root, bPids, pos)) {
-        exit_flag = 1;
-        }
-            //last_arg = (bPids.back().second).back();
-    }
-        delete tr;
-}
-| SPACE full_command_line NEWLINE {
+goal:
+ space full_command_line space NEWLINE {
     Tree *tr = new Tree;
     tr->root = $2;
     if (tr->root) {
@@ -109,11 +77,27 @@ full_command_line: command_line AMPERSAND {
                 $$->background = 1;
                  } |
                  command_line;
-command_line: simple_command PIPE command_line {
+command_line: simple_command space PIPE space command_line {
             $$=new Node();
             $$->type = PIPE_NODE;
             $$->left = $1;
-            $$->right = $3;
+            $$->right = $5;
+            }
+            |
+            simple_command space AND space command_line
+            {
+            $$=new Node();
+            $$->type = AND_NODE;
+            $$->left = $1;
+            $$->right = $5;
+            }
+            |
+            simple_command space OR space command_line
+            {
+            $$=new Node();
+            $$->type = OR_NODE;
+            $$->left = $1;
+            $$->right = $5;
             }
             |
             simple_command {
@@ -127,7 +111,7 @@ command_line: simple_command PIPE command_line {
             else {
             $$=$1;
             }
-            }
+            };
 simple_command: no_arg_command iomodifier {
               $$=$1;
               };
@@ -137,82 +121,24 @@ simpler_command: no_arg_command simple_iomodifier {
                };
 
 simple_iomodifier: 
-          GREATAND SPACE word simple_iomodifier {
-            currentCommand->addFile(3, *$3);
-          }
-          | GREATAND word simple_iomodifier {
-            currentCommand->addFile(3, *$2);
-            }
-          | GREATAND word SPACE simple_iomodifier {
-            currentCommand->addFile(3, *$2);
-            }
-          | GREATAND SPACE word SPACE simple_iomodifier {
+          GREATAND space word space simple_iomodifier {
             currentCommand->addFile(3, *$3);
             }
-            |
-          GREATGREATAND SPACE word simple_iomodifier {
-            currentCommand->addFile(5, *$3);
-          }
-          | GREATGREATAND word simple_iomodifier {
-            currentCommand->addFile(5, *$2);
-            }
-          | GREATGREATAND word SPACE simple_iomodifier {
-            currentCommand->addFile(5, *$2);
-            }
-          | GREATGREATAND SPACE word SPACE simple_iomodifier {
+          | GREATGREATAND space word space simple_iomodifier {
             currentCommand->addFile(5, *$3);
             }|
             ;
 iomodifier: 
-          GREAT SPACE word iomodifier {
-            currentCommand->addFile(1, *$3);
-          }
-          | GREAT word iomodifier {
-            currentCommand->addFile(1, *$2);
-            }
-          | GREAT word SPACE iomodifier {
-            currentCommand->addFile(1, *$2);
-            }
-          | GREAT SPACE word SPACE iomodifier {
+          GREAT space word space iomodifier {
             currentCommand->addFile(1, *$3);
 }
-|
-          LESS SPACE word iomodifier {
-            currentCommand->addFile(0, *$3);
-          }
-          | LESS word iomodifier {
-            currentCommand->addFile(0, *$2);
-            }
-          | LESS word SPACE iomodifier {
-            currentCommand->addFile(0, *$2);
-            }
-          | LESS SPACE word SPACE iomodifier {
+          | LESS space word space iomodifier {
             currentCommand->addFile(0, *$3);
 }
-|
-          IOERR SPACE word iomodifier {
-            currentCommand->addFile(2, *$3);
-          }
-          | IOERR word iomodifier {
-            currentCommand->addFile(2, *$2);
-            }
-          | IOERR word SPACE iomodifier {
-            currentCommand->addFile(2, *$2);
-            }
-          | IOERR SPACE word SPACE iomodifier {
+          | IOERR space word space iomodifier {
             currentCommand->addFile(2, *$3);
 }
-|
-          GREATGREAT SPACE word iomodifier {
-            currentCommand->addFile(4, *$3);
-          }
-          | GREATGREAT word iomodifier {
-            currentCommand->addFile(4, *$2);
-            }
-          | GREATGREAT word SPACE iomodifier {
-            currentCommand->addFile(4, *$2);
-            }
-          | GREATGREAT SPACE word SPACE iomodifier {
+          | GREATGREAT space word space iomodifier {
             currentCommand->addFile(4, *$3);
 }
         |;
@@ -258,6 +184,8 @@ ch: CHAR {
   $$=convertEscapeChar(*$1);
   delete $1;
   } ;
+
+space: SPACE | ;
 %%
 
 void yyerror(const char *s) {

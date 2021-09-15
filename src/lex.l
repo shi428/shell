@@ -15,8 +15,14 @@
 & { 
     return AMPERSAND;
 }
+&& { 
+    return AND;
+}
 "|" { 
     return PIPE;
+}
+"||" { 
+    return OR;
 }
 "$(" { 
     return SUBSHELL;
@@ -64,7 +70,7 @@
     yylval.ch = *yytext;
     return CHAR;
 }
-\\[^ \t\n] { 
+\\[^\n] { 
     yylval.str = new std::string(yytext);
     return ESCAPE_CHAR;
 }

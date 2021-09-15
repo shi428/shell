@@ -5,6 +5,8 @@
     typedef enum type {
         COMMAND_NODE= 0,
         PIPE_NODE = 1,
+        AND_NODE = 2,
+        OR_NODE = 3,
     }Type;
 typedef struct node {
     int background;
