@@ -4,19 +4,25 @@
 #include <command.h>
 #include <built-in.h>
 #include <exec.h>
-int yylex();
 void yyerror(const char *s);
+int yylex ();
+extern char *yytext;
 extern unsigned int ind;
 extern struct passwd *p;
 extern std::vector <pair<pid_t, std::vector <std::string>>> bPids;
 extern std::vector <int> pos;
 typedef struct yy_buffer_state * YY_BUFFER_STATE;
 extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
+extern YY_BUFFER_STATE  yy_scan_string(const char *str);
 extern YY_BUFFER_STATE  buffer;
+extern void yy_switch_to_buffer(YY_BUFFER_STATE new_buffer);
+extern void yypush_buffer_state(YY_BUFFER_STATE new_buffer);
 int exit_flag;
 Command *currentCommand;
 #define YYERROR_VERBOSE 1
 std::vector <std::string> args_vec;
+std::stack <Command *>command_stack;
+extern void myunput(int c);
 %}
 
 %union {char ch; std::string* str; Node *node;}
@@ -51,7 +57,9 @@ std::vector <std::string> args_vec;
 %type <node> simpler_command;
 %type <node> command_line;
 %type <node> full_command_line;
+%type <node> command_word;
 %type space;
+%type <str> subshell;
 %%
 
 goal:
@@ -143,28 +151,44 @@ iomodifier:
 }
         |;
 
-no_arg_command: args {
-    //for (auto i: args_vec) std::cout << i << std::endl;
+command_word: word {
     $$=new Node();
     $$->type = COMMAND_NODE;
     $$->obj = new Command();
     currentCommand = (Command *)$$->obj;
-    ((Command *)($$->obj))->createArgs(args_vec);
-    args_vec.clear();
+    command_stack.push(currentCommand);
+    currentCommand->commands.push_back(*$1);
+    }
+no_arg_command: command_word SPACE args {
+    //for (auto i: args_vec) std::cout << i << std::endl;
+    $$=$1;
+    currentCommand->createArgs(currentCommand->commands);
 }
+| command_word {
+    $$=$1;
+    currentCommand->createArgs(currentCommand->commands);
+};
 args: 
+    subshell {
+    delete $1;
+    }
+    |
    word {
    if (($1)->length()) {
-    args_vec.push_back(*$1);
+    currentCommand->commands.push_back(*$1);
     delete $1;
     }
    }
    |
    args SPACE word {
    if (($3)->length()) {
-    args_vec.push_back(*$3);
+    currentCommand->commands.push_back(*$3);
     delete $3;
     }
+    }
+    |
+    args SPACE subshell{
+    delete $3;
     }
    ;
 word:  ch word {
@@ -177,6 +201,46 @@ word:  ch word {
    }
     ;
 
+subshell: SUBSHELL space command_line RIGHT_PAREN {
+        Tree *tr = new Tree;
+        tr->root = $3;
+        int pipefd[2];
+        pipe(pipefd);
+        pid_t child;
+        child = fork();
+        if (child == 0) {
+                dup2(pipefd[1], STDOUT_FILENO);
+                close(pipefd[0]);
+            exec(tr, p, tr->root, bPids, pos);
+            exit(EXIT_SUCCESS);
+        }
+            close(pipefd[1]);
+            char buf[4096];
+            string line;
+            ssize_t n_bytes;
+            while ((n_bytes = read(pipefd[0], buf, 4095)) != 0) {
+                buf[n_bytes] = '\0';
+                char *temp = buf;
+                while (*temp != '\0'){
+                    if (*temp == '\n') {
+                        line += ' ';
+                    }
+                    else {
+                        line += *temp;
+                    }
+                    temp++;
+                }
+            }
+            close(pipefd[0]);
+            //cout << line << endl;
+            delete tr;
+            for (size_t i = line.size() - 1; i >= 0; i--) {
+                myunput(line[i]);
+            }
+    command_stack.pop();
+    currentCommand = command_stack.top();
+        $$ = new string();
+}
 ch: CHAR {
   $$=$1;
   }

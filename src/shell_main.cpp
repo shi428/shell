@@ -117,6 +117,7 @@ extern int yyparse();
 typedef struct yy_buffer_state * YY_BUFFER_STATE;
 extern YY_BUFFER_STATE yy_scan_string(const char * str);
 extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
+extern void yypush_buffer_state(YY_BUFFER_STATE buffer);
 extern int yylex_destroy();
 extern char *yytext;
 YY_BUFFER_STATE  buffer;
@@ -149,10 +150,11 @@ int main(int argc, char *argv[]) {
         }
 
         buffer = yy_scan_string((char *)line.c_str());
+        yypush_buffer_state(buffer);
         if (yyparse()) cout << "ERROR" << endl;
         //if (!getline(cin, line)) break;
-        //yy_delete_buffer(buffer);
-        yylex_destroy();
+        yy_delete_buffer(buffer);
+        //yylex_destroy();
         /*vector <Token> tokens = genTokens(line, true);
         if (isatty(0)) {//for (auto i: tokens) i.printToken();
         }

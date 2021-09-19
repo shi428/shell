@@ -22,6 +22,7 @@ typedef struct command {
     void printCommand(int spaces);
 
     char **cmd;
+    vector <string> commands;
     vector <string> files[6];
 }Command;
 #endif

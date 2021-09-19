@@ -1,5 +1,5 @@
 INCDIR=include
-CPP = g++ -std=c++11 -g -I $(INCDIR) -Wall -Werror
+CPP = g++ -std=c++11 -g -I $(INCDIR) -Wall
 WORKDIR=work
 SRCDIR=src
 SHELLSRCS=shell_main.cpp tokenizer.cpp misc.cpp parser.cpp command.cpp exec.cpp built-in.cpp expansion.cpp cat.cpp read_line.cpp tty_raw_mode.cpp trie.cpp autocomplete.cpp
@@ -28,11 +28,11 @@ debug_%: compile_%
 memory_%: compile_%
 	valgrind --show-leak-kinds=all --leak-check=full ./$*
 lex.yy.cpp: lex.l
-	lex  -l -o $(SRCDIR)/$@ $< 
+	flex  -o $(SRCDIR)/$@ $< 
 lex.yy.o: lex.yy.cpp
 	$(CPP) -c $(SRCDIR)/$< -o $(WORKDIR)/$@ 
 yacc.yy.cpp: yacc.y
-	yacc -d -y -t --debug -o $(SRCDIR)/$@ $< 
+	bison -d -y -t --debug -o $(SRCDIR)/$@ $< 
 yacc.yy.o: yacc.yy.cpp
 	$(CPP) -c $(SRCDIR)/$< -o $(WORKDIR)/$@ 
 compile_shell: $(SHELLOBJS) lex.yy.o yacc.yy.o

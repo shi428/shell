@@ -2,9 +2,10 @@
 #include <bits/stdc++.h>
 #include <parser.h>
 #include "yacc.yy.hpp"
+    static void yyunput(int c, char *buf);
+    void myunput(int c);
 %}
 
-%option nounput
 %%
 [ \t]+ {
     return SPACE;
@@ -77,4 +78,8 @@
 %%
 int yywrap() {
     return 1;
+}
+
+void myunput(int c) {
+    unput(c);
 }
