@@ -122,6 +122,8 @@ extern int yylex_destroy();
 extern char *yytext;
 YY_BUFFER_STATE  buffer;
 extern int exit_flag;
+void yyrestart(FILE * input_file );
+extern void yypop_buffer_state();
 int main(int argc, char *argv[]) {
     signal(SIGINT, sigint_handler);
     signal(SIGCHLD, sigchild_handler);
@@ -150,11 +152,10 @@ int main(int argc, char *argv[]) {
         }
 
         buffer = yy_scan_string((char *)line.c_str());
-        yypush_buffer_state(buffer);
+        //yypush_buffer_state(buffer);
         if (yyparse()) cout << "ERROR" << endl;
         //if (!getline(cin, line)) break;
         yy_delete_buffer(buffer);
-        //yylex_destroy();
         /*vector <Token> tokens = genTokens(line, true);
         if (isatty(0)) {//for (auto i: tokens) i.printToken();
         }

@@ -1,3 +1,4 @@
+%x src
 %{
 #include <bits/stdc++.h>
 #include <parser.h>
@@ -66,6 +67,36 @@
 }
 "}" {
     return RIGHT_BRACE;
+}
+" source " {
+    BEGIN(src);
+}
+<src>[^ \t\n]+ {
+            std::string line;
+            std::ifstream fin(yytext);
+            FILE *yyin = fopen(yytext, "r+");
+            if (!yyin) {
+                BEGIN(INITIAL);
+                std::cerr << "source: no such file or directory: " << yytext << std::endl;
+            }
+            else {
+            fputc('\n', yyin);
+            yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
+            BEGIN(INITIAL);
+            yyparse();
+            yypop_buffer_state();
+         /*   while (std::getline(fin, line)) {
+                line += '\n';
+                YY_BUFFER_STATE buffer = yy_scan_string((char *)line.c_str());
+                yypush_buffer_state(buffer);
+                //yypush_buffer_state(yy_scan_string((char *)line.c_str()));
+                BEGIN(0); 
+                yyparse();
+                //yy_delete_buffer(buffer);
+                yypop_buffer_state();
+            }*/
+            fclose(yyin);
+            }
 }
 [^ \t\n] { 
     yylval.ch = *yytext;

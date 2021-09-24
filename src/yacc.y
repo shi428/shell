@@ -68,7 +68,7 @@ goal:
     tr->root = $2;
     if (tr->root) {
         //        parseTree->root->traverse(0);
-        if (exec(tr, p, tr->root, bPids, pos)) {
+        if (exec(tr, p, tr->root, bPids, pos) == 1) {
         exit_flag = 1;
         }
             //last_arg = (bPids.back().second).back();

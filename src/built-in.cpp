@@ -104,6 +104,13 @@ void printAliases() {
         cout << endl;
     }
 }
+typedef struct yy_buffer_state * YY_BUFFER_STATE;
+void yyrestart(FILE * input_file );
+extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
+extern void yypush_buffer_state(YY_BUFFER_STATE buffer);
+extern void yypop_buffer_state();
+extern YY_BUFFER_STATE yy_scan_string(const char * str);
+int yyparse();
 int runBuiltInCommand(char **cmd, struct passwd *p) {
     if (checkSyntax(cmd)) {
         if (!strcmp(cmd[0], "alias")) {
@@ -185,38 +192,25 @@ int runBuiltInCommand(char **cmd, struct passwd *p) {
             }
         }
         if (!strcmp(cmd[0], "source")) {
-            /*string line;
+            string line;
             ifstream fin(cmd[1]);
             if (!fin.good()) {
                 cerr << "source: no such file or directory: " << cmd[1] << endl;
                 return -1;
             }
             signal(SIGCHLD, sigchild_handler);
+            
             while (getline(fin, line)) {
-                fflush(stdout);
-                fflush(stdin);
-                fflush(stderr);
-                if (isatty(0)) {
-                    //                    printPrompt();
-                }
-                vector <Token> tokens = genTokens(line, true);
-                tokens = expand_subshell(tokens);
-                tokens = expand_env(tokens);
-                Tree *parseTree = newTree(tokens);
-                //tokens.~vector <Token>();
-                if (parseTree->root) {
-                    //        parseTree->root->traverse(0);
-                    if (exec(parseTree, p, parseTree->root, bPids, pos)) {
-                        delete parseTree;
-                        break;
-                    }
-                }
-                delete parseTree;
-                fflush(stdout);
-                fflush(stdin);
-                fflush(stderr);
+                line += '\n';
+                YY_BUFFER_STATE buffer = yy_scan_string((char *)line.c_str());
+                yypush_buffer_state(buffer);
+                //yypush_buffer_state(yy_scan_string((char *)line.c_str()));
+                if (yyparse()) cout << "ERROR" << endl;
+                //yy_delete_buffer(buffer);
+               yypop_buffer_state();
             }
-            fin.close();*/
+            yyrestart(stdin);
+            fin.close();
         }
         return 0;
     }
