@@ -111,6 +111,7 @@ extern void yypush_buffer_state(YY_BUFFER_STATE buffer);
 extern void yypop_buffer_state();
 extern YY_BUFFER_STATE yy_scan_string(const char * str);
 int yyparse();
+extern void myunput(int c);
 int runBuiltInCommand(char **cmd, struct passwd *p) {
     if (checkSyntax(cmd)) {
         if (!strcmp(cmd[0], "alias")) {
@@ -198,18 +199,14 @@ int runBuiltInCommand(char **cmd, struct passwd *p) {
                 cerr << "source: no such file or directory: " << cmd[1] << endl;
                 return -1;
             }
-            signal(SIGCHLD, sigchild_handler);
+            //signal(SIGCHLD, sigchild_handler);
             
             while (getline(fin, line)) {
                 line += '\n';
-                YY_BUFFER_STATE buffer = yy_scan_string((char *)line.c_str());
-                yypush_buffer_state(buffer);
-                //yypush_buffer_state(yy_scan_string((char *)line.c_str()));
-                if (yyparse()) cout << "ERROR" << endl;
-                //yy_delete_buffer(buffer);
-               yypop_buffer_state();
+                for (size_t i = line.length() - 1; i >= 0; i--) {
+                    myunput(line[i]);
+                }
             }
-            yyrestart(stdin);
             fin.close();
         }
         return 0;

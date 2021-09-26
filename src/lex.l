@@ -2,9 +2,35 @@
 %{
 #include <bits/stdc++.h>
 #include <parser.h>
+#include <unistd.h>
 #include "yacc.yy.hpp"
     static void yyunput(int c, char *buf);
     void myunput(int c);
+   /* extern std::string readline();
+    extern std::vector <std::string> history;
+    extern unsigned ind;
+
+    int mygetc(FILE *f) {
+        static char *p;
+        char ch;
+        if (!isatty(0)) {
+            return getc(f);
+        }
+        if (!p || !*p) {
+            std::string s = readline();
+            if (s.compare("\n")) {
+            history.push_back(s);
+            ind = history.size();
+                }
+
+            p = (char *)s.c_str();
+        }
+        ch = *p;
+        p++;
+        return ch;
+    }*/
+//#undef getc
+//#define getc(f) mygetc(f)
 %}
 
 %%
@@ -68,35 +94,8 @@
 "}" {
     return RIGHT_BRACE;
 }
-" source " {
-    BEGIN(src);
-}
-<src>[^ \t\n]+ {
-            std::string line;
-            std::ifstream fin(yytext);
-            FILE *yyin = fopen(yytext, "r+");
-            if (!yyin) {
-                BEGIN(INITIAL);
-                std::cerr << "source: no such file or directory: " << yytext << std::endl;
-            }
-            else {
-            fputc('\n', yyin);
-            yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
-            BEGIN(INITIAL);
-            yyparse();
-            yypop_buffer_state();
-         /*   while (std::getline(fin, line)) {
-                line += '\n';
-                YY_BUFFER_STATE buffer = yy_scan_string((char *)line.c_str());
-                yypush_buffer_state(buffer);
-                //yypush_buffer_state(yy_scan_string((char *)line.c_str()));
-                BEGIN(0); 
-                yyparse();
-                //yy_delete_buffer(buffer);
-                yypop_buffer_state();
-            }*/
-            fclose(yyin);
-            }
+\133 {
+    std::cout << yytext << std::endl;
 }
 [^ \t\n] { 
     yylval.ch = *yytext;

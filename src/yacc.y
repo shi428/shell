@@ -17,6 +17,7 @@ extern YY_BUFFER_STATE  yy_scan_string(const char *str);
 extern YY_BUFFER_STATE  buffer;
 extern void yy_switch_to_buffer(YY_BUFFER_STATE new_buffer);
 extern void yypush_buffer_state(YY_BUFFER_STATE new_buffer);
+extern void printPrompt();
 int exit_flag;
 Command *currentCommand;
 #define YYERROR_VERBOSE 1
@@ -59,10 +60,14 @@ extern void myunput(int c);
 %type <node> full_command_line;
 %type <node> command_word;
 %type space;
-%type <str> subshell;
+//%type <str> subshell;
+%type <str> arg;
+%type <str> quote_word;
+%type <str> quote;
 %%
 
-goal:
+goal: input 
+input:
  space full_command_line space NEWLINE {
     Tree *tr = new Tree;
     tr->root = $2;
@@ -75,7 +80,8 @@ goal:
     }
         delete tr;
 }
-  | NEWLINE 
+  | NEWLINE  {
+  }
   | error NEWLINE { yyerrok; }
  
 ;
@@ -151,14 +157,22 @@ iomodifier:
 }
         |;
 
-command_word: word {
+command_word: arg {
     $$=new Node();
     $$->type = COMMAND_NODE;
     $$->obj = new Command();
     currentCommand = (Command *)$$->obj;
     command_stack.push(currentCommand);
     currentCommand->commands.push_back(*$1);
-    }
+    }; /*| quote
+    {
+    $$=new Node();
+    $$->type = COMMAND_NODE;
+    $$->obj = new Command();
+    currentCommand = (Command *)$$->obj;
+    command_stack.push(currentCommand);
+    currentCommand->commands.push_back(*$1);
+    };*/
 no_arg_command: command_word SPACE args {
     //for (auto i: args_vec) std::cout << i << std::endl;
     $$=$1;
@@ -169,28 +183,90 @@ no_arg_command: command_word SPACE args {
     currentCommand->createArgs(currentCommand->commands);
 };
 args: 
-    subshell {
-    delete $1;
-    }
-    |
-   word {
+    arg {
    if (($1)->length()) {
     currentCommand->commands.push_back(*$1);
     delete $1;
     }
-   }
-   |
-   args SPACE word {
+    }
+    |
+   args SPACE arg {
    if (($3)->length()) {
     currentCommand->commands.push_back(*$3);
     delete $3;
     }
     }
     |
-    args SPACE subshell{
-    delete $3;
-    }
    ;
+arg: arg word
+{
+$$->append(*$2);
+delete $2;
+} | 
+arg quote {
+$$->append(*$2);
+delete $2;
+} | 
+{
+$$=new string();
+};
+
+quote_word: quote_word ch {
+          $$->push_back($2);
+          } |
+          quote_word SPACE {
+          $$->push_back(' ');
+          } | 
+          quote_word AMPERSAND {
+          $$->push_back('&');
+          } | 
+          quote_word PIPE {
+          $$->push_back('|');
+          } | 
+          quote_word OR {
+          $$->append("||");
+          } | 
+          quote_word AND {
+          $$->append("&&");
+          } | 
+          quote_word GREAT {
+          $$->append(">");
+          } | 
+          quote_word GREATGREAT {
+          $$->append(">>");
+          } | 
+          quote_word GREATAND {
+          $$->append(">&");
+          } | 
+          quote_word GREATGREATAND {
+          $$->append(">>&");
+          } | 
+          quote_word IOERR {
+          $$->append("2>");
+          } | 
+          quote_word LESS {
+          $$->append("<");
+          } | 
+          quote_word LEFT_BRACE {
+          $$->append("{");
+          } | 
+          quote_word RIGHT_BRACE {
+          $$->append("}");
+          } | 
+          quote_word LEFT_PAREN {
+          $$->append("(");
+          } | 
+          quote_word RIGHT_PAREN {
+          $$->append(")");
+          } | 
+          {
+          $$=new string();
+          };
+quote: DQUOTE quote_word DQUOTE {
+     $$=$2;
+} | SQUOTE quote_word SQUOTE {
+     $$=$2;
+};
 word:  ch word {
     string ret = $1+ *$2;
     $$ = new string(ret.c_str());
@@ -201,7 +277,7 @@ word:  ch word {
    }
     ;
 
-subshell: SUBSHELL space command_line RIGHT_PAREN {
+/*subshell: SUBSHELL space command_line RIGHT_PAREN {
         Tree *tr = new Tree;
         tr->root = $3;
         int pipefd[2];
@@ -240,7 +316,7 @@ subshell: SUBSHELL space command_line RIGHT_PAREN {
     command_stack.pop();
     currentCommand = command_stack.top();
         $$ = new string();
-}
+}*/
 ch: CHAR {
   $$=$1;
   }

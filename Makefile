@@ -28,7 +28,7 @@ debug_%: compile_%
 memory_%: compile_%
 	valgrind --show-leak-kinds=all --leak-check=full ./$*
 lex.yy.cpp: lex.l
-	flex  -o $(SRCDIR)/$@ $< 
+	lex -l -o $(SRCDIR)/$@ $< 
 lex.yy.o: lex.yy.cpp
 	$(CPP) -c $(SRCDIR)/$< -o $(WORKDIR)/$@ 
 yacc.yy.cpp: yacc.y

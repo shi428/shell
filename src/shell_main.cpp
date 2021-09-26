@@ -154,9 +154,9 @@ int main(int argc, char *argv[]) {
         buffer = yy_scan_string((char *)line.c_str());
         //yypush_buffer_state(buffer);
         if (yyparse()) cout << "ERROR" << endl;
-        //if (!getline(cin, line)) break;
+        /*//if (!getline(cin, line)) break;
         yy_delete_buffer(buffer);
-        /*vector <Token> tokens = genTokens(line, true);
+        vector <Token> tokens = genTokens(line, true);
         if (isatty(0)) {//for (auto i: tokens) i.printToken();
         }
         tokens = expand_subshell(tokens);
@@ -190,6 +190,8 @@ int main(int argc, char *argv[]) {
         }
         delete parseTree;*/
     }
+    //yyrestart(stdin);
+    //yyparse();
     deleteAliasedCommands();
     return EXIT_SUCCESS;
 }
