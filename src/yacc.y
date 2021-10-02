@@ -4,7 +4,7 @@
 #include <command.h>
 #include <built-in.h>
 #include <exec.h>
-void yyerror(const char *s);
+#include "lex.yy.hpp"
 int yylex ();
 extern char *yytext;
 extern unsigned int ind;
@@ -26,6 +26,14 @@ std::stack <Command *>command_stack;
 extern void myunput(int c);
 %}
 
+%param {yyscan_t scanner};
+%code requires{
+    typedef void *yyscan_t;
+};
+%code {
+int yylex(yyscan_t);
+void yyerror(yyscan_t, const char *);
+};
 %union {char ch; std::string* str; Node *node;}
 %start goal
 %token <ch> CHAR
@@ -164,6 +172,7 @@ command_word: arg {
     currentCommand = (Command *)$$->obj;
     command_stack.push(currentCommand);
     currentCommand->commands.push_back(*$1);
+    delete $1;
     }; /*| quote
     {
     $$=new Node();
@@ -328,7 +337,7 @@ ch: CHAR {
 space: SPACE | ;
 %%
 
-void yyerror(const char *s) {
+void yyerror(yyscan_t scan, const char *s) {
     cerr << s << endl;
 }
 

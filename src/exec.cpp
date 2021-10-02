@@ -66,6 +66,7 @@ int exec_pipe(Tree *tr, struct passwd *p, vector <pid_t> &children, Node *node, 
 int exec_and(Tree *tr, struct passwd *p, vector <pid_t> &children, Node *node, int *pipefds, int readfd, int writefd, vector <string> &cmds) {
     exec_node(tr, p, children, node->left, pipefds, readfd, writefd, cmds);
         int status;
+        if (children.size())
         waitpid(children[children.size() - 1], &status, 0);
         if (!WEXITSTATUS(status)) {
     cmds.push_back(string("&&"));
@@ -77,6 +78,7 @@ int exec_and(Tree *tr, struct passwd *p, vector <pid_t> &children, Node *node, i
 int exec_or(Tree *tr, struct passwd *p, vector <pid_t> &children, Node *node, int *pipefds, int readfd, int writefd, vector <string> &cmds) {
     exec_node(tr, p, children, node->left, pipefds, readfd, writefd, cmds);
         int status;
+        if (children.size())
         waitpid(children[children.size() - 1], &status, 0);
         if (WEXITSTATUS(status)) {
     cmds.push_back(string("&&"));

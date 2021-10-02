@@ -1,8 +1,8 @@
 #include <expansion.h>
 #include <bits/stdc++.h>
 extern int getLength(char **);
-vector <Token> expand_subshell(vector <Token> &tokens) {
-/*    for (unsigned int i = 0; i < tokens.size(); i++) {
+/*vector <Token> expand_subshell(vector <Token> &tokens) {
+    for (unsigned int i = 0; i < tokens.size(); i++) {
         if (tokens[i].type == SUBSHELL) {
             tokens[i].lexeme += '\n';
             //      cout << "subshell" << endl;
@@ -80,16 +80,16 @@ vector <Token> expand_subshell(vector <Token> &tokens) {
                 tokens.erase(tokens.begin() + i + 1);
             }
         }
-    }*/
+    }
     return tokens;
-}
+}*/
 
 extern pid_t shell_pid;
 extern int return_code;
 extern pid_t background_process;
 extern string last_arg;
-vector <Token> expand_env(vector <Token> &tokens) {
-    /*for (unsigned int i = 0; i < tokens.size(); i++) {
+/*vector <Token> expand_env(vector <Token> &tokens) {
+    for (unsigned int i = 0; i < tokens.size(); i++) {
         if (tokens[i].type == ENV) {
             string line2 = isEnviron((char *)tokens[i].lexeme.c_str()) ? getenv(tokens[i].lexeme.c_str()) : "";
             if (!tokens[i].lexeme.compare("$")) {
@@ -141,14 +141,14 @@ vector <Token> expand_env(vector <Token> &tokens) {
             }
         }
     }
-    //for (auto i: tokens) i.printToken();*/
+    //for (auto i: tokens) i.printToken();
     return tokens;
-}
+}*/
 
 extern unordered_map<string, string> users;
 
-vector <Token> expand_tilde(vector <Token> &tokens) {
-    /*for (unsigned int i = 0; i < tokens.size(); i++) {
+/*vector <Token> expand_tilde(vector <Token> &tokens) {
+    for (unsigned int i = 0; i < tokens.size(); i++) {
         bool flag = false;
         if (tokens[i].type == TILDE) {
             string line2 = tokens[i].lexeme;
@@ -219,9 +219,9 @@ vector <Token> expand_tilde(vector <Token> &tokens) {
             }
         }
     }
-    //for (auto i: tokens) i.printToken();*/
+    //for (auto i: tokens) i.printToken();
     return tokens;
-}
+}*/
 string expandPrompt(char *prompt) {
     string ret;
     while (*prompt) {
@@ -242,6 +242,12 @@ string expandPrompt(char *prompt) {
             }
             if (prompt[1] == 'u') {
                 ret += getenv("USER");
+                prompt++;
+            }
+            if (prompt[1] == 'H') {
+                char hostname[100];
+                gethostname(hostname, sizeof(hostname));
+                ret += hostname;
                 prompt++;
             }
         }

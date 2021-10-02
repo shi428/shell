@@ -1,6 +1,6 @@
 #include <built-in.h>
 #include <parser.h>
-#include <tokenizer.h>
+#include <misc.h>
 #include <bits/stdc++.h>
 #include <sys/wait.h>
 #include <fcntl.h>
@@ -8,6 +8,8 @@
 #include <pwd.h>
 #include <exec.h>
 #include <expansion.h>
+#include "lex.yy.hpp"
+#include "yacc.yy.hpp"
 
 extern char **environ;
 const char *built_in[7] = {"alias", "cd", "help", "printenv", "setenv", "source", "unsetenv"};
@@ -110,8 +112,8 @@ extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
 extern void yypush_buffer_state(YY_BUFFER_STATE buffer);
 extern void yypop_buffer_state();
 extern YY_BUFFER_STATE yy_scan_string(const char * str);
-int yyparse();
-extern void myunput(int c);
+//int yyparse();
+//extern void myunput(int c);
 int runBuiltInCommand(char **cmd, struct passwd *p) {
     if (checkSyntax(cmd)) {
         if (!strcmp(cmd[0], "alias")) {
@@ -201,12 +203,18 @@ int runBuiltInCommand(char **cmd, struct passwd *p) {
             }
             //signal(SIGCHLD, sigchild_handler);
             
+            yyscan_t local;
+            yylex_init(&local);
             while (getline(fin, line)) {
                 line += '\n';
-                for (size_t i = line.length() - 1; i >= 0; i--) {
+                YY_BUFFER_STATE buffer = yy_scan_string((char *)line.c_str(), local);
+                yyparse(local);
+                yy_delete_buffer(buffer, local);
+/*                for (size_t i = line.length() - 1; i >= 0; i--) {
                     myunput(line[i]);
-                }
+                }*/
             }
+            yylex_destroy(local);
             fin.close();
         }
         return 0;

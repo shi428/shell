@@ -390,7 +390,6 @@ int Command::execute(Tree *tr, struct passwd *p, vector <pid_t> &children, int *
                 delete tr;
                 //        if (aliased_cmd != cmd) delete [] ptr;
                 deleteAliasedCommands();
-                yylex_destroy();
                 exit(EXIT_FAILURE);
             }
         }

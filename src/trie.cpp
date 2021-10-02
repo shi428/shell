@@ -35,11 +35,13 @@ void Trie::insert(string &key) {
     TrieNode *current = root;
     for (unsigned int i = 0; i < key.length(); i++) {
         int index = (unsigned char)key[i] - 0x20;
+        if (index >= 0) {
         if (!current->children[index]) {
             current->children[index] = new TrieNode();
             current->n_children++;
         }
         current = current->children[index];
+        }
     }
     current->is_word = true;
 }
@@ -67,11 +69,13 @@ TrieNode* Trie::search(string &key) {
     TrieNode *current = root;
     for (unsigned int i = 0; i < key.length(); i++) {
         int index = (unsigned char)key[i] - 0x20;
+        if (index >= 0) {
         if (!current->children[index]) {
             return NULL;
         }
         else {
             current = current->children[index];
+        }
         }
     }
     return current;

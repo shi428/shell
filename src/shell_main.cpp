@@ -1,10 +1,12 @@
 #include <parser.h>
-#include <tokenizer.h>
+#include <misc.h>
 #include <exec.h>
 #include <built-in.h>
 #include <expansion.h>
 #include <sys/stat.h>
 #include <trie.h>
+#include "yacc.yy.hpp"
+#include "lex.yy.hpp"
 vector <pair<pid_t, vector <string>>> bPids;
 vector <int> pos;
 pid_t shell_pid;
@@ -130,15 +132,18 @@ int main(int argc, char *argv[]) {
     shell_pid = getpid();
     string line;
     p = getpwuid(getuid());
+    getUsers(p);
     string shellrc_loc = string(getenv("HOME")) + string("/.shellrc");
-    //const char *source[3] = {"source", shellrc_loc.c_str(), NULL};
-    //char *shell_path = realpath("/proc/self/exe", NULL);
-    //const char *set_shell[4] = {"setenv", "SHELL", shell_path, NULL};
-    //runBuiltInCommand((char **)set_shell, p);
-    //free(shell_path);
+    const char *source[3] = {"source", shellrc_loc.c_str(), NULL};
+    char *shell_path = realpath("/proc/self/exe", NULL);
+    const char *set_shell[4] = {"setenv", "SHELL", shell_path, NULL};
+    runBuiltInCommand((char **)set_shell, p);
+    free(shell_path);
     if (isatty(0)) {
-     //   runBuiltInCommand((char **)source, p);
+        runBuiltInCommand((char **)source, p);
     }
+    yyscan_t local;
+    yylex_init(&local);
     while (!exit_flag) {
         //trie = buildTrie(getenv("PWD"));
         if (isatty(0)) {
@@ -151,12 +156,12 @@ int main(int argc, char *argv[]) {
             ind = history.size();
         }
 
-        buffer = yy_scan_string((char *)line.c_str());
+        buffer = yy_scan_string((char *)line.c_str(), local);
         //yypush_buffer_state(buffer);
-        if (yyparse()) cout << "ERROR" << endl;
-        /*//if (!getline(cin, line)) break;
-        yy_delete_buffer(buffer);
-        vector <Token> tokens = genTokens(line, true);
+        yyparse(local);
+        //if (!getline(cin, line)) break;
+        yy_delete_buffer(buffer, local);
+        /*vector <Token> tokens = genTokens(line, true);
         if (isatty(0)) {//for (auto i: tokens) i.printToken();
         }
         tokens = expand_subshell(tokens);
@@ -192,6 +197,7 @@ int main(int argc, char *argv[]) {
     }
     //yyrestart(stdin);
     //yyparse();
+    yylex_destroy(local);
     deleteAliasedCommands();
     return EXIT_SUCCESS;
 }

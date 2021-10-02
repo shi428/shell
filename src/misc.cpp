@@ -8,7 +8,7 @@ StringIterator::stringIterator(string &line) {
         {' ', ' '},
         {'a', '\a'},
         {'b', '\b'},
-        {'e', '\e'},
+        {'e', '\033'},
         {'f', '\f'},
         {'n', '\n'},
         {'t', '\t'},
