@@ -4,8 +4,8 @@
 #include <parser.h>
 #include <unistd.h>
 #include "yacc.yy.hpp"
-//    static void yyunput(int c, char *buf);
- //   void myunput(int c);
+    static void yyunput(int c, char *buf, yyscan_t scan);
+    void myunput(int c);
    /* extern std::string readline();
     extern std::vector <std::string> history;
     extern unsigned ind;
@@ -33,7 +33,7 @@
 //#define getc(f) mygetc(f)
 %}
 
-%option reentrant
+%option reentrant bison-bridge bison-locations
 %%
 [ \t]+ {
     return SPACE;
@@ -96,15 +96,19 @@
     return RIGHT_BRACE;
 }
 [^ \t\n] { 
-    yylval.ch = *yytext;
+    yylval->ch = *yytext;
     return CHAR;
 }
 \\[^\n] { 
-    yylval.str = new std::string(yytext);
+    yylval->str = new std::string(yytext);
     return ESCAPE_CHAR;
 }
 %%
 int yywrap(yyscan_t scan) {
     return 1;
+}
+
+void myunput(int c) {
+    //unput(c);
 }
 

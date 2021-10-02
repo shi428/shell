@@ -8,8 +8,8 @@
 #include <pwd.h>
 #include <exec.h>
 #include <expansion.h>
-#include "lex.yy.hpp"
 #include "yacc.yy.hpp"
+#include "lex.yy.hpp"
 
 extern char **environ;
 const char *built_in[7] = {"alias", "cd", "help", "printenv", "setenv", "source", "unsetenv"};

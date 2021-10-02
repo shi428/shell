@@ -2,7 +2,7 @@ INCDIR=include
 CPP = g++ -std=c++11 -g -I $(INCDIR) -Wall
 WORKDIR=work
 SRCDIR=src
-SHELLSRCS=shell_main.cpp tokenizer.cpp misc.cpp parser.cpp command.cpp exec.cpp built-in.cpp expansion.cpp cat.cpp read_line.cpp tty_raw_mode.cpp trie.cpp autocomplete.cpp
+SHELLSRCS=shell_main.cpp misc.cpp parser.cpp command.cpp exec.cpp built-in.cpp expansion.cpp cat.cpp read_line.cpp tty_raw_mode.cpp trie.cpp autocomplete.cpp
 TOKENSRCS=token_main.cpp misc.cpp read_line.cpp trie.cpp tty_raw_mode.cpp autocomplete.cpp
 PARSERSRCS=tokenizer.cpp misc.cpp parser_main.cpp trie.cpp tty_raw_mode.cpp autocomplete.cpp read_line.cpp command.cpp parser.cpp built-in.cpp
 READLINESRCS=read_line.cpp read_line_main.cpp trie.cpp tty_raw_mode.cpp

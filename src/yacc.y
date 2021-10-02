@@ -4,9 +4,7 @@
 #include <command.h>
 #include <built-in.h>
 #include <exec.h>
-#include "lex.yy.hpp"
-int yylex ();
-extern char *yytext;
+//#include "lex.yy.hpp"
 extern unsigned int ind;
 extern struct passwd *p;
 extern std::vector <pair<pid_t, std::vector <std::string>>> bPids;
@@ -26,13 +24,16 @@ std::stack <Command *>command_stack;
 extern void myunput(int c);
 %}
 
-%param {yyscan_t scanner};
+%define api.pure full
+%lex-param {yyscan_t scanner};
+%parse-param {yyscan_t scanner};
+%locations
 %code requires{
     typedef void *yyscan_t;
 };
 %code {
-int yylex(yyscan_t);
-void yyerror(yyscan_t, const char *);
+int yylex(YYSTYPE *yylvalp, YYLTYPE *yylocp, yyscan_t scanner);
+void yyerror(YYLTYPE *yylocp, yyscan_t, const char *);
 };
 %union {char ch; std::string* str; Node *node;}
 %start goal
@@ -68,7 +69,7 @@ void yyerror(yyscan_t, const char *);
 %type <node> full_command_line;
 %type <node> command_word;
 %type space;
-//%type <str> subshell;
+%type <str> subshell;
 %type <str> arg;
 %type <str> quote_word;
 %type <str> quote;
@@ -216,6 +217,11 @@ arg quote {
 $$->append(*$2);
 delete $2;
 } | 
+arg subshell {
+$$->append(*$2);
+delete $2;
+}
+|
 {
 $$=new string();
 };
@@ -286,7 +292,7 @@ word:  ch word {
    }
     ;
 
-/*subshell: SUBSHELL space command_line RIGHT_PAREN {
+subshell: SUBSHELL space command_line RIGHT_PAREN {
         Tree *tr = new Tree;
         tr->root = $3;
         int pipefd[2];
@@ -321,11 +327,12 @@ word:  ch word {
             delete tr;
             for (size_t i = line.size() - 1; i >= 0; i--) {
                 myunput(line[i]);
+                if (i == 0) break;
             }
     command_stack.pop();
     currentCommand = command_stack.top();
-        $$ = new string();
-}*/
+        $$ = new string(line);
+}
 ch: CHAR {
   $$=$1;
   }
@@ -337,7 +344,7 @@ ch: CHAR {
 space: SPACE | ;
 %%
 
-void yyerror(yyscan_t scan, const char *s) {
+void yyerror(YYLTYPE *yyllocp, yyscan_t scan, const char *s) {
     cerr << s << endl;
 }
 
