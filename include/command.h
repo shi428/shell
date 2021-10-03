@@ -10,6 +10,7 @@
 #include <pwd.h>
 #include <unistd.h>
 #include <parser.h>
+#include <shell.h>
 
 using namespace std;
 extern void myCat(int inputfd, int outputfd, vector <string> &files, bool readInput);

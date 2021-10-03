@@ -311,12 +311,14 @@ int Command::execute(Tree *tr, struct passwd *p, vector <pid_t> &children, int *
           return 0;
           }
           }*/
+    process *processPtr = new process();
     char **aliased_cmd = expandAlias(cmd);
     char **ptr = aliased_cmd != cmd ? aliased_cmd : cmd;
     if (strcmp(cmd[0], "exit") == 0) {
         cout << "exit" << endl;
         return 1;
     }
+    processPtr->argv = copyCommand(ptr);
     pid_t child;
     int fdout[2];
     int fdin[2];
@@ -357,6 +359,21 @@ int Command::execute(Tree *tr, struct passwd *p, vector <pid_t> &children, int *
       }*/
     else {
         if ((child = fork()) == 0) {
+            pid_t  pid;
+            if (shell_is_interactive) {
+                pid = getpid();
+                //if (!j->pgid) j->pgid = pid;
+                //setpgid (pid, j->pgid);
+                //if (foreground) {
+                //    tcsetpgrp(shell_terminal, pgid);
+                // }
+                signal(SIGINT, SIG_DFL);
+                signal(SIGQUIT, SIG_DFL);
+                signal(SIGTSTP, SIG_DFL);
+                signal(SIGTTIN, SIG_DFL);
+                signal(SIGTTOU, SIG_DFL);
+                signal(SIGCHLD, SIG_DFL);
+            }
             dup2(readfd, STDIN_FILENO);
             dup2(writefd, STDOUT_FILENO);
             if (files[0].size() > 1 || (readfd != STDIN_FILENO && files[0].size())) {
@@ -390,6 +407,15 @@ int Command::execute(Tree *tr, struct passwd *p, vector <pid_t> &children, int *
                 //        if (aliased_cmd != cmd) delete [] ptr;
                 deleteAliasedCommands();
                 exit(EXIT_FAILURE);
+            }
+        }
+        else {
+            processPtr->pid = child;
+            if (shell_is_interactive) {
+                //if (!j->pgid) {
+                //    j->pgid = pid;
+               // }
+               // setpgid(pid, j->pgid);
             }
         }
         children.push_back(child);

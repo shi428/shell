@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <vector>
 #include <string>
+#include <process.h>
 
 int exec(Tree *tr, struct passwd *p, Node *node, vector <pair<pid_t, vector <string>>> &bPids, vector <int> &pos);
 int exec_node(Tree *tr, struct passwd *p, vector <pid_t> &children, Node *node, int *pipefds, int readfd, int writefd, vector <string> &cmds);
