@@ -30,11 +30,11 @@ memory_%: compile_%
 lex.yy.cpp: lex.l
 	lex  --header-file=$(SRCDIR)/$(patsubst %.cpp,%.hpp, $@) -o $(SRCDIR)/$@ $< 
 lex.yy.o: lex.yy.cpp
-	$(CPP) -c $(SRCDIR)/$< -o $(WORKDIR)/$@ 
+	time --format='%e' $(CPP) -c $(SRCDIR)/$< -o $(WORKDIR)/$@ 
 yacc.yy.cpp: yacc.y
 	bison -d -y -t --debug -o $(SRCDIR)/$@ $< 
 yacc.yy.o: yacc.yy.cpp
-	$(CPP) -c $(SRCDIR)/$< -o $(WORKDIR)/$@ 
+	time --format='%e' $(CPP) -c $(SRCDIR)/$< -o $(WORKDIR)/$@ 
 compile_shell: $(SHELLOBJS) lex.yy.o yacc.yy.o
 	$(CPP) $(addprefix $(WORKDIR)/, $(SHELLOBJS) lex.yy.o yacc.yy.o) -o shell
 compile_tokenizer: $(TOKENOBJS) lex.yy.o
@@ -44,6 +44,6 @@ compile_parser: $(PARSEROBJS) lex.yy.o yacc.yy.o
 compile_readline: $(READLINEOBJS)
 	$(CPP) $(addprefix $(WORKDIR)/, $(READLINEOBJS)) -o readline
 %.o: %.cpp | $(WORKDIR)
-	$(CPP) -c $< -o $(WORKDIR)/$@ 
+	time --format='%e' $(CPP) -c $< -o $(WORKDIR)/$@ 
 clean:
 	rm -rf shell tokenizer parser work readline testing/*diff testing/out* testing/*.out testing/o* testing/f* src/lex.yy.cpp src/yacc.yy.cpp src/yacc.yy.hpp src/lex.yy.hpp

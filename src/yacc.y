@@ -1,5 +1,7 @@
 %{
-#include <bits/stdc++.h>
+#include <string>
+#include <vector>
+#include <stack>
 #include <misc.h>
 #include <command.h>
 #include <built-in.h>

@@ -1,10 +1,10 @@
-#include <bits/stdc++.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <termios.h>
 #include <trie.h>
 #include <dirent.h>
 #include <misc.h>
+#include <vector>
 
 using namespace std;
 extern unsigned int ind;

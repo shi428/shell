@@ -1,6 +1,7 @@
-#include <bits/stdc++.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <vector>
+#include <string>
 
 using namespace std;
 vector <int> openFiles(vector <string> &files) {

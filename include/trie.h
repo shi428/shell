@@ -2,7 +2,9 @@
 #define TRIE_H
 #define ALPHABET_LEN 255 - 32 + 1
 
-#include <bits/stdc++.h>
+#include <string>
+#include <iostream>
+#include <cstring>
 using namespace std;
 struct TrieNode {
     TrieNode();

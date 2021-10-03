@@ -1,7 +1,6 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include <bits/stdc++.h>
     typedef enum type {
         COMMAND_NODE= 0,
         PIPE_NODE = 1,

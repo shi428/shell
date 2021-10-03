@@ -1,7 +1,8 @@
 #ifndef SHELL_H
 #define SHELL_H
 
-#include <bits/stdc++.h>
+#include <vector>
+#include <string>
 using namespace std;
 vector <char *> parse_command(string &input);
 int handle_command(struct passwd *p, vector <char *> &cmd);

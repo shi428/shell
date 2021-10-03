@@ -1,8 +1,11 @@
 #ifndef MISC_H
 #define MISC_H
 
-#include <bits/stdc++.h>
 
+#include <unordered_map>
+#include <string>
+#include <cstring>
+#include <iostream>
 using namespace std;
 typedef struct stringIterator {
     unordered_map<char, char> escapeChars;

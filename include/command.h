@@ -1,6 +1,9 @@
 #ifndef COMMAND_H
 #define COMMAND_H
-#include <bits/stdc++.h>
+#include <vector>
+#include <string>
+#include <iostream>
+#include <unordered_map>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <fcntl.h>

@@ -1,7 +1,7 @@
 #include <built-in.h>
 #include <parser.h>
+#include <fstream>
 #include <misc.h>
-#include <bits/stdc++.h>
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <unistd.h>

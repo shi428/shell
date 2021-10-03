@@ -1,6 +1,6 @@
 %x src
 %{
-#include <bits/stdc++.h>
+#include <string>
 #include <parser.h>
 #include <unistd.h>
 #include "yacc.yy.hpp"
