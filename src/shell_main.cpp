@@ -1,10 +1,12 @@
 #include <parser.h>
+#define EXTERN
 #include <misc.h>
 #include <exec.h>
 #include <built-in.h>
 #include <expansion.h>
 #include <sys/stat.h>
 #include <trie.h>
+#include <shell.h>
 #include "yacc.yy.hpp"
 #include "lex.yy.hpp"
 vector <pair<pid_t, vector <string>>> bPids;
@@ -13,6 +15,11 @@ pid_t shell_pid;
 pid_t background_process;
 int return_code;
 string last_arg;
+//EXTERN pid_t shell_pgid;
+//EXTERN struct termios shell_tmodes;
+//EXTERN int shell_terminal;
+//EXTERN int shell_is_interactive;
+
 unordered_map<string,string> users;
 
 Trie *buildTrie(const char *currentdir);
@@ -127,8 +134,9 @@ extern int exit_flag;
 void yyrestart(FILE * input_file );
 extern void yypop_buffer_state();
 int main(int argc, char *argv[]) {
-    signal(SIGINT, sigint_handler);
-    signal(SIGCHLD, sigchild_handler);
+//    signal(SIGINT, sigint_handler);
+//    signal(SIGCHLD, sigchild_handler);
+    init_shell();
     shell_pid = getpid();
     string line;
     p = getpwuid(getuid());
@@ -200,4 +208,39 @@ int main(int argc, char *argv[]) {
     yylex_destroy(local);
     deleteAliasedCommands();
     return EXIT_SUCCESS;
+}
+
+void init_shell() {
+    /* See if we are running interactively.  */
+  shell_terminal = STDIN_FILENO;
+  shell_is_interactive = isatty (shell_terminal);
+
+  if (shell_is_interactive)
+    {
+      /* Loop until we are in the foreground.  */
+      while (tcgetpgrp (shell_terminal) != (shell_pgid = getpgrp ()))
+        kill (- shell_pgid, SIGTTIN);
+
+      /* Ignore interactive and job-control signals.  */
+      signal (SIGINT, sigint_handler);
+      signal (SIGQUIT, SIG_IGN);
+      signal (SIGTSTP, SIG_IGN);
+      signal (SIGTTIN, SIG_IGN);
+      signal (SIGTTOU, SIG_IGN);
+      signal (SIGCHLD, sigchild_handler);
+
+      /* Put ourselves in our own process group.  */
+      shell_pgid = getpid ();
+      if (setpgid (shell_pgid, shell_pgid) < 0)
+        {
+          perror ("Couldn't put the shell in its own process group");
+          exit (1);
+        }
+
+      /* Grab control of the terminal.  */
+      tcsetpgrp (shell_terminal, shell_pgid);
+
+      /* Save default terminal attributes for shell.  */
+      tcgetattr (shell_terminal, &shell_tmodes);
+    }
 }

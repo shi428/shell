@@ -1,12 +1,17 @@
 #ifndef SHELL_H
 #define SHELL_H
+#ifndef EXTERN
+#define EXTERN extern
+#endif
 
-#include <bits/stdc++.h>
+#include <sys/types.h>
+#include <termios.h>
+#include <unistd.h>
 using namespace std;
-vector <char *> parse_command(string &input);
-int handle_command(struct passwd *p, vector <char *> &cmd);
-void freeStrings(vector <char *> &cmd);
-void printPrompt(struct passwd *p);
-string replaceHomeDir(char *buf, char *pw_name);
-int detectCarrots(vector <char *> &cmd);
+
+EXTERN pid_t shell_pgid;
+EXTERN struct termios shell_tmodes;
+EXTERN int shell_terminal;
+EXTERN int shell_is_interactive;
+void init_shell();
 #endif
