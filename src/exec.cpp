@@ -1,4 +1,6 @@
 #include <exec.h>
+#include <command.h>
+//#include <expansion.h>
 
 extern int return_code;
 extern string last_arg;

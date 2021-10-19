@@ -1,7 +1,7 @@
-#include <parser.h>
+//#include <parser.h>
 #define EXTERN
 #include <misc.h>
-#include <exec.h>
+//#include <exec.h>
 #include <built-in.h>
 #include <expansion.h>
 #include <sys/stat.h>

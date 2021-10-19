@@ -6,8 +6,9 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <pwd.h>
-#include <exec.h>
-#include <expansion.h>
+#include <vector>
+//#include <expansion.h>
+#include <unordered_map>
 #include "yacc.yy.hpp"
 #include "lex.yy.hpp"
 

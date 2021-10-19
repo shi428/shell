@@ -1,8 +1,8 @@
 #ifndef EXEC_H
 #define EXEC_H
 
-#include "command.h"
-#include "parser.h"
+//#include "command.h"
+#include <parser.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <fcntl.h>

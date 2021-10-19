@@ -1,4 +1,6 @@
 #include <expansion.h>
+//#include <built-in.h>
+#include <unordered_map>
 extern int getLength(char **);
 /*vector <Token> expand_subshell(vector <Token> &tokens) {
     for (unsigned int i = 0; i < tokens.size(); i++) {

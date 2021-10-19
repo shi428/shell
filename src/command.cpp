@@ -1,9 +1,3 @@
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <pwd.h>
-#include <unistd.h>
 #include <command.h>
 #include <misc.h>
 #include <built-in.h>
