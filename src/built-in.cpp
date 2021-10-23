@@ -1,13 +1,6 @@
-#include <built-in.h>
-#include <parser.h>
-#include <fstream>
-#include <misc.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <pwd.h>
-#include <vector>
+#include <shell.h>
 //#include <expansion.h>
+//#include <fstream>
 #include <unordered_map>
 #include "yacc.yy.hpp"
 #include "lex.yy.hpp"
@@ -107,14 +100,6 @@ void printAliases() {
         cout << endl;
     }
 }
-typedef struct yy_buffer_state * YY_BUFFER_STATE;
-void yyrestart(FILE * input_file );
-extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
-extern void yypush_buffer_state(YY_BUFFER_STATE buffer);
-extern void yypop_buffer_state();
-extern YY_BUFFER_STATE yy_scan_string(const char * str);
-//int yyparse();
-//extern void myunput(int c);
 int runBuiltInCommand(char **cmd, struct passwd *p) {
     if (checkSyntax(cmd)) {
         if (!strcmp(cmd[0], "alias")) {
@@ -128,9 +113,6 @@ int runBuiltInCommand(char **cmd, struct passwd *p) {
                 aliases[string(ptr[0])] = pair<char **, int>(&ptr[1], getLength(&cmd[2]));
                 alias_ptrs.push_back(ptr);
                 //}
-                /*else {
-                    it->second = pair<char **, int>(&ptr[1], getLength(&cmd[2]));
-                }*/
             }
         }
         if (!strcmp(cmd[0], "help")) {
@@ -202,7 +184,6 @@ int runBuiltInCommand(char **cmd, struct passwd *p) {
                 cerr << "source: no such file or directory: " << cmd[1] << endl;
                 return -1;
             }
-            //signal(SIGCHLD, sigchild_handler);
             
             yyscan_t local;
             yylex_init(&local);
@@ -211,9 +192,6 @@ int runBuiltInCommand(char **cmd, struct passwd *p) {
                 YY_BUFFER_STATE buffer = yy_scan_string((char *)line.c_str(), local);
                 yyparse(local);
                 yy_delete_buffer(buffer, local);
-/*                for (size_t i = line.length() - 1; i >= 0; i--) {
-                    myunput(line[i]);
-                }*/
             }
             yylex_destroy(local);
             fin.close();

@@ -17,9 +17,9 @@ struct Trie {
     Trie();
     ~Trie();
     TrieNode *root;
-    void insert(string &key);
-    void traverse(TrieNode *root, string &prefix);
-    TrieNode* search(string &key);
-    string try_complete(string &key);
+    void insert(std::string &key);
+    void traverse(TrieNode *root, std::string &prefix);
+    TrieNode* search(std::string &key);
+    std::string try_complete(std::string &key);
 };
 #endif

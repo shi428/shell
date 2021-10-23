@@ -1,6 +1,4 @@
-#include <dirent.h>
-#include <trie.h>
-#include <unistd.h>
+#include <shell.h>
 
 Trie *buildTrie(string &str) {
     size_t period = str.find_last_of('.');

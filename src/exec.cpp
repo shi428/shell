@@ -1,10 +1,9 @@
-#include <exec.h>
-#include <command.h>
+#include <shell.h>
 //#include <expansion.h>
 
 extern int return_code;
 extern string last_arg;
-int exec(Tree *tr, struct passwd *p, Node *node, vector <pair<pid_t, vector <string>>> &bPids, vector <int> &pos) {
+int exec(AST *tr, struct passwd *p, Node *node, vector <pair<pid_t, vector <string>>> &bPids, vector <int> &pos) {
     vector <pid_t> children;
     vector <string> cmds;
     int ret = exec_node(tr, p, children, node, NULL, STDIN_FILENO, STDOUT_FILENO, cmds);
@@ -27,12 +26,17 @@ int exec(Tree *tr, struct passwd *p, Node *node, vector <pair<pid_t, vector <str
     return ret;
 }
 
-int exec_node(Tree *tr, struct passwd *p, vector <pid_t> &children, Node *node, int *pipefds, int readfd, int writefd, vector <string> &cmds) {
+int exec_node(AST *tr, struct passwd *p, vector <pid_t> &children, Node *node, int *pipefds, int readfd, int writefd, vector <string> &cmds) {
     int fdin = dup(STDIN_FILENO);
     int fdout = dup(STDOUT_FILENO);
     int fderr = dup(STDERR_FILENO);
     int ret = 0;
     if (node->type == COMMAND_NODE) {
+        vector <string> args;
+        for (auto i: node->children) {
+           args.push_back(*(string *)i->obj);
+        }
+        ((Command *)node->obj)->createArgs(args);
         // cerr << "CMD" << endl;
         ret = ((Command *)node->obj)->execute(tr, p, children, pipefds, readfd, writefd, cmds);
     }
@@ -53,38 +57,38 @@ int exec_node(Tree *tr, struct passwd *p, vector <pid_t> &children, Node *node, 
     return ret;
 }
 
-int exec_pipe(Tree *tr, struct passwd *p, vector <pid_t> &children, Node *node, int *pipefds, int readfd, int writefd, vector <string> &cmds) {
+int exec_pipe(AST *tr, struct passwd *p, vector <pid_t> &children, Node *node, int *pipefds, int readfd, int writefd, vector <string> &cmds) {
     int fds[2];
     pipe(fds);
-    int left = exec_node(tr, p, children, node->left, fds, readfd, fds[1], cmds);
+    int left = exec_node(tr, p, children, node->children[0], fds, readfd, fds[1], cmds);
     cmds.push_back(string("|"));
     close(fds[1]);
-    int right = exec_node(tr, p, children, node->right, pipefds, fds[0], writefd, cmds);
+    int right = exec_node(tr, p, children, node->children[1], pipefds, fds[0], writefd, cmds);
     close(fds[0]);
     return left + right;
 }
 
 
-int exec_and(Tree *tr, struct passwd *p, vector <pid_t> &children, Node *node, int *pipefds, int readfd, int writefd, vector <string> &cmds) {
-    exec_node(tr, p, children, node->left, pipefds, readfd, writefd, cmds);
+int exec_and(AST *tr, struct passwd *p, vector <pid_t> &children, Node *node, int *pipefds, int readfd, int writefd, vector <string> &cmds) {
+    exec_node(tr, p, children, node->children[0], pipefds, readfd, writefd, cmds);
         int status;
         if (children.size())
         waitpid(children[children.size() - 1], &status, 0);
         if (!WEXITSTATUS(status)) {
     cmds.push_back(string("&&"));
-    exec_node(tr, p, children, node->right, pipefds, readfd, writefd, cmds);
+    exec_node(tr, p, children, node->children[1], pipefds, readfd, writefd, cmds);
     return 0;
         }
     return -1;;
 }
-int exec_or(Tree *tr, struct passwd *p, vector <pid_t> &children, Node *node, int *pipefds, int readfd, int writefd, vector <string> &cmds) {
-    exec_node(tr, p, children, node->left, pipefds, readfd, writefd, cmds);
+int exec_or(AST *tr, struct passwd *p, vector <pid_t> &children, Node *node, int *pipefds, int readfd, int writefd, vector <string> &cmds) {
+    exec_node(tr, p, children, node->children[0], pipefds, readfd, writefd, cmds);
         int status;
         if (children.size())
         waitpid(children[children.size() - 1], &status, 0);
         if (WEXITSTATUS(status)) {
     cmds.push_back(string("&&"));
-    exec_node(tr, p, children, node->right, pipefds, readfd, writefd, cmds);
+    exec_node(tr, p, children, node->children[1], pipefds, readfd, writefd, cmds);
     return 0;
         }
     return -1;;

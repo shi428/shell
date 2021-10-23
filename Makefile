@@ -1,8 +1,8 @@
 INCDIR=include
-CPP = g++ -std=c++11 -g -I $(INCDIR) -Wall
+CPP = g++ -std=c++11 -g -Wall -I$(INCDIR)
 WORKDIR=work
 SRCDIR=src
-SHELLSRCS=shell_main.cpp misc.cpp parser.cpp command.cpp exec.cpp built-in.cpp expansion.cpp cat.cpp read_line.cpp tty_raw_mode.cpp trie.cpp autocomplete.cpp process.cpp
+SHELLSRCS=shell_main.cpp misc.cpp ast.cpp ast_arg.cpp command.cpp exec.cpp built-in.cpp expansion.cpp cat.cpp read_line.cpp tty_raw_mode.cpp trie.cpp autocomplete.cpp process.cpp
 TOKENSRCS=token_main.cpp misc.cpp read_line.cpp trie.cpp tty_raw_mode.cpp autocomplete.cpp
 PARSERSRCS=tokenizer.cpp misc.cpp parser_main.cpp trie.cpp tty_raw_mode.cpp autocomplete.cpp read_line.cpp command.cpp parser.cpp built-in.cpp
 READLINESRCS=read_line.cpp read_line_main.cpp trie.cpp tty_raw_mode.cpp
@@ -21,6 +21,7 @@ test_%: compile_shell
 	cd testing && ./testall $@
 $(WORKDIR): lex.yy.cpp yacc.yy.cpp
 	test -d $(WORKDIR) || mkdir $(WORKDIR)
+	$(CPP) include/shell.h
 %: compile_%
 	./$*
 debug_%: compile_%
@@ -44,6 +45,6 @@ compile_parser: $(PARSEROBJS) lex.yy.o yacc.yy.o
 compile_readline: $(READLINEOBJS)
 	$(CPP) $(addprefix $(WORKDIR)/, $(READLINEOBJS)) -o readline
 %.o: %.cpp | $(WORKDIR)
-	time --format='%e' $(CPP) -c $< -o $(WORKDIR)/$@ 
+	time --format='%e' $(CPP) -c $< -o  $(WORKDIR)/$@ 
 clean:
 	rm -rf shell tokenizer parser work readline testing/*diff testing/out* testing/*.out testing/o* testing/f* src/lex.yy.cpp src/yacc.yy.cpp src/yacc.yy.hpp src/lex.yy.hpp

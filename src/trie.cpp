@@ -1,4 +1,4 @@
-#include <trie.h>
+#include <shell.h>
 
 using namespace std;
 TrieNode::TrieNode() {
@@ -31,7 +31,7 @@ Trie::~Trie() {
     deleteHelper(root);
 }
 
-void Trie::insert(string &key) {
+void Trie::insert(std::string &key) {
     TrieNode *current = root;
     for (unsigned int i = 0; i < key.length(); i++) {
         int index = (unsigned char)key[i] - 0x20;
@@ -46,14 +46,14 @@ void Trie::insert(string &key) {
     current->is_word = true;
 }
 
-void Trie::traverse(TrieNode *root, string &prefix) {
+void Trie::traverse(TrieNode *root, std::string &prefix) {
     if (!root) return;
     if (!root->n_children && root->is_word) {
-        cout << prefix << endl;
+        std::cout << prefix << endl;
         return ;
     }
     if (root->is_word) {
-        cout << prefix << endl;
+        std::cout << prefix << endl;
     }
     for (int i = 0; i < ALPHABET_LEN; i++) {
         if (root->children[i]) {
@@ -65,7 +65,7 @@ void Trie::traverse(TrieNode *root, string &prefix) {
     }
 }
 
-TrieNode* Trie::search(string &key) {
+TrieNode* Trie::search(std::string &key) {
     TrieNode *current = root;
     for (unsigned int i = 0; i < key.length(); i++) {
         int index = (unsigned char)key[i] - 0x20;
@@ -81,7 +81,7 @@ TrieNode* Trie::search(string &key) {
     return current;
 }
 
-string Trie::try_complete(string &input) {
+std::string Trie::try_complete(std::string &input) {
     string ret = "";
     TrieNode *current = search(input);
     while (current && current->n_children == 1 && !current->is_word) {
@@ -95,21 +95,3 @@ string Trie::try_complete(string &input) {
     }
     return ret;
 }
-/*int main() {
-    Trie *trie = new Trie;
-    string prefix = "";
-    vector <string> ins;
-    ins.push_back("asdf");
-    ins.push_back("aldskjf");
-    ins.push_back("laksjdf");
-    ins.push_back("asdfa");
-    ifstream fin("/usr/share/dict/words");
-    string line;
-    while (getline(fin, line)) {
-//        cout << line << endl;
-        trie->insert(line);
-    }
-    fin.close();
-    trie->traverse(trie->root, prefix);
-    delete trie;
-}*/

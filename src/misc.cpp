@@ -1,7 +1,4 @@
-#include <misc.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
+#include <shell.h>
 
 StringIterator::stringIterator(string &line) {
     escapeChars = {

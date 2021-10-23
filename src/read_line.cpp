@@ -1,10 +1,4 @@
-#include <unistd.h>
-#include <sys/types.h>
-#include <termios.h>
-#include <trie.h>
-#include <dirent.h>
-#include <misc.h>
-#include <vector>
+#include <shell.h>
 
 using namespace std;
 extern unsigned int ind;

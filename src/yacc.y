@@ -1,11 +1,12 @@
 %{
-#include <parser.h>
-#include <string>
-#include <vector>
+#include <shell.h>
+//#include <ast.h>
+//#include <string>
+//#include <vector>
 #include <stack>
-#include <misc.h>
-#include <command.h>
-#include <exec.h>
+//#include <misc.h>
+//#include <command.h>
+//#include <exec.h>
 //#include <expansion.h>
 //#include "lex.yy.hpp"
 extern unsigned int ind;
@@ -21,6 +22,7 @@ extern void yypush_buffer_state(YY_BUFFER_STATE new_buffer);
 extern void printPrompt();
 int exit_flag;
 Command *currentCommand;
+std::vector <Node *> currentArgs;
 #define YYERROR_VERBOSE 1
 std::vector <std::string> args_vec;
 std::stack <Command *>command_stack;
@@ -81,7 +83,7 @@ void yyerror(YYLTYPE *yylocp, yyscan_t, const char *);
 goal: input 
 input:
  space full_command_line space NEWLINE {
-    Tree *tr = new Tree;
+    AST *tr = new AST;
     tr->root = $2;
     if (tr->root) {
         //        parseTree->root->traverse(0);
@@ -106,24 +108,24 @@ full_command_line: command_line AMPERSAND {
 command_line: simple_command space PIPE space command_line {
             $$=new Node();
             $$->type = PIPE_NODE;
-            $$->left = $1;
-            $$->right = $5;
+            $$->children.push_back($1);
+            $$->children.push_back($5);
             }
             |
             simple_command space AND space command_line
             {
             $$=new Node();
             $$->type = AND_NODE;
-            $$->left = $1;
-            $$->right = $5;
+            $$->children.push_back($1);
+            $$->children.push_back($5);
             }
             |
             simple_command space OR space command_line
             {
             $$=new Node();
             $$->type = OR_NODE;
-            $$->left = $1;
-            $$->right = $5;
+            $$->children.push_back($1);
+            $$->children.push_back($5);
             }
             |
             simple_command {
@@ -175,7 +177,7 @@ command_word: arg {
     $$->obj = new Command();
     currentCommand = (Command *)$$->obj;
     command_stack.push(currentCommand);
-    currentCommand->commands.push_back(*$1);
+    currentArgs.push_back(make_arg_node(*$1));
     delete $1;
     }; /*| quote
     {
@@ -189,23 +191,25 @@ command_word: arg {
 no_arg_command: command_word SPACE args {
     //for (auto i: args_vec) std::cout << i << std::endl;
     $$=$1;
-    currentCommand->createArgs(currentCommand->commands);
+    $$->children = currentArgs;
+    currentArgs.clear();
 }
 | command_word {
     $$=$1;
-    currentCommand->createArgs(currentCommand->commands);
+    $$->children = currentArgs;
+    currentArgs.clear();
 };
 args: 
     arg {
    if (($1)->length()) {
-    currentCommand->commands.push_back(*$1);
+    currentArgs.push_back(make_arg_node(*$1));
     delete $1;
     }
     }
     |
    args SPACE arg {
    if (($3)->length()) {
-    currentCommand->commands.push_back(*$3);
+    currentArgs.push_back(make_arg_node(*$3));
     delete $3;
     }
     }
@@ -296,7 +300,7 @@ word:  ch word {
     ;
 
 subshell: SUBSHELL space command_line RIGHT_PAREN {
-        Tree *tr = new Tree;
+        AST *tr = new AST;
         tr->root = $3;
         int pipefd[2];
         pipe(pipefd);

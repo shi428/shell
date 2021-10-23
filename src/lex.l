@@ -1,8 +1,7 @@
 %x src
 %{
 #include <string>
-#include <parser.h>
-#include <unistd.h>
+#include <ast.h>
 #include "yacc.yy.hpp"
     static void yyunput(int c, char *buf, yyscan_t scan);
     void myunput(int c);

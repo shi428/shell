@@ -1,7 +1,4 @@
-#include <fcntl.h>
-#include <unistd.h>
-#include <vector>
-#include <string>
+#include <shell.h>
 
 using namespace std;
 vector <int> openFiles(vector <string> &files) {
