@@ -9,6 +9,7 @@ typedef enum type {
         AND_NODE = 2,
         OR_NODE = 3,
         ARG_NODE = 4,
+        SUBSHELL_NODE = 5,
 }Type;
 
 struct Node {
@@ -27,4 +28,5 @@ struct AST {
 };
 
 Node *make_arg_node(string &arg);
+Node *make_subshell_node(Node *command_line);
 #endif

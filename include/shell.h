@@ -22,8 +22,6 @@
 #include <process.h>
 #include <trie.h>
 
-#include <fstream>
-
 using namespace std;
 
 EXTERN pid_t shell_pgid;

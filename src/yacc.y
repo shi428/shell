@@ -300,7 +300,8 @@ word:  ch word {
     ;
 
 subshell: SUBSHELL space command_line RIGHT_PAREN {
-        AST *tr = new AST;
+        currentArgs.push_back(make_subshell_node($3));
+/*        AST *tr = new AST;
         tr->root = $3;
         int pipefd[2];
         pipe(pipefd);
@@ -338,7 +339,7 @@ subshell: SUBSHELL space command_line RIGHT_PAREN {
             }
     command_stack.pop();
     currentCommand = command_stack.top();
-        $$ = new string(line);
+        $$ = new string(line);*/
 }
 ch: CHAR {
   $$=$1;

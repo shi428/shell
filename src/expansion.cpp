@@ -1,6 +1,5 @@
-#include <expansion.h>
+#include <shell.h>
 //#include <built-in.h>
-#include <unordered_map>
 extern int getLength(char **);
 extern pid_t shell_pid;
 extern int return_code;
@@ -8,6 +7,8 @@ extern pid_t background_process;
 extern string last_arg;
 extern unordered_map<string, string> users;
 
+vector <Node *>expand_subshell(Node *subshell) {
+}
 string expandPrompt(char *prompt) {
     string ret;
     while (*prompt) {
@@ -111,8 +112,13 @@ void expandWildcardHelper(string &prefix, string &suffix, string &relative_dir, 
         while (struct dirent *entry = readdir(directory)) {
             string dir = string(entry->d_name);
             string regex_substr = reg_ex.substr(1, reg_ex.find('/', 1) - 1);
+            regex_substr.insert(0, 1, '^');
+            regex_substr.push_back('$');
+            regex_t re;
+            regcomp(&re, regex_substr.c_str(), REG_EXTENDED | REG_NOSUB);
             //cout << dir << " " << regex_substr << " " << suffix << endl;
-            if (regex_match(dir, regex(regex_substr))) {
+            if (!regexec(&re, entry->d_name, 1, NULL, 0)/*regex_match(dir, regex(regex_substr))*/) {
+            //if (regex_match(dir, regex(regex_substr))) {
                 if (dir[0] == '.') {
                     if (suffix.substr(suffix.find('/') + 1)[0] == '.') {
                         if (pwd) {
@@ -142,7 +148,11 @@ void expandWildcardHelper(string &prefix, string &suffix, string &relative_dir, 
             string dir = string(entry->d_name);
             string regex_substr = reg_ex.substr(1, reg_ex.find('/', 1) - 1);
             string newPrefix = prefix + dir + "/";
-            if (regex_match(dir, regex(regex_substr))) {
+            regex_substr.insert(0, 1, '^');
+            regex_substr.push_back('$');
+            regex_t re;
+            regcomp(&re, regex_substr.c_str(), REG_EXTENDED | REG_NOSUB);
+            if (!regexec(&re, entry->d_name, 1, NULL, 0)/*regex_match(dir, regex(regex_substr))*/) {
                 if (dir[0] == '.') {
                     if (suffix.substr(suffix.find('/') + 1)[0] == '.') {
                         string newSuffix = suffix.substr(suffix.find('/',1));
@@ -183,6 +193,5 @@ vector <string> expandWildcard(string &wildcard, bool pwd){
     string relative_dir = "";
     expandWildcardHelper(root_dir, wildcard, relative_dir, ret, false, pwd);
     sort(ret.begin(), ret.end());
-
     return ret;
 }
