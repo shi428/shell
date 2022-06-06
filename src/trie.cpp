@@ -2,8 +2,8 @@
 
 using namespace std;
 TrieNode::TrieNode() {
-    n_children = 0;
-    is_word = false;
+    this->n_children = 0;
+    this->is_word = false;
     for (int i = 0; i < ALPHABET_LEN; i++) {
         children[i] = NULL;
     }
@@ -15,24 +15,18 @@ Trie::Trie() {
 
 void deleteHelper(TrieNode *root) {
     if (!root) return;
-  /*  if (!root->n_children) {
-        delete root;
-        return ;
-    }*/
     for (int i = 0; i < ALPHABET_LEN; i++) {
-      //  if (root->children[i]) {
         deleteHelper(root->children[i]);
-       // }
     }
     delete root;
 }
 
 Trie::~Trie() {
-    deleteHelper(root);
+    deleteHelper(this->root);
 }
 
-void Trie::insert(std::string &key) {
-    TrieNode *current = root;
+void Trie::insert(string &key) {
+    TrieNode *current = this->root;
     for (unsigned int i = 0; i < key.length(); i++) {
         int index = (unsigned char)key[i] - 0x20;
         if (index >= 0) {
@@ -46,14 +40,14 @@ void Trie::insert(std::string &key) {
     current->is_word = true;
 }
 
-void Trie::traverse(TrieNode *root, std::string &prefix) {
+void Trie::traverse(TrieNode *root, string &prefix) {
     if (!root) return;
     if (!root->n_children && root->is_word) {
-        std::cout << prefix << endl;
+        cout << prefix << endl;
         return ;
     }
     if (root->is_word) {
-        std::cout << prefix << endl;
+        cout << prefix << endl;
     }
     for (int i = 0; i < ALPHABET_LEN; i++) {
         if (root->children[i]) {
@@ -65,8 +59,8 @@ void Trie::traverse(TrieNode *root, std::string &prefix) {
     }
 }
 
-TrieNode* Trie::search(std::string &key) {
-    TrieNode *current = root;
+TrieNode* Trie::search(string &key) {
+    TrieNode *current = this->root;
     for (unsigned int i = 0; i < key.length(); i++) {
         int index = (unsigned char)key[i] - 0x20;
         if (index >= 0) {
@@ -81,7 +75,7 @@ TrieNode* Trie::search(std::string &key) {
     return current;
 }
 
-std::string Trie::try_complete(std::string &input) {
+string Trie::try_complete(string &input) {
     string ret = "";
     TrieNode *current = search(input);
     while (current && current->n_children == 1 && !current->is_word) {

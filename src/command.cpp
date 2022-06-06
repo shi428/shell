@@ -119,6 +119,7 @@ int Command::execute(AST *tr, struct passwd *p, vector <pid_t> &children, int *p
         return 1;
     }
     processPtr->argv = copyCommand(ptr);
+    //pid_t current_pid;
     pid_t child;
     int fdout[2];
     int fdin[2];
@@ -159,9 +160,8 @@ int Command::execute(AST *tr, struct passwd *p, vector <pid_t> &children, int *p
       }*/
     else {
         if ((child = fork()) == 0) {
-            pid_t  pid;
             if (shell_is_interactive) {
-                pid = getpid();
+                //current_pid = getpid();
                 //if (!j->pgid) j->pgid = pid;
                 //setpgid (pid, j->pgid);
                 //if (foreground) {

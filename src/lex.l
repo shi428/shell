@@ -3,8 +3,8 @@
 #include <string>
 #include <ast.h>
 #include "yacc.yy.hpp"
-    static void yyunput(int c, char *buf, yyscan_t scan);
-    void myunput(int c);
+//    static void yyunput(int c, char *buf, yyscan_t scan);
+//    void myunput(int c);
    /* extern std::string readline();
     extern std::vector <std::string> history;
     extern unsigned ind;
@@ -32,7 +32,7 @@
 //#define getc(f) mygetc(f)
 %}
 
-%option reentrant bison-bridge bison-locations
+%option reentrant bison-bridge bison-locations nounput
 %%
 [ \t]+ {
     return SPACE;

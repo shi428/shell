@@ -3,7 +3,6 @@
 //#include <ast.h>
 //#include <string>
 //#include <vector>
-#include <stack>
 //#include <misc.h>
 //#include <command.h>
 //#include <exec.h>
@@ -25,7 +24,6 @@ Command *currentCommand;
 std::vector <Node *> currentArgs;
 #define YYERROR_VERBOSE 1
 std::vector <std::string> args_vec;
-std::stack <Command *>command_stack;
 extern void myunput(int c);
 %}
 
@@ -176,7 +174,6 @@ command_word: arg {
     $$->type = COMMAND_NODE;
     $$->obj = new Command();
     currentCommand = (Command *)$$->obj;
-    command_stack.push(currentCommand);
     currentArgs.push_back(make_arg_node(*$1));
     delete $1;
     }; /*| quote

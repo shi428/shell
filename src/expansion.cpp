@@ -7,8 +7,8 @@ extern pid_t background_process;
 extern string last_arg;
 extern unordered_map<string, string> users;
 
-vector <Node *>expand_subshell(Node *subshell) {
-}
+//vector <Node *>expand_subshell(Node *subshell) {
+//}
 string expandPrompt(char *prompt) {
     string ret;
     while (*prompt) {
