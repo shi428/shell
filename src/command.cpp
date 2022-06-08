@@ -1,11 +1,11 @@
-#include <shell.h>
+#include <shell_util.h>
 
 extern int fdin[2];
 extern int yylex_destroy();
 Command::~Command() {
     int i = 0;
     while (cmd[i]) {
-        delete [] cmd[i];
+        free(cmd[i]);
         i++;
     }
     delete [] cmd;
@@ -31,8 +31,7 @@ void Command::createArgs(vector <string> &cmd) {
     }
     this->cmd = new char*[args.size() + 1];
     for (unsigned int i = 0; i < args.size(); i++) {
-        this->cmd[i] = new char[args[i].length() + 1];
-        strcpy(this->cmd[i], args[i].c_str());
+        this->cmd[i] = strdup(args[i].c_str());
     }
     this->cmd[args.size()] = NULL;
 }

@@ -1,4 +1,4 @@
-#include <shell.h>
+#include <shell_util.h>
 //#include <expansion.h>
 //#include <fstream>
 #include "yacc.yy.hpp"
@@ -30,7 +30,7 @@ void sigchild_handler2(int signum) {
                 pos.erase(pos.begin() + i);
                 i--;
                 if (isatty(0)) {
-                    printPrompt();
+                    //printPrompt();
                 }
                 fflush(stdout);
             }
@@ -189,7 +189,8 @@ int runBuiltInCommand(char **cmd, struct passwd *p) {
             while (getline(fin, line)) {
                 line += '\n';
                 YY_BUFFER_STATE buffer = yy_scan_string((char *)line.c_str(), local);
-                yyparse(local);
+                AST *ast = NULL;
+                yyparse(local, &ast);
                 yy_delete_buffer(buffer, local);
             }
             yylex_destroy(local);

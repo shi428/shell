@@ -1,4 +1,4 @@
-#include <shell.h>
+#include <shell_util.h>
 Node::Node() {
     obj = NULL;
     background = 0;
@@ -8,10 +8,10 @@ Node::~Node() {
     if (obj) 
         switch (type) {
             case ARG_NODE: 
-                delete (string*)obj; 
+                delete obj; 
                 break;
             case COMMAND_NODE:
-                delete (Command *)obj;
+                delete obj;
                 break;
             default: break;
         }

@@ -19,6 +19,7 @@ check() {
 echo -e "\033[1;4;93m\ttest exit\033[0m"
 echo -e "\033[1;4;93m\ttest exit\033[0m" > $diffFile
 input_str=$'exit'
+run_cmd $input_str
 if [ $pass = true ]
 then
     exit 0

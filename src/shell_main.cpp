@@ -1,11 +1,14 @@
 //#include <parser.h>
 #define EXTERN
 //#include <exec.h>
+#include <shell_util.h>
 #include <shell.h>
+#include <jobs.h>
 #include "yacc.yy.hpp"
 #include "lex.yy.hpp"
 vector <pair<pid_t, vector <string>>> bPids;
 vector <int> pos;
+job *first_job = NULL;
 pid_t shell_pid;
 pid_t background_process;
 int return_code;
@@ -13,7 +16,7 @@ string last_arg;
 unordered_map<string,string> users;
 
 Trie *buildTrie(const char *currentdir);
-void printPrompt() {
+void print_prompt() {
     if (isEnviron((char *)"PROMPT")) {
         char *prompt = getenv("PROMPT");
         cout << expandPrompt(prompt);
@@ -28,15 +31,39 @@ void sigint_handler(int signum) {
     //signal(SIGINT, sigint_handler);
     cout << endl;
     if (isatty(0)) {
-        printPrompt();
+        Shell::print_prompt();
     }
     fflush(stdout);
 }
 
-void sigchild_handler(int signum) {
+/*void delete_job(job *j) {
+    if (j == first_job) {
+        delete j;
+        first_job = NULL;
+        return ;
+    }
+    job *it = first_job;
+    while (it && it->next != j) {
+        it = it->next;
+    }
+    it->next = j->next;
+    delete j;
+}*/
+/*void sigchild_handler(int signum) {
     pid_t pid;
-    while ((pid = waitpid(-1, NULL, WNOHANG)) > 0) {
-        for (unsigned int i = 0; i < bPids.size(); i++) {
+    int status;
+    while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+        //mark_process_status(first_job, pid, status);
+        //job *j = find_job_by_pid(first_job, pid);
+        if (j->job_is_completed()) {
+            cout << endl;
+            j->print_job_information();
+            //delete_job(j);
+                if (isatty(0)) {
+                    Shell::print_prompt();
+                }
+                fflush(stdout);
+        }for (unsigned int i = 0; i < bPids.size(); i++) {
             if (bPids[i].first == pid && pos.size()) {
                 background_process = pid;
                 cout << endl;
@@ -50,13 +77,13 @@ void sigchild_handler(int signum) {
                 pos.erase(pos.begin() + i);
                 i--;
                 if (isatty(0)) {
-                    printPrompt();
+                    Shell::print_prompt();
                 }
                 fflush(stdout);
             }
         }
     }
-}
+}*/
 
 void getUsers(struct passwd *p) {
     while (true) {
@@ -82,7 +109,7 @@ struct passwd *p;
 YY_BUFFER_STATE  buffer;
 extern int exit_flag;
 int main(int argc, char *argv[]) {
-    init_shell();
+    Shell::init_shell();
     shell_pid = getpid();
     string line;
     p = getpwuid(getuid());
@@ -94,14 +121,14 @@ int main(int argc, char *argv[]) {
     runBuiltInCommand((char **)set_shell, p);
     free(shell_path);
     if (isatty(0)) {
-        runBuiltInCommand((char **)source, p);
+        //runBuiltInCommand((char **)source, p);
     }
     yyscan_t local;
     yylex_init(&local);
     while (!exit_flag) {
         //trie = buildTrie(getenv("PWD"));
         if (isatty(0)) {
-            printPrompt();
+            Shell::print_prompt();
         }
         line = read_line();
         if (!line.compare("")) break;
@@ -110,46 +137,37 @@ int main(int argc, char *argv[]) {
             ind = history.size();
         }
 
+        if (line.substr(0, 4).compare("jobs") == 0) {
+            Shell::print_jobs();
+            continue;
+        }
+        
+        AST *ast = NULL;
         buffer = yy_scan_string((char *)line.c_str(), local);
-        yyparse(local);
+        yyparse(local, &ast);
         yy_delete_buffer(buffer, local);
+        if (ast && ast->root) {
+        job *j = create_job_from_ast(ast);
+        Shell::insert_job(j);
+        /*if (!Shell::first_job) {
+            Shell::first_job = j;
+        }
+        else {
+            job *it = Shell::first_job;
+            while (it->next) {
+                it = it->next;
+            }
+            it->next = j;
+        }*/
+        j->launch_job();
+        if (j->job_is_completed()) {
+            Shell::delete_job(j);
+        }
+        delete ast;
+        }
     }
     yylex_destroy(local);
     deleteAliasedCommands();
     return EXIT_SUCCESS;
 }
 
-void init_shell() {
-    /* See if we are running interactively.  */
-  shell_terminal = STDIN_FILENO;
-  shell_is_interactive = isatty (shell_terminal);
-
-  if (shell_is_interactive)
-    {
-      /* Loop until we are in the foreground.  */
-      while (tcgetpgrp (shell_terminal) != (shell_pgid = getpgrp ()))
-        kill (- shell_pgid, SIGTTIN);
-
-      /* Ignore interactive and job-control signals.  */
-      signal (SIGINT, sigint_handler);
-      signal (SIGQUIT, SIG_IGN);
-      signal (SIGTSTP, SIG_IGN);
-      signal (SIGTTIN, SIG_IGN);
-      signal (SIGTTOU, SIG_IGN);
-      signal (SIGCHLD, sigchild_handler);
-
-      /* Put ourselves in our own process group.  */
-      shell_pgid = getpid ();
-      if (setpgid (shell_pgid, shell_pgid) < 0)
-        {
-          perror ("Couldn't put the shell in its own process group");
-          exit (1);
-        }
-
-      /* Grab control of the terminal.  */
-      tcsetpgrp (shell_terminal, shell_pgid);
-
-      /* Save default terminal attributes for shell.  */
-      tcgetattr (shell_terminal, &shell_tmodes);
-    }
-}

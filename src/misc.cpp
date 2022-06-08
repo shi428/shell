@@ -1,4 +1,4 @@
-#include <shell.h>
+#include <shell_util.h>
 
 StringIterator::stringIterator(string &line) {
     escapeChars = {
@@ -137,7 +137,7 @@ extern char **environ;
 bool isEnviron(char *String) {
     int i = 0;
     while (environ[i]) {
-        string env = environ[i];
+        string env = string(environ[i]);
         string token = env.substr(0, env.find('='));
         if (!strcmp(token.c_str(), String)) {
             return true;

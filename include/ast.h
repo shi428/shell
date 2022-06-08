@@ -20,11 +20,12 @@ struct Node {
     Type type;
     vector <Node *> children;
 };
+
 struct AST {
     AST();
     ~AST();
-    void freeNodes(Node *node);
-    Node *root;
+    void freeNodes(Node  *node);
+    Node  *root;
 };
 
 Node *make_arg_node(string &arg);

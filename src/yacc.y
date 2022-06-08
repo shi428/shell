@@ -1,5 +1,5 @@
 %{
-#include <shell.h>
+#include <shell_util.h>
 //#include <ast.h>
 //#include <string>
 //#include <vector>
@@ -30,13 +30,14 @@ extern void myunput(int c);
 %define api.pure full
 %lex-param {yyscan_t scanner};
 %parse-param {yyscan_t scanner};
+%parse-param {AST ** ast};
 %locations
 %code requires{
     typedef void *yyscan_t;
 };
 %code {
 int yylex(YYSTYPE *yylvalp, YYLTYPE *yylocp, yyscan_t scanner);
-void yyerror(YYLTYPE *yylocp, yyscan_t, const char *);
+void yyerror(YYLTYPE *yylocp, yyscan_t, AST **ast, const char *);
 };
 %union {char ch; std::string* str; Node *node;}
 %start goal
@@ -82,15 +83,16 @@ goal: input
 input:
  space full_command_line space NEWLINE {
     AST *tr = new AST;
+    *ast = tr;
     tr->root = $2;
-    if (tr->root) {
+    /*if (tr->root) {
         //        parseTree->root->traverse(0);
         if (exec(tr, p, tr->root, bPids, pos) == 1) {
         exit_flag = 1;
         }
             //last_arg = (bPids.back().second).back();
     }
-        delete tr;
+        delete tr;*/
 }
   | NEWLINE  {
   }
@@ -349,7 +351,7 @@ ch: CHAR {
 space: SPACE | ;
 %%
 
-void yyerror(YYLTYPE *yyllocp, yyscan_t scan, const char *s) {
+void yyerror(YYLTYPE *yyllocp, yyscan_t scan, AST **ast, const char *s) {
     cerr << s << endl;
 }
 

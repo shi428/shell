@@ -1,4 +1,4 @@
-#include <shell.h>
+#include <shell_util.h>
 struct termios tty_attr;
 void set_tty_raw_mode() {
     struct termios newtty_attr;
