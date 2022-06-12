@@ -90,6 +90,9 @@ string read_line() {
         if (read(0, &ch, 1) == 0){
             return "";
         }
+        if (ch == 4) {
+            return "";
+        }
         if (ch == '\n') {
             if (isatty(0))
                 write(1, &ch, 1);

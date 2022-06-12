@@ -118,19 +118,20 @@ int main(int argc, char *argv[]) {
     const char *source[3] = {"source", shellrc_loc.c_str(), NULL};
     char *shell_path = realpath("/proc/self/exe", NULL);
     const char *set_shell[4] = {"setenv", "SHELL", shell_path, NULL};
-    runBuiltInCommand((char **)set_shell, p);
+    //runBuiltInCommand((char **)set_shell, p);
     free(shell_path);
     if (isatty(0)) {
         //runBuiltInCommand((char **)source, p);
     }
     yyscan_t local;
     yylex_init(&local);
-    while (!exit_flag) {
+    while (!Shell::exit_status) {
         //trie = buildTrie(getenv("PWD"));
         if (isatty(0)) {
             Shell::print_prompt();
         }
         line = read_line();
+        update_status();
         if (!line.compare("")) break;
         if (line.compare("\n")) {
             history.push_back(line);
@@ -159,8 +160,8 @@ int main(int argc, char *argv[]) {
             }
             it->next = j;
         }*/
-        j->launch_job();
-        if (j->job_is_completed()) {
+        j->launch_job(ast);
+        if (/*j->job_is_completed() || */Shell::exit_status) {
             Shell::delete_job(j);
         }
         delete ast;
@@ -168,6 +169,7 @@ int main(int argc, char *argv[]) {
     }
     yylex_destroy(local);
     deleteAliasedCommands();
+    Shell::destroy_shell();
     return EXIT_SUCCESS;
 }
 

@@ -11,6 +11,7 @@ struct Shell {
     inline static struct termios shell_tmodes;
     inline static int shell_terminal;
     inline static int shell_is_interactive;
+    inline static int exit_status;
 
     struct list_of_jobs {
         list_of_jobs() {
@@ -38,9 +39,16 @@ struct Shell {
     static void sigint_handler(int );
     static void sigchild_handler(int );
     static void print_prompt();
+    static void insert_job_after(job *j, job *it);
     static void insert_job(job *j);
     static void delete_job(job *j);
     static void print_jobs();
+    static job *find_first_stopped_or_bg_job();
+    static job *find_first_stopped_or_fg_job();
+    static job *find_first_background_job();
+    static job *find_first_foreground_job();
+    static void mark_job_as_running(job *j);
 };
 
+//helpers
 #endif

@@ -153,7 +153,7 @@ int Command::execute(AST *tr, struct passwd *p, vector <pid_t> &children, int *p
             dup2(fderr[1], STDERR_FILENO); 
             //close(fderr[0]);
         }
-        runBuiltInCommand(ptr, p);
+        //runBuiltInCommand(ptr, p);
     }
     /*if (true) {
       }*/

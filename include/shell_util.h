@@ -29,4 +29,6 @@ EXTERN struct termios shell_tmodes;
 EXTERN int shell_terminal;
 EXTERN int shell_is_interactive;
 void init_shell();
+void myTee(int inputfd, int outputfd, vector <string> &files, int append);
+void myCat();
 #endif

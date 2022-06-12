@@ -29,9 +29,9 @@ int main() {
     if (child[1] == 0) {
         dup2(fds[0], 0);
         close(fds[1]);
-        int null = open("/dev/null", O_CREAT | O_WRONLY | O_TRUNC);
-        dup2(null, 1);
-        close(null);
+        //int null = open("/dev/null", O_CREAT | O_WRONLY | O_TRUNC);
+        //dup2(null, 1);
+        //close(null);
         execvp(cmd2[0], cmd2);
     }
     //else {

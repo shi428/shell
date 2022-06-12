@@ -4,7 +4,7 @@
 #include <fstream>
 bool isBuiltIn(char *cmd);
 bool checkSyntax(char **cmd);
-int runBuiltInCommand(char **cmd, struct passwd *p);
+int runBuiltInCommand(char **cmd);
 void deleteAliasedCommands();
 char **copyCommand(char **cmd);
 #endif

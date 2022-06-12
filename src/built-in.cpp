@@ -1,12 +1,12 @@
-#include <shell_util.h>
+#include <shell.h>
 //#include <expansion.h>
 //#include <fstream>
 #include "yacc.yy.hpp"
 #include "lex.yy.hpp"
 
 extern char **environ;
-const char *built_in[7] = {"alias", "cd", "help", "printenv", "setenv", "source", "unsetenv"};
-const char *built_in_desc[7] = {"[name] [value]", "[dir]", "", "", "[name] [value]", "[file]", "[name]"};
+const char *built_in[9] = {"alias", "bg", "cd", "fg", "help", "printenv", "setenv", "source", "unsetenv"};
+const char *built_in_desc[9] = {"[name] [value]", "", "[dir]", "", "", "", "[name] [value]", "[file]", "[name]"};
 unordered_map<string, pair<char **, int>> aliases;
 
 vector <char **> alias_ptrs;
@@ -68,6 +68,12 @@ bool checkSyntax(char **cmd) {
     if (!strcmp(cmd[0], "setenv")) {
         return args == 3;
     }
+    if (!strcmp(cmd[0], "fg")) {
+        return args == 1;
+    }
+    if (!strcmp(cmd[0], "bg")) {
+        return args == 1;
+    }
     if (!strcmp(cmd[0], "unsetenv")) {
         return args == 2;
     }
@@ -99,7 +105,7 @@ void printAliases() {
         cout << endl;
     }
 }
-int runBuiltInCommand(char **cmd, struct passwd *p) {
+int runBuiltInCommand(char **cmd) {
     if (checkSyntax(cmd)) {
         if (!strcmp(cmd[0], "alias")) {
             if (cmd[1] == NULL) {
@@ -116,7 +122,7 @@ int runBuiltInCommand(char **cmd, struct passwd *p) {
         }
         if (!strcmp(cmd[0], "help")) {
             cout << "List of built-in commands" << endl;
-            for (int i = 0; i < 7; i++) {
+            for (int i = 0; i < 9; i++) {
                 cout << '\t' << built_in[i] << " " << built_in_desc[i] << endl;
             }
         }
@@ -144,7 +150,7 @@ int runBuiltInCommand(char **cmd, struct passwd *p) {
             setEnvCmd[3] = NULL;
             strcpy(setEnvCmd[0], "setenv");
             strcpy(setEnvCmd[1], "PWD");
-            runBuiltInCommand(setEnvCmd, p);
+            runBuiltInCommand(setEnvCmd);
             delete [] setEnvCmd[0];
             delete [] setEnvCmd[1];
             delete [] setEnvCmd[2];
@@ -176,6 +182,31 @@ int runBuiltInCommand(char **cmd, struct passwd *p) {
                 cerr << "unsetenv: failed to unset environment variable: " << cmd[1] << endl;
             }
         }
+        if (!strcmp(cmd[0], "fg")) {
+            job *j =Shell::find_first_stopped_or_bg_job();
+            if (!j) {
+                cerr << "fg: No such job" << endl;
+                return -1;
+            }
+            Shell::mark_job_as_running(j);
+            j->print_job_information();
+            if (j->foreground) {
+                j->put_job_in_foreground(1);
+            }
+            else {
+                j->put_job_in_foreground(0);
+            }
+        }
+        if (!strcmp(cmd[0], "bg")) {
+            job *j =Shell::find_first_stopped_or_bg_job();
+            if (!j) {
+                cerr << "bg: No such job" << endl;
+                return -1;
+            }
+            Shell::mark_job_as_running(j);
+            j->print_job_information();
+            j->put_job_in_background(1);
+        }
         if (!strcmp(cmd[0], "source")) {
             string line;
             ifstream fin(cmd[1]);
@@ -183,21 +214,44 @@ int runBuiltInCommand(char **cmd, struct passwd *p) {
                 cerr << "source: no such file or directory: " << cmd[1] << endl;
                 return -1;
             }
-            
+
             yyscan_t local;
             yylex_init(&local);
+
+            signal(SIGTTOU, SIG_IGN);
             while (getline(fin, line)) {
                 line += '\n';
                 YY_BUFFER_STATE buffer = yy_scan_string((char *)line.c_str(), local);
                 AST *ast = NULL;
                 yyparse(local, &ast);
                 yy_delete_buffer(buffer, local);
+                if (ast && ast->root) {
+                    job *j = create_job_from_ast(ast);
+                    Shell::insert_job(j);
+                    /*if (!Shell::first_job) {
+                      Shell::first_job = j;
+                      }
+                      else {
+                      job *it = Shell::first_job;
+                      while (it->next) {
+                      it = it->next;
+                      }
+                      it->next = j;
+                      }*/
+                    j->launch_job(ast);
+                    if (j->job_is_completed() || Shell::exit_status) {
+                        Shell::delete_job(j);
+                    }
+                    delete ast;
+                }
             }
+
             yylex_destroy(local);
             fin.close();
         }
         return 0;
     }
+
     cerr << cmd[0]<< ": wrong number of arguments" << endl;
     return -1;
 }

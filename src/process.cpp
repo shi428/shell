@@ -21,7 +21,7 @@ process::~process() {
     argv = NULL;
 }
 
-void process::launch_process(pid_t pgid, int in_file, int out_file, int err_file, int foreground) {
+void process::launch_process(AST *ast, pid_t pgid, int in_file, int out_file, int err_file, int foreground) {
     pid_t pid;
 
     if (Shell::shell_is_interactive) {
@@ -35,7 +35,7 @@ void process::launch_process(pid_t pgid, int in_file, int out_file, int err_file
 
         //give process group terminal permissions
         if (foreground) {
-        tcsetpgrp(Shell::shell_terminal, pgid);
+                tcsetpgrp(Shell::shell_terminal, pgid);
         }
 
         //Set the handling for job control signals back to the default.
@@ -61,6 +61,12 @@ void process::launch_process(pid_t pgid, int in_file, int out_file, int err_file
         close (err_file);
     }
 
+    if (isBuiltIn(this->argv[0])) {
+        runBuiltInCommand(this->argv);
+        delete ast;
+        Shell::destroy_shell();
+        exit(0);
+    }
     //exec process, exit if theres an error
     execvp (this->argv[0], this->argv);
     perror ("execvp");
@@ -76,7 +82,12 @@ void process::print_process_info() {
         status_str = "Done";
     }
     else if (WIFSTOPPED(status)) {
+        if (this->stopped) {
         status_str = "Stopped";
+        }
+        else {
+        status_str = "Continued";
+        }
     }
     else if (WTERMSIG(status)) {
         status_str = "Terminated";

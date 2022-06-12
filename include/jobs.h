@@ -7,8 +7,8 @@
 typedef struct job {
     job();
     ~job();
-    void launch_job();
-    void wait_for_job();
+    void launch_job(AST *ast);
+    int wait_for_job();
     int job_is_stopped();
     int job_is_completed();
     void put_job_in_foreground(int cont);
