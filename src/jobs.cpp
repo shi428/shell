@@ -12,7 +12,7 @@ job::job() {
     this->stdin_fd = 0;
     this->stdout_fd = 1;
     this->stderr_fd = 2;
-    this->foreground = 1;
+    this->foreground = 0;
 }
 
 job::~job() {
@@ -27,9 +27,8 @@ job::~job() {
 
 void job::launch_job(AST *ast) {
     pid_t pid;
-    int my_pipe[2]; //to output redirection
-   // int my_pipe2[2]; //to append redirection
-   // int my_pipe3[2]; //to pipe redirection
+    int my_pipe[2]; //to output/append redirection
+    int my_pipe2[2]; //to pipe redirection
     int in_file;
     int out_file;
     int process_out_file;
@@ -38,6 +37,7 @@ void job::launch_job(AST *ast) {
 
     int old_stdin = dup(STDIN_FILENO);
     int old_stdout = dup(STDOUT_FILENO);
+
     //execute a pipeline
     for (process *p = this->first_process; p; p = p->next) {
         //running builtin commands that have to be run in the parent
@@ -67,6 +67,10 @@ void job::launch_job(AST *ast) {
                 runBuiltInCommand(p->argv);
                 flag = 1;
             }
+            if (!strcmp(p->argv[0], "bg")) {
+                runBuiltInCommand(p->argv);
+                flag = 1;
+            }
             if (!strcmp(p->argv[0], "unsetenv")) {
                 runBuiltInCommand(p->argv);
                 flag = 1;
@@ -80,28 +84,27 @@ void job::launch_job(AST *ast) {
 
         //if redirection is necessary
         if (p->next) { 
-            pipe(my_pipe);
-    /*        if (p->files[1].size() || p->files[4].size()) {
-            pipe(my_pipe);
             pipe(my_pipe2);
-            process_out_file = my_pipe[1];
+            if (p->files[1].size() || p->files[4].size()) {
+                pipe(my_pipe);
+                process_out_file = my_pipe[1];
+                out_file = my_pipe2[1];
             }
             else {
-            process_out_file = my_pipe3[1];
-            }*/
-            process_out_file = my_pipe[1];
+                process_out_file = my_pipe2[1];
+            }
+            //process_out_file = my_pipe[1];
         }
         else { //end of pipeline
-            /*if (p->files[1].size() || p->files[4].size()) {
-            pipe(my_pipe);
-            pipe(my_pipe2);
-            process_out_file = my_pipe[1];
+            if (p->files[1].size() || p->files[4].size()) {
+                pipe(my_pipe);
+                process_out_file = my_pipe[1];
             }
             else {
-            process_out_file = this->stdout_fd;
-            }*/
-            process_out_file = this->stdout_fd;
-            //out_file = this->stdout_fd;
+                process_out_file = this->stdout_fd;
+            }
+            //process_out_file = this->stdout_fd;
+            out_file = this->stdout_fd;
         }
         pid = fork();
         if (pid == 0) { //child process
@@ -116,30 +119,6 @@ void job::launch_job(AST *ast) {
             exit(1);
         }
         else { //parent process
-            /*if (p->files[1].size() || p->files[4].size()) {
-            close(my_pipe[1]);
-            //normal output redirection
-            myTee(my_pipe[0], my_pipe2[1], p->files[1], 0);
-
-            close(my_pipe[0]);
-            close(my_pipe2[1]);
-
-            //append
-            myTee(my_pipe2[0], out_file, p->files[4], 1);
-
-            close(my_pipe2[0]);
-            }
-            else {
-            if (process_out_file != this->stdout_fd) {
-            close(process_out_file);
-            }
-            }
-            if (out_file != this->stdout_fd) {
-            close(out_file);
-            }
-            if (in_file != this->stdin_fd) {
-            close(in_file);
-            }*/
             //assign process group
             p->pid = pid;
             if (Shell::shell_is_interactive) {
@@ -149,6 +128,21 @@ void job::launch_job(AST *ast) {
                 setpgid(pid, this->pgid);
             }
 
+            //output redirection
+            if (p->files[1].size() || p->files[4].size()) {
+                //only do if redirect files exist
+                close(process_out_file);
+                if (fork() == 0) {
+                    setpgid(getpid(), this->pgid);
+                    myTee(my_pipe[0], out_file, p->files[1], p->files[4]);
+                    exit(0);
+                }
+                //clean up write end of pipe
+                if (out_file != this->stdout_fd) {
+                    close(out_file);
+                }
+                close(my_pipe[0]);
+            }
             //clean pipes
             if (in_file != this->stdin_fd) {
                 close(in_file);
@@ -157,10 +151,7 @@ void job::launch_job(AST *ast) {
                 close(process_out_file);
             }
         }
-        /*if (p->files[1].size() || p->files[4].size()) {
-        in_file = my_pipe3[0];
-        }*/
-        in_file  = my_pipe[0];
+        in_file  = my_pipe2[0];
     }
 
     if (!Shell::shell_is_interactive) {
@@ -310,8 +301,9 @@ void update_status() {
     int status;
     pid_t pid;
 
-    do
+    do {
         pid = waitpid (WAIT_ANY, &status, WUNTRACED|WNOHANG|WCONTINUED);
+    }
     while (!mark_process_status (pid, status));
 }
 

@@ -190,12 +190,12 @@ int runBuiltInCommand(char **cmd) {
             }
             Shell::mark_job_as_running(j);
             j->print_job_information();
-            if (j->foreground) {
-                j->put_job_in_foreground(1);
-            }
-            else {
+            //if (j->foreground || j->job_is_stopped()) {
+            j->put_job_in_foreground(1);
+            //}
+           /* else {
                 j->put_job_in_foreground(0);
-            }
+            }*/
         }
         if (!strcmp(cmd[0], "bg")) {
             job *j =Shell::find_first_stopped_or_bg_job();

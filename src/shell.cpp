@@ -20,7 +20,7 @@ void Shell::init_shell() {
         signal (SIGTSTP, SIG_IGN);
         signal (SIGTTIN, SIG_IGN);
         signal (SIGTTOU, SIG_IGN);
-        signal (SIGCHLD, sigchild_handler);
+        signal (SIGCHLD, SIG_DFL);
 
         /* Put ourselves in our own process group.  */
         shell_pgid = getpid ();
@@ -118,19 +118,18 @@ void Shell::delete_job(job *j) {
     jobs->n_jobs--;
 }
 
-void Shell::sigchild_handler(int signum) {
+void Shell::check_zombie() {
     pid_t pid;
     int status;
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
         mark_process_status(pid, status);
         job *j = find_job_by_pid(pid);
-        if (j->job_is_completed() && !j->foreground) {
-            printf("\n");
+        if (j && j->job_is_completed() && !j->foreground) {
             j->print_job_information();
             delete_job(j);
-            if (isatty(0)) {
+            /*if (isatty(0)) {
                 print_prompt();
-            }
+            }*/
             fflush(stdout);
             return ;
         }/*for (unsigned int i = 0; i < bPids.size(); i++) {
@@ -169,7 +168,6 @@ void Shell::print_prompt() {
 void Shell::print_jobs() {
     job *jlast = NULL;
     job *jnext = NULL;
-    update_status();
     printf("printing jobs\n");
     for (job *j = jobs->first_job; j; j = jnext) {
         jnext = j->next;

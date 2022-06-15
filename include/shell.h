@@ -37,7 +37,7 @@ struct Shell {
     static void init_shell();
     static void destroy_shell();
     static void sigint_handler(int );
-    static void sigchild_handler(int );
+    static void check_zombie( );
     static void print_prompt();
     static void insert_job_after(job *j, job *it);
     static void insert_job(job *j);

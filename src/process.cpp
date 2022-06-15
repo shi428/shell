@@ -89,11 +89,11 @@ void process::print_process_info() {
         status_str = "Continued";
         }
     }
-    else if (WTERMSIG(status)) {
-        status_str = "Terminated";
-    }
     else if (WIFCONTINUED(status)) {
         status_str = "Continued";
+    }
+    else if (WTERMSIG(status)) {
+        status_str = "Terminated";
     }
     printf("%d %s ", this->pid, status_str.c_str());
     int i = 0;

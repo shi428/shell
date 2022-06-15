@@ -1,0 +1,40 @@
+input           : complete_command
+pipe_sequence   : command
+                |  pipe_sequence '|' linebreak command
+command         : simple_command
+                | compound_command
+compound_command: subshell
+subshell        : '(' compound_list ')'
+compound_list   : linebreak pipe_list
+                | linebreak pipe_list separator
+pipe_list       : pipe_list separator pipe_sequence
+                | pipe_sequence
+simple_command  : no_arg_command
+no_arg_command  : command_word space args
+                | command_word
+command_word:   : arg
+args            : arg
+                | args SPACE arg
+                | //empty
+arg             : arg word
+                : arg quote
+quote           : DQUOTE quote_word DQUOTE
+                | SQUOTE quote_word SQUOTE
+word            : ch word
+                | //mark the start of the word
+ch              : CHAR
+                | ESCAPE_CHAR
+space           : SPACE
+                | //empty
+linebreak       : newline_list
+                |
+newline_list    : NEWLINE
+                | newline_list NEWLINE
+separator_op    : AMPERSAND
+                | ';'
+separator: separator_op linebreak
+         | newline_list
+         ;
+
+                
+

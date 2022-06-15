@@ -131,6 +131,7 @@ int main(int argc, char *argv[]) {
             Shell::print_prompt();
         }
         line = read_line();
+        Shell::check_zombie();
         update_status();
         if (!line.compare("")) break;
         if (line.compare("\n")) {
@@ -161,7 +162,7 @@ int main(int argc, char *argv[]) {
             it->next = j;
         }*/
         j->launch_job(ast);
-        if (/*j->job_is_completed() || */Shell::exit_status) {
+        if (Shell::exit_status) {
             Shell::delete_job(j);
         }
         delete ast;

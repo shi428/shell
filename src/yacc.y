@@ -81,10 +81,10 @@ void yyerror(YYLTYPE *yylocp, yyscan_t, AST **ast, const char *);
 
 goal: input 
 input:
- space full_command_line space NEWLINE {
+ space linebreak full_command_line space linebreak {
     AST *tr = new AST;
     *ast = tr;
-    tr->root = $2;
+    tr->root = $3;
     /*if (tr->root) {
         //        parseTree->root->traverse(0);
         if (exec(tr, p, tr->root, bPids, pos) == 1) {
@@ -96,7 +96,7 @@ input:
 }
   | NEWLINE  {
   }
-  | error NEWLINE { yyerrok; }
+  //| error NEWLINE { yyerrok; }
  
 ;
 
@@ -105,14 +105,14 @@ full_command_line: command_line AMPERSAND {
                 $$->background = 1;
                  } |
                  command_line;
-command_line: simple_command space PIPE space command_line {
+command_line: simple_command space PIPE space linebreak command_line {
             $$=new Node();
             $$->type = PIPE_NODE;
             $$->children.push_back($1);
-            $$->children.push_back($5);
+            $$->children.push_back($6);
             }
             |
-            simple_command space AND space command_line
+            /*simple_command space AND space command_line
             {
             $$=new Node();
             $$->type = AND_NODE;
@@ -127,7 +127,7 @@ command_line: simple_command space PIPE space command_line {
             $$->children.push_back($1);
             $$->children.push_back($5);
             }
-            |
+            |*/
             simple_command {
             $$=$1;
             }
@@ -348,7 +348,23 @@ ch: CHAR {
   delete $1;
   } ;
 
-space: SPACE | ;
+space: SPACE 
+     | 
+     ;
+
+linebreak: newline_list
+         |
+         ;
+newline_list: NEWLINE
+            | newline_list NEWLINE
+            ;
+
+separator_op: AMPERSAND 
+            | ';'
+separator: separator_op linebreak
+         | newline_list
+         ;
+
 %%
 
 void yyerror(YYLTYPE *yyllocp, yyscan_t scan, AST **ast, const char *s) {

@@ -48,7 +48,6 @@ rm -f out*
 echo Processing Command: $shell_in>>$diffFile
 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; cat out3 out4 ) <(../shell <<< $shell_in 2>&1; cat out1 out2 ) >>& $diffFile
 check $shell_in $?
-rm -f test_redirect_input.*
 if [ $pass = true ]
 then
     exit 0
