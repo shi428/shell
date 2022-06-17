@@ -239,7 +239,7 @@ int runBuiltInCommand(char **cmd) {
                       it->next = j;
                       }*/
                     j->launch_job(ast);
-                    if (j->job_is_completed() || Shell::exit_status) {
+                    if (Shell::exit_status) {
                         Shell::delete_job(j);
                     }
                     delete ast;

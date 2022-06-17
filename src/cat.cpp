@@ -9,11 +9,11 @@ vector <int> openFiles(vector <string> &files) {
     return ret;
 }
 
-void myCat(int inputfd, int outputfd, vector <string> &files, bool readInput) {
+void myCat(int inputfd, int outputfd, vector <string> &files) {
     char buffer[4096];
     vector <int> fds = openFiles(files);
     ssize_t n_bytes;
-    if (readInput) {
+    if (inputfd) {
         while ((n_bytes = read(inputfd, buffer, 4095)) != 0) {
             buffer[n_bytes] = '\0';
             write(outputfd, buffer, n_bytes);

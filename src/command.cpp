@@ -103,7 +103,7 @@ int Command::redirectOut(int *pipefd, int *pipefd2, int i, bool pipeflag, bool _
 
 int Command::redirectIn(int *pipefd, vector <pid_t> &children, int readfd, int writefd, bool pipeflag) {
     reverse(files[0].begin(), files[0].end());
-    myCat(readfd, pipefd[1], files[0], pipeflag);
+    //myCat(readfd, pipefd[1], files[0], pipeflag);
     close(pipefd[1]);
     return 1;
 }

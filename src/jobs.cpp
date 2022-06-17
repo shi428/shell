@@ -29,14 +29,22 @@ void job::launch_job(AST *ast) {
     pid_t pid;
     int my_pipe[2]; //to output/append redirection
     int my_pipe2[2]; //to pipe redirection
-    int in_file;
+    int err_pipe[2]; //error redirection
+    int out_err_pipe[2]; //output and error redirection
+    int in_pipe[2]; //input redirection
+
+    int in_file; 
     int out_file;
+    int err_file;
     int process_out_file;
+    int redirect_in_file;
 
     in_file = this->stdin_fd;
+    redirect_in_file = this->stdin_fd;
 
     int old_stdin = dup(STDIN_FILENO);
     int old_stdout = dup(STDOUT_FILENO);
+
 
     //execute a pipeline
     for (process *p = this->first_process; p; p = p->next) {
@@ -59,9 +67,10 @@ void job::launch_job(AST *ast) {
                 flag = 1;
             }
 
-            /*if (!strcmp(p->argv[0], "source")) {
-            //runBuiltInCommand(p->argv);
-            }*/
+            if (!strcmp(p->argv[0], "source")) {
+                runBuiltInCommand(p->argv);
+                flag = 1;
+            }
 
             if (!strcmp(p->argv[0], "fg")) {
                 runBuiltInCommand(p->argv);
@@ -85,32 +94,69 @@ void job::launch_job(AST *ast) {
         //if redirection is necessary
         if (p->next) { 
             pipe(my_pipe2);
+            process_out_file = my_pipe2[1];
+            err_file = this->stderr_fd;
+            if (p->files[0].size()) {
+                pipe(in_pipe);
+                redirect_in_file = in_file;
+                in_file = in_pipe[0];
+                if (p->files[0].size() == 1 && redirect_in_file == this->stdin_fd /*not coming from a pipe*/) {
+                    in_file = open(p->files[0][0].c_str(), O_RDONLY);
+                }
+            }
             if (p->files[1].size() || p->files[4].size()) {
                 pipe(my_pipe);
                 process_out_file = my_pipe[1];
                 out_file = my_pipe2[1];
             }
-            else {
-                process_out_file = my_pipe2[1];
+            if (p->files[2].size()) {
+                pipe(err_pipe);
+                err_file = err_pipe[1];
             }
-            //process_out_file = my_pipe[1];
         }
         else { //end of pipeline
+            process_out_file = this->stdout_fd;
+            err_file = this->stderr_fd;
+            if (p->files[0].size()) {
+                pipe(in_pipe);
+                redirect_in_file = in_file;
+                in_file = in_pipe[0];
+                if (p->files[0].size() == 1 && redirect_in_file == this->stdin_fd) {
+                    in_file = open(p->files[0][0].c_str(), O_RDONLY);
+                }
+            }
             if (p->files[1].size() || p->files[4].size()) {
                 pipe(my_pipe);
                 process_out_file = my_pipe[1];
             }
-            else {
-                process_out_file = this->stdout_fd;
+            if (p->files[2].size()) {
+                pipe(err_pipe);
+                err_file = err_pipe[1];
+            }
+            if (p->files[3].size() || p->files[5].size()) {
+                pipe(out_err_pipe);
+                process_out_file = out_err_pipe[1];
+                err_file = out_err_pipe[1];
             }
             //process_out_file = this->stdout_fd;
             out_file = this->stdout_fd;
         }
+        //input redirection here
+        if (p->files[0].size() > 1 || (p->files[0].size() && redirect_in_file != this->stdin_fd)) {
+            if (fork() == 0) {
+                reverse(p->files[0].begin(), p->files[0].end());
+                myCat(redirect_in_file, in_pipe[1], p->files[0]);
+                exit(0);
+            }
+            close(in_pipe[1]);
+        }
+
+        //execute command
         pid = fork();
         if (pid == 0) { //child process
             if (flag == 0) {
                 //use first pipe output for piping
-                p->launch_process(ast, this->pgid, in_file, process_out_file, this->stderr_fd, this->foreground);
+                p->launch_process(ast, this->pgid, in_file, process_out_file, err_file, this->foreground);
             }
             exit(0);
         }
@@ -142,6 +188,27 @@ void job::launch_job(AST *ast) {
                     close(out_file);
                 }
                 close(my_pipe[0]);
+            }
+            //error redirection
+            if (p->files[2].size()) {
+                close(err_file);
+                if (fork() == 0) {
+                    setpgid(getpid(), this->pgid);
+                    vector <string> empty;
+                    myTee(err_pipe[0], 1, p->files[2], empty);
+                    exit(0);
+                }
+                close(err_pipe[0]);
+            }
+            if (p->files[3].size() || p->files[5].size()) {
+                close(out_err_pipe[1]);
+                if (fork() == 0) {
+                    setpgid(getpid(), this->pgid);
+                    vector <string> empty;
+                    myTee(out_err_pipe[0], 1, p->files[3], p->files[5]);
+                    exit(0);
+                }
+                close(out_err_pipe[0]);
             }
             //clean pipes
             if (in_file != this->stdin_fd) {

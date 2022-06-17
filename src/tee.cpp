@@ -1,7 +1,4 @@
-#include <bits/stdc++.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/wait.h>
+#include <shell_util.h>
 
 using namespace std;
 vector <int> openFiles(vector <string> &files, int append) {

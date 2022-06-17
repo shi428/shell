@@ -30,5 +30,5 @@ EXTERN int shell_terminal;
 EXTERN int shell_is_interactive;
 void init_shell();
 void myTee(int inputfd, int outputfd, vector <string> &out_files, vector <string> & append_files);
-void myCat();
+void myCat(int inputfd, int outputfd, vector <string> &files);
 #endif

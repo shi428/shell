@@ -53,10 +53,13 @@ void process::launch_process(AST *ast, pid_t pgid, int in_file, int out_file, in
         close (in_file);
     }
     if (out_file != STDOUT_FILENO) {
+        if (out_file == err_file) {
+            dup2(err_file, STDERR_FILENO);
+        }
         dup2 (out_file, STDOUT_FILENO);
         close (out_file);
     }
-    if (err_file != STDERR_FILENO) {
+    if (out_file != err_file && err_file != STDERR_FILENO) {
         dup2 (err_file, STDERR_FILENO);
         close (err_file);
     }

@@ -73,7 +73,7 @@ void yyerror(YYLTYPE *yylocp, yyscan_t, AST **ast, const char *);
 %type <node> full_command_line;
 %type <node> command_word;
 %type space;
-%type <str> subshell;
+%type <str> cmd_subst;
 %type <str> arg;
 %type <str> quote_word;
 %type <str> quote;
@@ -223,7 +223,7 @@ arg quote {
 $$->append(*$2);
 delete $2;
 } | 
-arg subshell {
+arg cmd_subst {
 $$->append(*$2);
 delete $2;
 }
@@ -298,8 +298,8 @@ word:  ch word {
    }
     ;
 
-subshell: SUBSHELL space command_line RIGHT_PAREN {
-        currentArgs.push_back(make_subshell_node($3));
+cmd_subst: SUBSHELL space command_line RIGHT_PAREN {
+        currentArgs.push_back(make_cmd_subst_node($3));
 /*        AST *tr = new AST;
         tr->root = $3;
         int pipefd[2];
