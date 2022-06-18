@@ -4,6 +4,14 @@
 #include <shell_util.h>
 #include <jobs.h>
 
+//colors
+#define RED "\e[0;31m"
+#define GRN "\e[0;32m"
+#define MAG "\e[0;35m"
+#define CYN "\e[0;36m"
+#define HRED "\e[0;91m"
+#define HGRN "\e[0;92m"
+#define RST "\e[0m"
 struct Shell {
     Shell();
     ~Shell();
@@ -12,6 +20,7 @@ struct Shell {
     inline static int shell_terminal;
     inline static int shell_is_interactive;
     inline static int exit_status;
+    inline static int last_job_exit_status;
 
     struct list_of_jobs {
         list_of_jobs() {

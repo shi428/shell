@@ -1,4 +1,5 @@
 #include <shell.h>
+#include <iomanip>
 
 void Shell::init_shell() {
     /* See if we are running interactively.  */
@@ -125,6 +126,7 @@ void Shell::check_zombie() {
         mark_process_status(pid, status);
         job *j = find_job_by_pid(pid);
         if (j && j->job_is_completed() && !j->foreground) {
+            Shell::last_job_exit_status = WEXITSTATUS(status);
             j->print_job_information();
             delete_job(j);
             /*if (isatty(0)) {
@@ -160,7 +162,12 @@ void Shell::print_prompt() {
         cout << expandPrompt(prompt);
     }
     else {
-        cout << "shell>";
+        if (!Shell::last_job_exit_status) {
+            cout << HGRN << "[ " <<  setw(3) << 0 << " ] $ " << RST;;
+        }
+        else {
+            cout << HRED << "[ " <<  setw(3) << Shell::last_job_exit_status << " ] $ " << RST;
+        }
     }
     fflush(stdout);
 }

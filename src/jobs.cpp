@@ -221,10 +221,10 @@ void job::launch_job(AST *ast) {
         in_file  = my_pipe2[0];
     }
 
-    if (!Shell::shell_is_interactive) {
+    /*if (!Shell::shell_is_interactive) {
         this->wait_for_job();
-    }
-    else if (this->foreground) {
+    }*/
+    if (this->foreground) {
         this->put_job_in_foreground(0);
     }
     else {
@@ -267,6 +267,8 @@ int job::job_is_completed () {
 }
 
 void job::put_job_in_foreground(int cont) {
+    int status;
+
     this->foreground = 1;
 
     //continue job
@@ -276,8 +278,9 @@ void job::put_job_in_foreground(int cont) {
         if (kill (- this->pgid, SIGCONT) < 0)
             perror ("kill (SIGCONT)");
     }
-
-    if (WIFSTOPPED(this->wait_for_job()) == 0) {
+    status = this->wait_for_job();
+    if (WIFSTOPPED(status) == 0) {
+        Shell::last_job_exit_status = WEXITSTATUS(status);
         Shell::delete_job(this);
     }
     tcsetpgrp (Shell::shell_terminal, Shell::shell_pgid);
@@ -421,6 +424,12 @@ void traverse_helper(Node *node, job *j, string &command) {
             }
         }
         j->append_process(p);
+    }
+    else if (node->type == CMD_SUBST_NODE) {
+        //execute subshell
+        string cmd_subst_command;
+        traverse_helper(((AST *)node->obj)->root, j, cmd_subst_command);
+        cout << cmd_subst_command << endl;
     }
     else {
         traverse_helper(node->children[0], j, command);

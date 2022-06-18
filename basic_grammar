@@ -5,6 +5,7 @@ command         : simple_command
                 | compound_command
 compound_command: subshell
 subshell        : '(' compound_list ')'
+command_subst   : '$(' pipe_sequence ')'
 compound_list   : linebreak pipe_list
                 | linebreak pipe_list separator
 pipe_list       : pipe_list separator pipe_sequence
