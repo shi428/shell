@@ -146,10 +146,10 @@ int main(int argc, char *argv[]) {
         
         AST *ast = NULL;
         buffer = yy_scan_string((char *)line.c_str(), local);
-        yyparse(local, &ast);
+        yyparse(local, &ast, 0);
         yy_delete_buffer(buffer, local);
         if (ast && ast->root) {
-        job *j = create_job_from_ast(ast);
+        job *j = create_job_from_ast(&ast);
         Shell::insert_job(j);
         /*if (!Shell::first_job) {
             Shell::first_job = j;

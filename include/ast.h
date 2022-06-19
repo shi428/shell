@@ -16,18 +16,21 @@ struct Node {
     int background;
     Node();
     ~Node();
+    string getCommand(Node *root);
     void *obj;
     Type type;
     vector <Node *> children;
+    vector <char> expansionType;
 };
 
 struct AST {
     AST();
     ~AST();
+    string getCommand();
     void freeNodes(Node  *node);
     Node  *root;
 };
 
-Node *make_arg_node(string &arg);
+Node *make_arg_node(string &arg, vector <char> &expansionTypes);
 Node *make_cmd_subst_node(Node *command_line);
 #endif

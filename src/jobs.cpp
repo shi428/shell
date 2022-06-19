@@ -1,5 +1,7 @@
 #include <jobs.h>
 #include <shell.h>
+#include "yacc.yy.hpp"
+#include "lex.yy.hpp"
 
 job::job() {
     this->job_id = 0;
@@ -144,7 +146,7 @@ void job::launch_job(AST *ast) {
         //input redirection here
         if (p->files[0].size() > 1 || (p->files[0].size() && redirect_in_file != this->stdin_fd)) {
             if (fork() == 0) {
-                reverse(p->files[0].begin(), p->files[0].end());
+                //reverse(p->files[0].begin(), p->files[0].end());
                 myCat(redirect_in_file, in_pipe[1], p->files[0]);
                 exit(0);
             }
@@ -389,11 +391,109 @@ job *find_job_by_pid(pid_t pid)
     return NULL;
 }
 
-job *create_job_from_ast(AST *tr) {
+pair <int, int> findExpand(vector <char> expansionType, int index) {
+    int flag = 0;
+    int startIndex = 0;
+    int endIndex = 0;
+    for (int i = index; i < expansionType.size(); i++) {
+        if (expansionType[i] == 1 && !flag) {
+            flag = 1; 
+            startIndex = i;
+        }
+        if (flag == 1 && (expansionType[i] == 0 || i == expansionType.size() - 1)) {
+            endIndex = i;
+            break; 
+        }
+    }
+    return pair<int,int>(startIndex, endIndex);
+}
+string tryExpand(Node *node, string &command) {
+    string expandedCommand;
+    if (node->type == COMMAND_NODE) {
+        for (auto i: node->children) {
+            //args.push_back(*(string *)i->obj);
+            //p->argv[index] = strdup(((string *)i->obj)->c_str());
+            int index = 0;
+            //cout << i->expansionType.size() << ((string *)i->obj)->size() << endl;
+            while (index < i->expansionType.size()) {
+                if (i->expansionType[index] == 1) {
+                    int delim_index = find(i->expansionType.begin() + index + 1, i->expansionType.end(), 1) - i->expansionType.begin();
+                    string subshell_command = ((string *)i->obj)->substr(index + 2, delim_index - (index + 2));
+                    //cout << subshell_command << endl;
+                    expandedCommand += expandSubshell(subshell_command);
+                    index = delim_index;
+                }
+                else {
+                    expandedCommand += (*(string *)i->obj)[index];
+                }
+                index++;
+            }
+            command += *(string *)i->obj;
+            command += " ";
+            expandedCommand += " ";
+            //cout << *(string *)i->obj << endl;
+        }
+        for (int i = 0; i < 6; i++) {
+            string redirect_symbol;
+            switch(i) {
+            case 0:
+                redirect_symbol = " < ";
+                break;
+            case 1:
+                redirect_symbol = " > ";
+                break;
+            case 2:
+                redirect_symbol = " 2> ";
+                break;
+            case 3:
+                redirect_symbol = " >& ";
+                break;
+            case 4:
+                redirect_symbol = " >> ";
+                break;
+            case 5:
+                redirect_symbol = " >>& ";
+                break;
+            }
+            vector <string> files = ((Command *)(node->obj))->files[i];
+            if (files.size()) {
+            expandedCommand += redirect_symbol;
+            for (unsigned int j = 0; j < files.size() - 1; j++) {
+                expandedCommand += files[j];
+                expandedCommand += redirect_symbol;
+            }
+            expandedCommand += files[files.size() - 1];
+            }
+
+        }
+        //cout << "returning" << endl;
+        return expandedCommand;
+    }
+    expandedCommand += tryExpand(node->children[0], command);
+    command += " | ";
+    expandedCommand += " | ";
+    expandedCommand += tryExpand(node->children[1], command);
+    return expandedCommand;
+}
+
+
+job *create_job_from_ast(AST **tr) {
     job *j = new job;
     string command;
-    j->foreground = !tr->root->background;
-    traverse_helper(tr->root, j, command);
+    j->foreground = !(*tr)->root->background;
+    string expanded_command = tryExpand((*tr)->root, command);
+    //cout << expanded_command << endl;
+    delete *tr;
+
+    //parse expanded command
+    yyscan_t local;
+    yylex_init(&local);
+    YY_BUFFER_STATE buffer = yy_scan_string((char *)expanded_command.c_str(), local);
+    yyparse(local, tr, 1);
+    yy_delete_buffer(buffer, local);
+    yylex_destroy(local);
+
+    traverse_helper((*tr)->root, j, command);
     j->command = strdup(command.c_str());
     return j;
 }
@@ -424,12 +524,6 @@ void traverse_helper(Node *node, job *j, string &command) {
             }
         }
         j->append_process(p);
-    }
-    else if (node->type == CMD_SUBST_NODE) {
-        //execute subshell
-        string cmd_subst_command;
-        traverse_helper(((AST *)node->obj)->root, j, cmd_subst_command);
-        cout << cmd_subst_command << endl;
     }
     else {
         traverse_helper(node->children[0], j, command);

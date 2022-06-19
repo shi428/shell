@@ -32,6 +32,6 @@ typedef struct job {
 job *find_job_by_pid(pid_t pid);
 int mark_process_status(pid_t pid, int status);
 void update_status();
-job *create_job_from_ast(AST *tr);
+job *create_job_from_ast(AST **tr);
 void traverse_helper(Node *node, job *j, string &command);
 #endif

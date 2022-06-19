@@ -7,8 +7,50 @@ extern pid_t background_process;
 extern string last_arg;
 extern unordered_map<string, string> users;
 
-//vector <Node *>expand_subshell(Node *subshell) {
-//}
+string expandSubshell(string &subshell_command) {
+    pid_t child;
+    const char *shell[2] = {"/proc/self/exe", NULL};
+    int write_command_pipe[2];
+    int read_output_pipe[2];
+
+    pipe(write_command_pipe);
+    pipe(read_output_pipe);
+    subshell_command += "\n";
+    write(write_command_pipe[1], subshell_command.c_str(), subshell_command.length());
+
+    if (fork() == 0) {
+        dup2(write_command_pipe[0], STDIN_FILENO);
+        dup2(read_output_pipe[1], STDOUT_FILENO);
+        close(read_output_pipe[0]);
+        close(write_command_pipe[1]);
+        execvp(shell[0], (char **)shell);
+        exit(0);
+    }
+
+    close(write_command_pipe[0]);
+    close(write_command_pipe[1]);
+    close(read_output_pipe[1]);
+    
+    char buf[4096];
+    string output;
+    ssize_t n_bytes;
+    while ((n_bytes = read(read_output_pipe[0], buf, 4095)) != 0) {
+        buf[n_bytes] = '\0';
+        char *temp = buf;
+        while (*temp != '\0'){
+            if (*temp == '\n') {
+                output += ' ';
+            }
+            else {
+                output += *temp;
+            }
+            temp++;
+        }
+    }
+    close(read_output_pipe[0]);
+    output.pop_back();
+    return output;
+}
 string expandPrompt(char *prompt) {
     string ret;
     while (*prompt) {
@@ -77,7 +119,7 @@ char **expandAlias(char **cmd) {
     }
     ptr[aliased_length + length] = NULL;
     if (aliases[string(cmd[0])].first != aliased_cmd) {
-    delete []aliased_cmd;
+        delete []aliased_cmd;
     }
     return ptr;
 }
@@ -118,7 +160,7 @@ void expandWildcardHelper(string &prefix, string &suffix, string &relative_dir, 
             regcomp(&re, regex_substr.c_str(), REG_EXTENDED | REG_NOSUB);
             //cout << dir << " " << regex_substr << " " << suffix << endl;
             if (!regexec(&re, entry->d_name, 1, NULL, 0)/*regex_match(dir, regex(regex_substr))*/) {
-            //if (regex_match(dir, regex(regex_substr))) {
+                //if (regex_match(dir, regex(regex_substr))) {
                 if (dir[0] == '.') {
                     if (suffix.substr(suffix.find('/') + 1)[0] == '.') {
                         if (pwd) {
@@ -138,60 +180,60 @@ void expandWildcardHelper(string &prefix, string &suffix, string &relative_dir, 
                     }
                 }
             }
+            }
+            return ;
         }
-        return ;
-    }
-    else {
-        DIR *directory = opendir(current_dir.c_str());
-        string reg_ex = convert_to_regex(suffix);
-        while (struct dirent *entry = readdir(directory)) {
-            string dir = string(entry->d_name);
-            string regex_substr = reg_ex.substr(1, reg_ex.find('/', 1) - 1);
-            string newPrefix = prefix + dir + "/";
-            regex_substr.insert(0, 1, '^');
-            regex_substr.push_back('$');
-            regex_t re;
-            regcomp(&re, regex_substr.c_str(), REG_EXTENDED | REG_NOSUB);
-            if (!regexec(&re, entry->d_name, 1, NULL, 0)/*regex_match(dir, regex(regex_substr))*/) {
-                if (dir[0] == '.') {
-                    if (suffix.substr(suffix.find('/') + 1)[0] == '.') {
-                        string newSuffix = suffix.substr(suffix.find('/',1));
+        else {
+            DIR *directory = opendir(current_dir.c_str());
+            string reg_ex = convert_to_regex(suffix);
+            while (struct dirent *entry = readdir(directory)) {
+                string dir = string(entry->d_name);
+                string regex_substr = reg_ex.substr(1, reg_ex.find('/', 1) - 1);
+                string newPrefix = prefix + dir + "/";
+                regex_substr.insert(0, 1, '^');
+                regex_substr.push_back('$');
+                regex_t re;
+                regcomp(&re, regex_substr.c_str(), REG_EXTENDED | REG_NOSUB);
+                if (!regexec(&re, entry->d_name, 1, NULL, 0)/*regex_match(dir, regex(regex_substr))*/) {
+                    if (dir[0] == '.') {
+                        if (suffix.substr(suffix.find('/') + 1)[0] == '.') {
+                            string newSuffix = suffix.substr(suffix.find('/',1));
+                            string pwd_str = string(getenv("PWD")) + "/";
+                            if (!prefix.compare(pwd_str) || relative_dir_flag) {
+                                string new_relative_dir = relative_dir + dir + "/";
+                                if (entry->d_type == DT_DIR)
+                                    expandWildcardHelper(newPrefix, newSuffix, new_relative_dir, entries, pwd, pwd);
+                            }
+                            else {
+                                if (entry->d_type == DT_DIR)
+                                    expandWildcardHelper(newPrefix, newSuffix, relative_dir, entries, relative_dir_flag, pwd);
+                            }
+                        }
+                    }
+                    else {
+                        string newSuffix = suffix.substr(suffix.find('/', 1));
+                        //cout << newPrefix <<  " " << newSuffix << endl;
                         string pwd_str = string(getenv("PWD")) + "/";
                         if (!prefix.compare(pwd_str) || relative_dir_flag) {
                             string new_relative_dir = relative_dir + dir + "/";
                             if (entry->d_type == DT_DIR)
-                            expandWildcardHelper(newPrefix, newSuffix, new_relative_dir, entries, pwd, pwd);
+                                expandWildcardHelper(newPrefix, newSuffix, new_relative_dir, entries, pwd, pwd);
                         }
                         else {
                             if (entry->d_type == DT_DIR)
-                            expandWildcardHelper(newPrefix, newSuffix, relative_dir, entries, relative_dir_flag, pwd);
+                                expandWildcardHelper(newPrefix, newSuffix, relative_dir, entries, relative_dir_flag, pwd);
                         }
-                    }
-                }
-                else {
-                    string newSuffix = suffix.substr(suffix.find('/', 1));
-                    //cout << newPrefix <<  " " << newSuffix << endl;
-                    string pwd_str = string(getenv("PWD")) + "/";
-                    if (!prefix.compare(pwd_str) || relative_dir_flag) {
-                        string new_relative_dir = relative_dir + dir + "/";
-                            if (entry->d_type == DT_DIR)
-                        expandWildcardHelper(newPrefix, newSuffix, new_relative_dir, entries, pwd, pwd);
-                    }
-                    else {
-                            if (entry->d_type == DT_DIR)
-                        expandWildcardHelper(newPrefix, newSuffix, relative_dir, entries, relative_dir_flag, pwd);
                     }
                 }
             }
         }
     }
-}
 
-vector <string> expandWildcard(string &wildcard, bool pwd){
-    vector <string> ret;
-    string root_dir = "/";
-    string relative_dir = "";
-    expandWildcardHelper(root_dir, wildcard, relative_dir, ret, false, pwd);
-    sort(ret.begin(), ret.end());
-    return ret;
-}
+    vector <string> expandWildcard(string &wildcard, bool pwd){
+        vector <string> ret;
+        string root_dir = "/";
+        string relative_dir = "";
+        expandWildcardHelper(root_dir, wildcard, relative_dir, ret, false, pwd);
+        sort(ret.begin(), ret.end());
+        return ret;
+    }
