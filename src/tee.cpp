@@ -18,7 +18,7 @@ void myTee(int inputfd, int output_fd, vector <string> &out_files, vector <strin
     vector <int> out_fds = openFiles(out_files, 0);
     vector <int> append_fds = openFiles(append_files, 1);
     ssize_t n_bytes;
-    while (n_bytes = read(inputfd, buffer, (sizeof(buffer) / sizeof(buffer[0])) - 1)) {
+    while ((n_bytes = read(inputfd, buffer, (sizeof(buffer) / sizeof(buffer[0])) - 1)) != 0) {
         buffer[n_bytes] = '\0';
         for (auto i: out_fds) {
             write(i, buffer, n_bytes);

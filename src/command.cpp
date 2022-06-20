@@ -4,11 +4,13 @@ extern int fdin[2];
 extern int yylex_destroy();
 Command::~Command() {
     int i = 0;
+    if (cmd) {
     while (cmd[i]) {
         free(cmd[i]);
         i++;
     }
     delete [] cmd;
+    }
 }
 
 void Command::createArgs(vector <string> &cmd) {

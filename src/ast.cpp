@@ -8,10 +8,10 @@ Node::~Node() {
     if (obj) 
         switch (type) {
             case ARG_NODE: 
-                delete obj; 
+                delete (string*)obj; 
                 break;
             case COMMAND_NODE:
-                delete obj;
+                delete (Command*)obj;
                 break;
             default: break;
         }

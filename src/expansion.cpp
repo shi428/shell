@@ -8,7 +8,6 @@ extern string last_arg;
 extern unordered_map<string, string> users;
 
 string expandSubshell(string &subshell_command) {
-    pid_t child;
     const char *shell[2] = {"/proc/self/exe", NULL};
     int write_command_pipe[2];
     int read_output_pipe[2];
@@ -48,7 +47,9 @@ string expandSubshell(string &subshell_command) {
         }
     }
     close(read_output_pipe[0]);
+    if (output.back() == ' ') {
     output.pop_back();
+    }
     return output;
 }
 string expandPrompt(char *prompt) {

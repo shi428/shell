@@ -391,29 +391,13 @@ job *find_job_by_pid(pid_t pid)
     return NULL;
 }
 
-pair <int, int> findExpand(vector <char> expansionType, int index) {
-    int flag = 0;
-    int startIndex = 0;
-    int endIndex = 0;
-    for (int i = index; i < expansionType.size(); i++) {
-        if (expansionType[i] == 1 && !flag) {
-            flag = 1; 
-            startIndex = i;
-        }
-        if (flag == 1 && (expansionType[i] == 0 || i == expansionType.size() - 1)) {
-            endIndex = i;
-            break; 
-        }
-    }
-    return pair<int,int>(startIndex, endIndex);
-}
 string tryExpand(Node *node, string &command) {
     string expandedCommand;
     if (node->type == COMMAND_NODE) {
         for (auto i: node->children) {
             //args.push_back(*(string *)i->obj);
             //p->argv[index] = strdup(((string *)i->obj)->c_str());
-            int index = 0;
+            size_t index = 0;
             //cout << i->expansionType.size() << ((string *)i->obj)->size() << endl;
             while (index < i->expansionType.size()) {
                 if (i->expansionType[index] == 1) {

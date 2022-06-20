@@ -62,7 +62,7 @@ void Shell::insert_job_after(job *j, job *it) {
     }
     next_job = it->next;
     it->next = j;
-    j->next = it;
+    j->next = next_job;
 }
 
 void Shell::insert_job(job *j) {
@@ -82,7 +82,7 @@ void Shell::insert_job(job *j) {
             insert_job_after(j, jlast);
             return ;
         }
-        jlast = j;
+        jlast = it;
         i++;
     }
 
@@ -173,7 +173,6 @@ void Shell::print_prompt() {
 }
 
 void Shell::print_jobs() {
-    job *jlast = NULL;
     job *jnext = NULL;
     printf("printing jobs\n");
     for (job *j = jobs->first_job; j; j = jnext) {

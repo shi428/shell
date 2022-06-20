@@ -52,7 +52,8 @@ if [ $# -eq 0 ]; then
     run_test test_unsetenv
     run_test test_source
     run_test test_cd
-    run_test test_subshell
+    run_test test_command_substitution
+    run_test test_process_substitution
 else
     all=false
     run_test $1

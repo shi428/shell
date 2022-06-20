@@ -308,7 +308,7 @@ delete $2;
 } | 
 arg cmd_subst {
 $$->first->append(*$2);
-for (int i = 0; i < $2->length(); i++) {
+for (size_t i = 0; i < $2->length(); i++) {
     if (i == 0 || i == $2->length() - 1) {
     $$->second->push_back(COMMAND_SUBST);
     }
