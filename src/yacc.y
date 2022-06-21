@@ -404,47 +404,8 @@ word:  ch word {
    }
     ;
 
-cmd_subst: SUBSHELL space command_line RIGHT_PAREN {
-         $$ = new string("$("+$3->getCommand($3)+")");
-/*        AST *tr = new AST;
-        tr->root = $3;
-        int pipefd[2];
-        pipe(pipefd);
-        pid_t child;
-        child = fork();
-        if (child == 0) {
-                dup2(pipefd[1], STDOUT_FILENO);
-                close(pipefd[0]);
-            exec(tr, p, tr->root, bPids, pos);
-            exit(EXIT_SUCCESS);
-        }
-            close(pipefd[1]);
-            char buf[4096];
-            string line;
-            ssize_t n_bytes;
-            while ((n_bytes = read(pipefd[0], buf, 4095)) != 0) {
-                buf[n_bytes] = '\0';
-                char *temp = buf;
-                while (*temp != '\0'){
-                    if (*temp == '\n') {
-                        line += ' ';
-                    }
-                    else {
-                        line += *temp;
-                    }
-                    temp++;
-                }
-            }
-            close(pipefd[0]);
-            //cout << line << endl;
-            delete tr;
-            for (size_t i = line.size() - 1; i >= 0; i--) {
-                myunput(line[i]);
-                if (i == 0) break;
-            }
-    command_stack.pop();
-    currentCommand = command_stack.top();
-        $$ = new string(line);*/
+cmd_subst: SUBSHELL space linebreak full_command_line space linebreak RIGHT_PAREN {
+         $$ = new string("$("+$4->getCommand($4)+")");
 }
 ch: CHAR {
   $$=new string(1, $1);

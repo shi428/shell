@@ -10,33 +10,7 @@ const char *built_in_desc[9] = {"[name] [value]", "", "[dir]", "", "", "", "[nam
 unordered_map<string, pair<char **, int>> aliases;
 
 vector <char **> alias_ptrs;
-extern vector <pair<pid_t, vector <string>>> bPids;
-extern vector <int> pos;
-extern void printPrompt();
-extern void sigchild_handler(int signum);
-void sigchild_handler2(int signum) {
-    pid_t pid;
-    while ((pid = waitpid(-1, NULL, WNOHANG)) > 0) {
-        for (unsigned int i = 0; i < bPids.size(); i++) {
-            if (bPids[i].first == pid && pos.size()) {
-                cout << endl;
-                cout << pos[i] <<". [" << pid << "] ";
-                for (auto i: bPids[i].second) {
-                    cout << i << " ";
-                }
-                cout << "has exited";
-                cout << endl;
-                bPids.erase(bPids.begin() + i);
-                pos.erase(pos.begin() + i);
-                i--;
-                if (isatty(0)) {
-                    //printPrompt();
-                }
-                fflush(stdout);
-            }
-        }
-    }
-}
+//extern vector <int> pos;
 bool isBuiltIn(char *cmd) {
     for (int i = 0; i < 7; i++) {
         if (!strcmp(cmd, built_in[i])) return true;
@@ -228,16 +202,6 @@ int runBuiltInCommand(char **cmd) {
                 if (ast && ast->root) {
                     job *j = create_job_from_ast(&ast);
                     Shell::insert_job(j);
-                    /*if (!Shell::first_job) {
-                      Shell::first_job = j;
-                      }
-                      else {
-                      job *it = Shell::first_job;
-                      while (it->next) {
-                      it = it->next;
-                      }
-                      it->next = j;
-                      }*/
                     j->launch_job(ast);
                     if (Shell::exit_status) {
                         Shell::delete_job(j);

@@ -6,11 +6,9 @@
 #include <jobs.h>
 #include "yacc.yy.hpp"
 #include "lex.yy.hpp"
-vector <pair<pid_t, vector <string>>> bPids;
 vector <int> pos;
-job *first_job = NULL;
 pid_t shell_pid;
-pid_t background_process;
+//pid_t background_process;
 int return_code;
 string last_arg;
 unordered_map<string,string> users;
@@ -35,55 +33,6 @@ void sigint_handler(int signum) {
     }
     fflush(stdout);
 }
-
-/*void delete_job(job *j) {
-    if (j == first_job) {
-        delete j;
-        first_job = NULL;
-        return ;
-    }
-    job *it = first_job;
-    while (it && it->next != j) {
-        it = it->next;
-    }
-    it->next = j->next;
-    delete j;
-}*/
-/*void sigchild_handler(int signum) {
-    pid_t pid;
-    int status;
-    while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-        //mark_process_status(first_job, pid, status);
-        //job *j = find_job_by_pid(first_job, pid);
-        if (j->job_is_completed()) {
-            cout << endl;
-            j->print_job_information();
-            //delete_job(j);
-                if (isatty(0)) {
-                    Shell::print_prompt();
-                }
-                fflush(stdout);
-        }for (unsigned int i = 0; i < bPids.size(); i++) {
-            if (bPids[i].first == pid && pos.size()) {
-                background_process = pid;
-                cout << endl;
-                cout << pos[i] <<". [" << pid << "] ";
-                for (auto j: bPids[i].second) {
-                    cout << j << " ";
-                }
-                cout << "has exited";
-                cout << endl;
-                bPids.erase(bPids.begin() + i);
-                pos.erase(pos.begin() + i);
-                i--;
-                if (isatty(0)) {
-                    Shell::print_prompt();
-                }
-                fflush(stdout);
-            }
-        }
-    }
-}*/
 
 void getUsers(struct passwd *p) {
     while (true) {
@@ -151,16 +100,6 @@ int main(int argc, char *argv[]) {
         if (ast && ast->root) {
         job *j = create_job_from_ast(&ast);
         Shell::insert_job(j);
-        /*if (!Shell::first_job) {
-            Shell::first_job = j;
-        }
-        else {
-            job *it = Shell::first_job;
-            while (it->next) {
-                it = it->next;
-            }
-            it->next = j;
-        }*/
         j->launch_job(ast);
         if (Shell::exit_status) {
             Shell::delete_job(j);

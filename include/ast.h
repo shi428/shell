@@ -32,5 +32,4 @@ struct AST {
 };
 
 Node *make_arg_node(string &arg, vector <char> &expansionTypes);
-Node *make_cmd_subst_node(Node *command_line);
 #endif

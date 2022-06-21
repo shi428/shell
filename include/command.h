@@ -26,7 +26,7 @@ typedef struct command {
 
     char **cmd;
     vector <string> commands;
-    vector <string> files[6];
+    vector <string> files[6]; //later nodes
 }Command;
 #endif
 

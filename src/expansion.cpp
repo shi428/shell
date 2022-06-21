@@ -29,7 +29,7 @@ string expandSubshell(string &subshell_command) {
     close(write_command_pipe[0]);
     close(write_command_pipe[1]);
     close(read_output_pipe[1]);
-    
+
     char buf[4096];
     string output;
     ssize_t n_bytes;
@@ -48,10 +48,11 @@ string expandSubshell(string &subshell_command) {
     }
     close(read_output_pipe[0]);
     if (output.back() == ' ') {
-    output.pop_back();
+        output.pop_back();
     }
     return output;
 }
+
 string expandPrompt(char *prompt) {
     string ret;
     while (*prompt) {
@@ -59,9 +60,6 @@ string expandPrompt(char *prompt) {
             if (prompt[1] == 'w') {
                 string user = getenv("USER");
                 string pwd = getenv("PWD");
-                /*cout << user << endl;
-                  cout << users[user] << endl;
-                  cout << pwd << endl;*/
                 size_t pos = pwd.find(users[user]);
                 if (pos != string::npos) { 
                     pwd.erase(pwd.begin() + pos, pwd.begin() + pos + users[user].length());
@@ -228,6 +226,75 @@ void expandWildcardHelper(string &prefix, string &suffix, string &relative_dir, 
                 }
             }
         }
+    }
+
+    string tryExpandCommand(Node *node, string &command) {
+        string expandedCommand;
+        if (node->type == COMMAND_NODE) {
+            for (auto i: node->children) {
+                //args.push_back(*(string *)i->obj);
+                //p->argv[index] = strdup(((string *)i->obj)->c_str());
+                size_t index = 0;
+                //cout << i->expansionType.size() << ((string *)i->obj)->size() << endl;
+                while (index < i->expansionType.size()) {
+                    if (i->expansionType[index] == 1) {
+                        int delim_index = find(i->expansionType.begin() + index + 1, i->expansionType.end(), 1) - i->expansionType.begin();
+                        string subshell_command = ((string *)i->obj)->substr(index + 2, delim_index - (index + 2));
+                        //cout << subshell_command << endl;
+                        expandedCommand += expandSubshell(subshell_command);
+                        index = delim_index;
+                    }
+                    else {
+                        expandedCommand += (*(string *)i->obj)[index];
+                    }
+                    index++;
+                }
+                command += *(string *)i->obj;
+                command += " ";
+                expandedCommand += " ";
+                //cout << *(string *)i->obj << endl;
+            }
+            for (int i = 0; i < 6; i++) {
+                string redirect_symbol;
+                switch(i) {
+                    case 0:
+                        redirect_symbol = " < ";
+                        break;
+                    case 1:
+                        redirect_symbol = " > ";
+                        break;
+                    case 2:
+                        redirect_symbol = " 2> ";
+                        break;
+                    case 3:
+                        redirect_symbol = " >& ";
+                        break;
+                    case 4:
+                        redirect_symbol = " >> ";
+                        break;
+                    case 5:
+                        redirect_symbol = " >>& ";
+                        break;
+                }
+                vector <string> files = ((Command *)(node->obj))->files[i];
+                if (files.size()) {
+                    expandedCommand += redirect_symbol;
+                    for (unsigned int j = 0; j < files.size() - 1; j++) {
+                        expandedCommand += files[j];
+                        expandedCommand += redirect_symbol;
+                    }
+                    expandedCommand += files[files.size() - 1];
+                }
+
+            }
+            //cout << "returning" << endl;
+            return expandedCommand;
+        }
+        expandedCommand += tryExpandCommand(node->children[0], command);
+        command += " | ";
+        expandedCommand += " | ";
+        expandedCommand += tryExpandCommand(node->children[1], command);
+        return expandedCommand;
     }
 
     vector <string> expandWildcard(string &wildcard, bool pwd){

@@ -38,7 +38,6 @@ struct Shell {
         }
         job *first_job;
         job *last_job;
-        int n_jobs = 0;
     };
 
     inline static list_of_jobs *jobs;
@@ -53,9 +52,6 @@ struct Shell {
     static void delete_job(job *j);
     static void print_jobs();
     static job *find_first_stopped_or_bg_job();
-    static job *find_first_stopped_or_fg_job();
-    static job *find_first_background_job();
-    static job *find_first_foreground_job();
     static void mark_job_as_running(job *j);
 };
 

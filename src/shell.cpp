@@ -104,7 +104,6 @@ void Shell::delete_job(job *j) {
             jobs->first_job = j->next;
             delete j;
         }
-        jobs->n_jobs--;
         return ;
     }
     job *it = jobs->first_job;
@@ -116,7 +115,6 @@ void Shell::delete_job(job *j) {
     }
     it->next = j->next;
     delete j;
-    jobs->n_jobs--;
 }
 
 void Shell::check_zombie() {

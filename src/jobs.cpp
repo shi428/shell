@@ -223,9 +223,6 @@ void job::launch_job(AST *ast) {
         in_file  = my_pipe2[0];
     }
 
-    /*if (!Shell::shell_is_interactive) {
-        this->wait_for_job();
-    }*/
     if (this->foreground) {
         this->put_job_in_foreground(0);
     }
@@ -391,81 +388,11 @@ job *find_job_by_pid(pid_t pid)
     return NULL;
 }
 
-string tryExpand(Node *node, string &command) {
-    string expandedCommand;
-    if (node->type == COMMAND_NODE) {
-        for (auto i: node->children) {
-            //args.push_back(*(string *)i->obj);
-            //p->argv[index] = strdup(((string *)i->obj)->c_str());
-            size_t index = 0;
-            //cout << i->expansionType.size() << ((string *)i->obj)->size() << endl;
-            while (index < i->expansionType.size()) {
-                if (i->expansionType[index] == 1) {
-                    int delim_index = find(i->expansionType.begin() + index + 1, i->expansionType.end(), 1) - i->expansionType.begin();
-                    string subshell_command = ((string *)i->obj)->substr(index + 2, delim_index - (index + 2));
-                    //cout << subshell_command << endl;
-                    expandedCommand += expandSubshell(subshell_command);
-                    index = delim_index;
-                }
-                else {
-                    expandedCommand += (*(string *)i->obj)[index];
-                }
-                index++;
-            }
-            command += *(string *)i->obj;
-            command += " ";
-            expandedCommand += " ";
-            //cout << *(string *)i->obj << endl;
-        }
-        for (int i = 0; i < 6; i++) {
-            string redirect_symbol;
-            switch(i) {
-            case 0:
-                redirect_symbol = " < ";
-                break;
-            case 1:
-                redirect_symbol = " > ";
-                break;
-            case 2:
-                redirect_symbol = " 2> ";
-                break;
-            case 3:
-                redirect_symbol = " >& ";
-                break;
-            case 4:
-                redirect_symbol = " >> ";
-                break;
-            case 5:
-                redirect_symbol = " >>& ";
-                break;
-            }
-            vector <string> files = ((Command *)(node->obj))->files[i];
-            if (files.size()) {
-            expandedCommand += redirect_symbol;
-            for (unsigned int j = 0; j < files.size() - 1; j++) {
-                expandedCommand += files[j];
-                expandedCommand += redirect_symbol;
-            }
-            expandedCommand += files[files.size() - 1];
-            }
-
-        }
-        //cout << "returning" << endl;
-        return expandedCommand;
-    }
-    expandedCommand += tryExpand(node->children[0], command);
-    command += " | ";
-    expandedCommand += " | ";
-    expandedCommand += tryExpand(node->children[1], command);
-    return expandedCommand;
-}
-
-
 job *create_job_from_ast(AST **tr) {
     job *j = new job;
     string command;
     j->foreground = !(*tr)->root->background;
-    string expanded_command = tryExpand((*tr)->root, command);
+    string expanded_command = tryExpandCommand((*tr)->root, command);
     //cout << expanded_command << endl;
     delete *tr;
 
