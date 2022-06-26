@@ -10,15 +10,19 @@ process::process() {
 }
 
 process::~process() {
-    int i = 0;
     if (this->argv == NULL) return ;
-    while (this->argv[i]) {
+    delete_argv(this->argv);
+    this->argv = NULL;
+}
+
+void delete_argv(char **argv) {
+    int i = 0;
+    while (argv[i]) {
         free(argv[i]);
         argv[i] = NULL;
         i++;
     }
     delete [] argv;
-    argv = NULL;
 }
 
 void process::launch_process(AST *ast, pid_t pgid, int in_file, int out_file, int err_file, int foreground) {
@@ -64,8 +68,8 @@ void process::launch_process(AST *ast, pid_t pgid, int in_file, int out_file, in
         close (err_file);
     }
 
-    if (isBuiltIn(this->argv[0])) {
-        runBuiltInCommand(this->argv);
+    if (is_builtin(this->argv[0])) {
+        run_builtin_command(this->argv);
         delete ast;
         Shell::destroy_shell();
         exit(0);

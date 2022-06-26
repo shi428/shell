@@ -11,7 +11,7 @@ unordered_map<string, pair<char **, int>> aliases;
 
 vector <char **> alias_ptrs;
 //extern vector <int> pos;
-bool isBuiltIn(char *cmd) {
+bool is_builtin(char *cmd) {
     for (int i = 0; i < 7; i++) {
         if (!strcmp(cmd, built_in[i])) return true;
     }
@@ -26,12 +26,11 @@ int getLength(char **cmd) {
     return args;
 }
 
-char **copyCommand(char **cmd) {
+char **copy_command(char **cmd) {
     int length = getLength(cmd);
     char **ret = new char*[length + 1];
     for (int i = 0; i < length; i++) {
-        ret[i] = new char[strlen(cmd[i]) + 1];
-        strcpy(ret[i], cmd[i]);
+        ret[i] = strdup(cmd[i]);
     }
     ret[length] = NULL;
     return ret;
@@ -79,14 +78,14 @@ void printAliases() {
         cout << endl;
     }
 }
-int runBuiltInCommand(char **cmd) {
+int run_builtin_command(char **cmd) {
     if (checkSyntax(cmd)) {
         if (!strcmp(cmd[0], "alias")) {
             if (cmd[1] == NULL) {
                 printAliases();
             }
             else {
-                char **ptr = copyCommand(&cmd[1]);
+                char **ptr = copy_command(&cmd[1]);
                 //auto it = aliases.find(ptr[0]);
                 //if (it == aliases.end()) {
                 aliases[string(ptr[0])] = pair<char **, int>(&ptr[1], getLength(&cmd[2]));
@@ -124,7 +123,7 @@ int runBuiltInCommand(char **cmd) {
             setEnvCmd[3] = NULL;
             strcpy(setEnvCmd[0], "setenv");
             strcpy(setEnvCmd[1], "PWD");
-            runBuiltInCommand(setEnvCmd);
+            run_builtin_command(setEnvCmd);
             delete [] setEnvCmd[0];
             delete [] setEnvCmd[1];
             delete [] setEnvCmd[2];
@@ -147,7 +146,7 @@ int runBuiltInCommand(char **cmd) {
               }
               i++;
               }*/
-            if (isEnviron(cmd[1])) {
+            if (is_environ(cmd[1])) {
                 if (unsetenv(cmd[1]) == -1) {
                     cerr << "unsetenv: failed to unset environment variable: " << cmd[1] << endl;
                 }
@@ -220,7 +219,7 @@ int runBuiltInCommand(char **cmd) {
     return -1;
 }
 
-void deleteAliasedCommands() {
+void delete_aliased_commands() {
     for (auto i: alias_ptrs) {
         char **ptr = i;
         int j = 0;

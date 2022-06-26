@@ -8,6 +8,11 @@ void Shell::init_shell() {
     shell_terminal = STDIN_FILENO;
     shell_is_interactive = isatty (shell_terminal);
     exit_status = 0;
+    shell_path = realpath("/proc/self/exe", NULL);
+    char *temp = strdup(shell_path);
+    string namedPipeDir = string(dirname(temp)) + "/tmp";
+    mkdir(namedPipeDir.c_str(), 0777);
+    free(temp);
 
     if (shell_is_interactive)
     {
@@ -39,7 +44,20 @@ void Shell::init_shell() {
     }
 }
 
+int unlink_cb(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
+    int rv = remove(fpath);
+    return rv;
+}
+
+int rmrf(const char *fpath) {
+    return nftw(fpath, unlink_cb, 64, FTW_DEPTH | FTW_PHYS);
+}
 void Shell::destroy_shell() {
+    char *temp = strdup(shell_path);
+    string namedPipeDir = string(dirname(temp)) + "/tmp";
+    free(shell_path);
+    free(temp);
+    rmrf(namedPipeDir.c_str());
     delete jobs;
 }
 
@@ -155,9 +173,16 @@ void Shell::check_zombie() {
 }
 
 void Shell::print_prompt() {
-    if (isEnviron((char *)"PROMPT")) {
+    if (is_environ((char *)"PROMPT")) {
         char *prompt = getenv("PROMPT");
-        cout << expandPrompt(prompt);
+        if (!Shell::last_job_exit_status) {
+        cout << expand_prompt(prompt);
+            cout << HGRN << "[ " <<  setw(3) << 0 << " ] $ " << RST;;
+        }
+        else {
+        cout << expand_prompt(prompt);
+            cout << HRED << "[ " <<  setw(3) << Shell::last_job_exit_status << " ] $ " << RST;
+        }
     }
     else {
         if (!Shell::last_job_exit_status) {

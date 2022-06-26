@@ -1,7 +1,7 @@
 #include <shell_util.h>
 
 using namespace std;
-vector <int> openFiles(vector <string> &files) {
+vector <int> open_files(vector <string> &files) {
     vector <int> ret;
     for (auto i: files) {
         ret.push_back(open(i.c_str(), O_RDONLY, 0644));
@@ -9,20 +9,20 @@ vector <int> openFiles(vector <string> &files) {
     return ret;
 }
 
-void myCat(int inputfd, int outputfd, vector <string> &files) {
+void my_cat(int inputFd, int outputFd, vector <string> &files) {
     char buffer[4096];
-    vector <int> fds = openFiles(files);
+    vector <int> fds = open_files(files);
     ssize_t n_bytes;
-    if (inputfd) {
-        while ((n_bytes = read(inputfd, buffer, 4095)) != 0) {
+    if (inputFd) {
+        while ((n_bytes = read(inputFd, buffer, 4095)) != 0) {
             buffer[n_bytes] = '\0';
-            write(outputfd, buffer, n_bytes);
+            write(outputFd, buffer, n_bytes);
         }
     }
     for (auto i: fds) {
         while ((n_bytes = read(i, buffer, 4095)) != 0) {
             buffer[n_bytes] = '\0';
-            write(outputfd, buffer, n_bytes);
+            write(outputFd, buffer, n_bytes);
         }
     }
 }
@@ -34,7 +34,7 @@ void myCat(int inputfd, int outputfd, vector <string> &files) {
     pipe(pipefd);
     files.push_back("tee.cpp");
     files.push_back("cat.cpp");
-    myCat(0, pipefd[1], files, false);
+    my_cat(0, pipefd[1], files, false);
     close(pipefd[1]);
     if (fork() == 0) {
         int fd = open("tee.cpp", O_RDONLY);

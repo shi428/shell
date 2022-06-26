@@ -21,6 +21,8 @@ struct Shell {
     inline static int shell_is_interactive;
     inline static int exit_status;
     inline static int last_job_exit_status;
+    inline static char *shell_path;
+    inline static job *currentJob;
 
     struct list_of_jobs {
         list_of_jobs() {

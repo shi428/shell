@@ -11,7 +11,7 @@ stringIterator::~stringIterator() {
     delete this->it;
 }
 
-char convertEscapeChar(string &escapeCh) {
+char convert_escape_char(string &escapeCh) {
     StringIterator it(escapeCh);
     unordered_map<char, char> escapeChars = {
         {' ', ' '},
@@ -50,11 +50,11 @@ char StringIterator::advance() {
     return ch;
 }
 
-bool detectWildcard(string &s) {
+bool detect_wildcard(string &s) {
     return s.find('*') != string::npos || s.find('?') != string::npos;
 }
 
-string consumeSpaces(StringIterator &it) {
+string consume_spaces(StringIterator &it) {
     string ret = "";
     char c;
     while ((it.pos < it.len) && ((c = it.peek()) == ' ')) {
@@ -66,7 +66,7 @@ string consumeSpaces(StringIterator &it) {
 }
 
 extern char **environ;
-bool isEnviron(char *String) {
+bool is_environ(char *String) {
     int i = 0;
     while (environ[i]) {
         string env = string(environ[i]);

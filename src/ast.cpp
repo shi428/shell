@@ -21,7 +21,7 @@ AST::AST() {
     root = NULL;
 }
 
-string Node::getCommand(Node *root) {
+string Node::get_command(Node *root) {
     string ret;
     if (root->type == COMMAND_NODE) {
         for (auto i: root->children) {
@@ -50,33 +50,33 @@ string Node::getCommand(Node *root) {
                 redirect_symbol = " >>& ";
                 break;
             }
-            vector <string> files = ((Command *)(root->obj))->files[i];
+            vector <Node*> files = ((Command *)(root->obj))->files[i];
             if (files.size()) {
             ret += redirect_symbol;
             for (unsigned int j = 0; j < files.size() - 1; j++) {
-                ret += files[j];
+                ret += *(string*)files[j]->obj;
                 ret += redirect_symbol;
             }
-            ret += files[files.size() - 1];
+            ret += *(string*)files[files.size() - 1]->obj;
             }
 
         }
         return ret;
     }
-    ret += getCommand(root->children[0]);
+    ret += get_command(root->children[0]);
     ret += "|";
-    ret += getCommand(root->children[1]);
+    ret += get_command(root->children[1]);
     return ret;
 }
-void AST::freeNodes(Node *node) {
-    if (!node) return;
-    for (auto i: node->children) {
-    freeNodes(i);
+void AST::free_nodes(Node *root) {
+    if (!root) return;
+    for (auto i: root->children) {
+    free_nodes(i);
     }
-    delete node;
+    delete root;
 }
 
 AST::~AST() {
-    freeNodes(root); 
+    free_nodes(root); 
 }
 

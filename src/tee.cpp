@@ -1,7 +1,7 @@
 #include <shell_util.h>
 
 using namespace std;
-vector <int> openFiles(vector <string> &files, int append) {
+vector <int> open_files(vector <string> &files, int append) {
     vector <int> ret;
     for (auto i: files) {
         if (append) {
@@ -13,12 +13,12 @@ vector <int> openFiles(vector <string> &files, int append) {
     }
     return ret;
 }
-void myTee(int inputfd, int output_fd, vector <string> &out_files, vector <string> &append_files) {
+void my_tee(int inputFd, int outputFd, vector <string> &outFiles, vector <string> & appendFiles) {
     char buffer[4096];
-    vector <int> out_fds = openFiles(out_files, 0);
-    vector <int> append_fds = openFiles(append_files, 1);
+    vector <int> out_fds = open_files(outFiles, 0);
+    vector <int> append_fds = open_files(appendFiles, 1);
     ssize_t n_bytes;
-    while ((n_bytes = read(inputfd, buffer, (sizeof(buffer) / sizeof(buffer[0])) - 1)) != 0) {
+    while ((n_bytes = read(inputFd, buffer, (sizeof(buffer) / sizeof(buffer[0])) - 1)) != 0) {
         buffer[n_bytes] = '\0';
         for (auto i: out_fds) {
             write(i, buffer, n_bytes);
@@ -26,8 +26,8 @@ void myTee(int inputfd, int output_fd, vector <string> &out_files, vector <strin
         for (auto i: append_fds) {
             write(i, buffer, n_bytes);
         }
-        if (output_fd != 1) {
-        write(output_fd, buffer, n_bytes);
+        if (outputFd != 1) {
+        write(outputFd, buffer, n_bytes);
         }
     }
     for (auto i: out_fds) {
@@ -66,7 +66,7 @@ void myTee(int inputfd, int output_fd, vector <string> &out_files, vector <strin
     }
     close(my_pipe[1]);
     if (fork() == 0) {
-    myTee(my_pipe[0], my_pipe2[1], files, files2);
+    my_tee(my_pipe[0], my_pipe2[1], files, files2);
     exit(0);
     }
     close(my_pipe2[1]);

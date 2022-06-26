@@ -27,6 +27,7 @@ typedef struct job {
     struct termios tmodes;      
     int stdin_fd, stdout_fd, stderr_fd;  
     int foreground;
+    vector <process *> substProcesses;
 } job;
 
 job *find_job_by_pid(pid_t pid);

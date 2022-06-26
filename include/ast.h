@@ -16,7 +16,7 @@ struct Node {
     int background;
     Node();
     ~Node();
-    string getCommand(Node *root);
+    string get_command(Node *root);
     void *obj;
     Type type;
     vector <Node *> children;
@@ -26,8 +26,7 @@ struct Node {
 struct AST {
     AST();
     ~AST();
-    string getCommand();
-    void freeNodes(Node  *node);
+    void free_nodes(Node  *root);
     Node  *root;
 };
 

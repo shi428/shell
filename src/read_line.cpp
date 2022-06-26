@@ -13,7 +13,7 @@ vector <pair <unsigned int, string>> args;
 void splitString(string &line) {
     StringIterator it(line);
     while (it.pos < it.len) {
-        string spaces = consumeSpaces(it);
+        string spaces = consume_spaces(it);
         string arg = "";
         unsigned int pos = it.pos;
         if (spaces.length() && it.pos == it.len) {

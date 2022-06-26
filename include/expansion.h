@@ -17,9 +17,11 @@ enum expansion_t {
 };
 //#define REGULAR 0
 //#define COMMAND_SUBST 1
-string expandPrompt(char *prompt);
-char **expandAlias(char **cmd);
-vector <string> expandWildcard(string &wildcard, bool cwd);
-string expandSubshell(string &subshell_command);
-string tryExpandCommand(Node *node, string &command);
+string expand_prompt(char *prompt);
+char **expand_alias(char **cmd);
+vector <string> expand_wildcard(string &wildcard, bool cwd);
+string expand_command_subst(string &subshellCommand);
+string expand_process_subst(string &subshellCommand, bool readWrite);
+string try_expand_command(Node *node, string &command);
+string expand_arg(Node *argNode, string &command);
 #endif

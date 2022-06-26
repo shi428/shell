@@ -18,13 +18,15 @@ extern YY_BUFFER_STATE  yy_scan_string(const char *str);
 extern YY_BUFFER_STATE  buffer;
 extern void yy_switch_to_buffer(YY_BUFFER_STATE new_buffer);
 extern void yypush_buffer_state(YY_BUFFER_STATE new_buffer);
-extern void printPrompt();
-int exit_flag;
-Command *currentCommand;
-std::vector <Node *> currentArgs;
-#define YYERROR_VERBOSE 1
+   #define YYERROR_VERBOSE 1
 std::vector <std::string> args_vec;
-extern void myunput(int c);
+   extern void myunput(int c);
+
+pair <string *, vector <char> *> * create_arg();
+void add_file_list(vector <Node *>**file_lists, int index, vector <Node*> file_list);
+void copy_arg(pair <string *, vector <char> * > *argOne, pair<string *, vector <char> * > *argTwo);
+void append_arg(pair <string *, vector <char> * > *argOne, pair<string *, vector <char> * > *argTwo);
+void delete_arg(pair <string *, vector <char> *> *arg);
 %}
 
 %define api.pure full
@@ -40,7 +42,7 @@ extern void myunput(int c);
 int yylex(YYSTYPE *yylvalp, YYLTYPE *yylocp, yyscan_t scanner);
 void yyerror(YYLTYPE *yylocp, yyscan_t, AST **ast, int, const char *);
 };
-%union {char ch; std::pair <std::string *, vector <char> *> *arg_str; std::string* str; Node *node; std::vector <Node *> *arg_list; std::vector <string>*file_list[6];}
+%union {char ch; std::pair <std::string *, vector <char> *> *arg_str; std::string* str; Node *node; std::vector <Node *> *arg_list; std::vector <Node*>*file_list[6];}
 %start goal
 %token <ch> CHAR
 %token <str> ESCAPE_CHAR
@@ -49,6 +51,8 @@ void yyerror(YYLTYPE *yylocp, yyscan_t, AST **ast, int, const char *);
 %token PIPE
 %token OR
 %token SUBSHELL
+%token LEFT_PROCESS_SUBST
+%token RIGHT_PROCESS_SUBST
 %token ENV
 %token <ch> LEFT_PAREN
 %token <ch> RIGHT_PAREN
@@ -72,10 +76,12 @@ void yyerror(YYLTYPE *yylocp, yyscan_t, AST **ast, int, const char *);
 %type <node> simpler_command;
 %type <node> command_line;
 %type <node> full_command_line;
-%type <node> command_word;
 %type space;
 %type <str> cmd_subst;
+%type <str> left_process_subst;
+%type <str> right_process_subst;
 %type <arg_str> arg;
+%type <arg_str> expansion;
 %type <arg_list> args;
 %type <str> quote_word;
 %type <str> quote;
@@ -84,28 +90,20 @@ void yyerror(YYLTYPE *yylocp, yyscan_t, AST **ast, int, const char *);
 %%
 
 goal: input 
-input:
+    input:
  space linebreak full_command_line space linebreak {
     AST *tr = new AST;
     *ast = tr;
     tr->root = $3;
-    /*if (tr->root) {
-        //        parseTree->root->traverse(0);
-        if (exec(tr, p, tr->root, bPids, pos) == 1) {
-        exit_flag = 1;
-        }
-            //last_arg = (bPids.back().second).back();
-    }
-        delete tr;*/
 }
   | NEWLINE  {
   }
   //| error NEWLINE { yyerrok; }
- 
+
 ;
 
 full_command_line: command_line AMPERSAND {
-                $$=$1;
+                 $$=$1;
                 $$->background = 1;
                  } |
                  command_line;
@@ -150,113 +148,80 @@ simple_command: no_arg_command iomodifier {
               for (auto j: *($2[i])) {
               ((Command *)$$->obj)->files[i].push_back(j);
               }
+              delete $2[i];
               }
               };
 
 simpler_command: no_arg_command simple_iomodifier {
-              $$=$1;
+               $$=$1;
               for (int i = 0; i < 6; i++) {
               for (auto j: *($2[i])) {
               ((Command *)$$->obj)->files[i].push_back(j);
               }
+              delete $2[i];
               }
                };
 
 simple_iomodifier: 
-          GREATAND space word space simple_iomodifier {
-            //currentCommand->addFile(3, *$3);
+                 GREATAND space args space simple_iomodifier {
             for (int i = 0; i < 6; i++) {
-            $$[i] = new std::vector <string>(*($5[i]));
+            $$[i] = new std::vector <Node*>(*($5[i]));
             delete $5[i];
             }
-            $$[3]->insert($$[3]->begin(), *$3);
+            add_file_list($$, 3, *$3);
             }
-          | GREATGREATAND space word space simple_iomodifier {
-            //currentCommand->addFile(5, *$3);
+          | GREATGREATAND space args space simple_iomodifier {
             for (int i = 0; i < 6; i++) {
-            $$[i] = new std::vector <string>(*($5[i]));
+            $$[i] = new std::vector <Node*>(*($5[i]));
             delete $5[i];
             }
-            $$[5]->insert($$[5]->begin(), *$3);
+            add_file_list($$, 5, *$3);
             }| {
             for (int i = 0; i < 6; i++) {
-            $$[i] = new std::vector <string>();
+            $$[i] = new std::vector <Node*>();
             }
             }
             ;
 iomodifier: 
-          GREAT space word space iomodifier {
+          GREAT space args space iomodifier {
             for (int i = 0; i < 6; i++) {
-            $$[i] = new std::vector <string>(*($5[i]));
+            $$[i] = new std::vector <Node*>(*($5[i]));
             delete $5[i];
             }
-            $$[1]->insert($$[1]->begin(), *$3);
-            //currentCommand->addFile(1, *$3);
+            add_file_list($$, 1, *$3);
+          }
+          | LESS space args space iomodifier {
+            for (int i = 0; i < 6; i++) {
+            $$[i] = new std::vector <Node*>(*($5[i]));
+            delete $5[i];
+            }
+            add_file_list($$, 0, *$3);
 }
-          | LESS space word space iomodifier {
+          | IOERR space args space iomodifier {
             for (int i = 0; i < 6; i++) {
-            $$[i] = new std::vector <string>(*($5[i]));
+            $$[i] = new std::vector <Node*>(*($5[i]));
             delete $5[i];
             }
-            $$[0]->insert($$[0]->begin(), *$3);
-            //currentCommand->addFile(0, *$3);
+            add_file_list($$, 2, *$3);
 }
-          | IOERR space word space iomodifier {
+          | GREATGREAT space args space iomodifier {
             for (int i = 0; i < 6; i++) {
-            $$[i] = new std::vector <string>(*($5[i]));
+            $$[i] = new std::vector <Node*>(*($5[i]));
             delete $5[i];
             }
-            $$[2]->insert($$[2]->begin(), *$3);
-            //currentCommand->addFile(2, *$3);
-}
-          | GREATGREAT space word space iomodifier {
-            for (int i = 0; i < 6; i++) {
-            $$[i] = new std::vector <string>(*($5[i]));
-            delete $5[i];
-            }
-            $$[4]->insert($$[4]->begin(), *$3);
-            //currentCommand->addFile(4, *$3);
+            add_file_list($$, 4, *$3);
 }
           |
           {
             for (int i = 0; i < 6; i++) {
-            $$[i] = new std::vector <string>();
+            $$[i] = new std::vector <Node*>();
             }
           };
 
-command_word: arg {
-    $$=new Node();
-    $$->type = COMMAND_NODE;
-    $$->obj = new Command();
-    currentCommand = (Command *)$$->obj;
-    currentArgs.push_back(make_arg_node(*$1));
-    delete $1;
-    }; /*| quote
-    {
-    $$=new Node();
-    $$->type = COMMAND_NODE;
-    $$->obj = new Command();
-    currentCommand = (Command *)$$->obj;
-    command_stack.push(currentCommand);
-    currentCommand->commands.push_back(*$1);
-    };*/
-/*no_arg_command: command_word SPACE args {
-    //for (auto i: args_vec) std::cout << i << std::endl;
-    $$=$1;
-    $$->children = currentArgs;
-    currentArgs.clear();
-}
-| command_word {
-    $$=$1;
-    $$->children = currentArgs;
-    currentArgs.clear();
-};*/
 no_arg_command: args {
-    $$=new Node();
+              $$=new Node();
     $$->type = COMMAND_NODE;
     $$->obj = new Command();
-    //currentCommand = (Command *)$$->obj;
-    //currentArgs.push_back(make_arg_node(*$1));
     //vector <Node *>args(*$1);
     for (auto i: *$1) {
         $$->children.push_back(i);
@@ -269,45 +234,47 @@ args:
    if ($1->first->length()) {
    $$ = new std::vector <Node*>();
    $$->push_back(make_arg_node(*($1->first), *($1->second)));
-    //currentArgs.push_back(make_arg_node($1->first, $1->second));
-    delete $1->first;
-    delete $1->second;
-    delete $1;
     }
+    delete_arg($1);
     }
     |
    args SPACE arg {
    if (($3)->first->length()) {
    $$ = new std::vector <Node*>(*$1);
    $$->push_back(make_arg_node(*($3->first), *($3->second)));
-    //currentArgs.push_back(make_arg_node(*$3));
-    delete $3->first;
-    delete $3->second;
-    delete $3;
     delete $1;
     }
+    delete_arg($3);
     }
     |
    ;
 arg: arg word
-{
-string a = *$2;
+   {
+$$ = create_arg();
+copy_arg($$, $1);
 $$->first->append(*$2);
 for (auto i: *$2) {
 $$->second->push_back(REGULAR);
 }
+delete_arg($1);
 delete $2;
 } | 
 arg quote {
+$$ = create_arg();
+copy_arg($$, $1);
 string quote_str(*$2);
 $$->first->append(quote_str);
 for (auto i: quote_str) {
 $$->second->push_back(REGULAR);
 }
+delete_arg($1);
 delete $2;
 } | 
-arg cmd_subst {
-$$->first->append(*$2);
+arg expansion {
+$$ = create_arg();
+copy_arg($$, $1);
+append_arg($$, $2);
+/*$$->first->append(*$2);
 for (size_t i = 0; i < $2->length(); i++) {
     if (i == 0 || i == $2->length() - 1) {
     $$->second->push_back(COMMAND_SUBST);
@@ -316,13 +283,15 @@ for (size_t i = 0; i < $2->length(); i++) {
     $$->second->push_back(REGULAR);
     }
 }
-delete $2;
+//delete_arg($1);
+delete $2;*/
 }
 |
 {
-$$ = new pair <string *, vector<char> *>();
+$$ = create_arg();
+/*$$ = new pair <string *, vector<char> *>();
 $$->first=new string();
-$$->second=new vector<char>();
+$$->second=new vector<char>();*/
 };
 
 quote_word: quote_word ch {
@@ -398,21 +367,67 @@ word:  ch word {
     string ret = *$1+ *$2;
     $$ = new string(ret.c_str());
     delete $2;
+    delete $1;
    }
     | {
    $$ = new string();
    }
     ;
 
+expansion: cmd_subst {
+$$ = create_arg();
+$$->first->append(*$1);
+for (size_t i = 0; i < $1->length(); i++) {
+    if (i == 0 || i == $1->length() - 1) {
+    $$->second->push_back(COMMAND_SUBST);
+    }
+    else {
+    $$->second->push_back(REGULAR);
+    }
+}
+delete $1;
+} | left_process_subst{
+$$ = create_arg();
+$$->first->append(*$1);
+for (size_t i = 0; i < $1->length(); i++) {
+    if (i == 0 || i == $1->length() - 1) {
+    $$->second->push_back(READ_PROCESS_SUBST);
+    }
+    else {
+    $$->second->push_back(REGULAR);
+    }
+}
+delete $1;
+} | right_process_subst{
+$$ = create_arg();
+$$->first->append(*$1);
+for (size_t i = 0; i < $1->length(); i++) {
+    if (i == 0 || i == $1->length() - 1) {
+    $$->second->push_back(WRITE_PROCESS_SUBST);
+    }
+    else {
+    $$->second->push_back(REGULAR);
+    }
+}
+delete $1;
+}
+
 cmd_subst: SUBSHELL space linebreak full_command_line space linebreak RIGHT_PAREN {
-         $$ = new string("$("+$4->getCommand($4)+")");
+         $$ = new string("$("+$4->get_command($4)+")");
+}
+
+left_process_subst: LEFT_PROCESS_SUBST space linebreak full_command_line space linebreak RIGHT_PAREN {
+             $$= new string("<("+$4->get_command($4)+")");
+             }
+right_process_subst: RIGHT_PROCESS_SUBST space linebreak full_command_line space linebreak RIGHT_PAREN {
+             $$= new string(">("+$4->get_command($4)+")");
 }
 ch: CHAR {
   $$=new string(1, $1);
   }
   | ESCAPE_CHAR{
   if (parse_quote) {
-  $$=new string(1, convertEscapeChar(*$1));
+  $$=new string(1, convert_escape_char(*$1));
   delete $1;
   }
   else {
@@ -443,3 +458,35 @@ void yyerror(YYLTYPE *yyllocp, yyscan_t scan, AST **ast, int parse_quote, const 
     cerr << s << endl;
 }
 
+pair <string *, vector <char> *> * create_arg() {
+    pair <string *, vector <char> *> *ret = new pair <string *, vector<char> *>();
+    ret->first=new string();
+    ret->second=new vector<char>();
+    return ret;
+}
+
+void add_file_list(vector <Node *>**file_lists, int index, vector <Node*> file_list) {
+    for (auto i: file_list) {
+        file_lists[index]->push_back(i);
+    }
+}
+
+void copy_arg(pair <string *, vector <char> * > *argOne, pair<string *, vector <char> * > *argTwo) {
+    //delete old
+    delete argOne->first;
+    delete argOne->second;
+    argOne->first = new string(*argTwo->first);
+    argOne->second = new vector <char>(*argTwo->second);
+}
+
+void append_arg(pair <string *, vector <char> * > *argOne, pair<string *, vector <char> * > *argTwo) {
+    argOne->first->append(*argTwo->first);
+    for (auto i: *argTwo->second) {
+        argOne->second->push_back(i);
+    }
+}
+void delete_arg(pair <string *, vector <char> *> *arg) {
+    delete arg->first;
+    delete arg->second;
+    delete arg;
+}

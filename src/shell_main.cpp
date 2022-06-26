@@ -15,9 +15,9 @@ unordered_map<string,string> users;
 
 Trie *buildTrie(const char *currentdir);
 void print_prompt() {
-    if (isEnviron((char *)"PROMPT")) {
+    if (is_environ((char *)"PROMPT")) {
         char *prompt = getenv("PROMPT");
-        cout << expandPrompt(prompt);
+        cout << expand_prompt(prompt);
     }
     else {
         cout << "shell>";
@@ -63,14 +63,14 @@ int main(int argc, char *argv[]) {
     string line;
     p = getpwuid(getuid());
     getUsers(p);
-    string shellrc_loc = string(getenv("HOME")) + string("/.shellrc");
-    const char *source[3] = {"source", shellrc_loc.c_str(), NULL};
-    char *shell_path = realpath("/proc/self/exe", NULL);
-    const char *set_shell[4] = {"setenv", "SHELL", shell_path, NULL};
-    //runBuiltInCommand((char **)set_shell, p);
-    free(shell_path);
+    //string shellrc_loc = string(getenv("HOME")) + string("/.shellrc");
+    //const char *source[3] = {"source", shellrc_loc.c_str(), NULL};
+    //char *shell_path = realpath("/proc/self/exe", NULL);
+    //const char *set_shell[4] = {"setenv", "SHELL", shell_path, NULL};
+    //run_builtin_command((char **)set_shell, p);
+    //free(shell_path);
     if (isatty(0)) {
-        //runBuiltInCommand((char **)source, p);
+        //run_builtin_command((char **)source, p);
     }
     yyscan_t local;
     yylex_init(&local);
@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
         }
     }
     yylex_destroy(local);
-    deleteAliasedCommands();
+    delete_aliased_commands();
     Shell::destroy_shell();
     return EXIT_SUCCESS;
 }

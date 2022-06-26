@@ -44,14 +44,21 @@ void job::launch_job(AST *ast) {
     in_file = this->stdin_fd;
     redirect_in_file = this->stdin_fd;
 
-    int old_stdin = dup(STDIN_FILENO);
-    int old_stdout = dup(STDOUT_FILENO);
+    int old_stdin = dup(this->stdin_fd);
+    int old_stdout = dup(this->stdout_fd);
 
 
     //execute a pipeline
     for (process *p = this->first_process; p; p = p->next) {
         //running builtin commands that have to be run in the parent
         int flag = 0;
+
+        //aliasing
+        char **aliasedCmd = expand_alias(p->argv);
+        if (aliasedCmd != p->argv) {
+            delete_argv(p->argv); 
+            p->argv = copy_command(aliasedCmd);
+        }
         if (this->foreground) {
             if (!strcmp(p->argv[0], "exit")) {
                 cout << "exit" << endl;
@@ -60,35 +67,35 @@ void job::launch_job(AST *ast) {
             }
 
             if (!strcmp(p->argv[0], "cd")) {
-                runBuiltInCommand(p->argv);
+                run_builtin_command(p->argv);
                 flag = 1;
             }
 
             if (!strcmp(p->argv[0], "setenv")) {
-                runBuiltInCommand(p->argv);
+                run_builtin_command(p->argv);
                 flag = 1;
             }
 
             if (!strcmp(p->argv[0], "source")) {
-                runBuiltInCommand(p->argv);
+                run_builtin_command(p->argv);
                 flag = 1;
             }
 
             if (!strcmp(p->argv[0], "fg")) {
-                runBuiltInCommand(p->argv);
+                run_builtin_command(p->argv);
                 flag = 1;
             }
             if (!strcmp(p->argv[0], "bg")) {
-                runBuiltInCommand(p->argv);
+                run_builtin_command(p->argv);
                 flag = 1;
             }
             if (!strcmp(p->argv[0], "unsetenv")) {
-                runBuiltInCommand(p->argv);
+                run_builtin_command(p->argv);
                 flag = 1;
             }
 
             if (!strcmp(p->argv[0], "alias") && p->argv[1]) {
-                runBuiltInCommand(p->argv);
+                run_builtin_command(p->argv);
                 flag = 1;
             }
         }
@@ -147,7 +154,7 @@ void job::launch_job(AST *ast) {
         if (p->files[0].size() > 1 || (p->files[0].size() && redirect_in_file != this->stdin_fd)) {
             if (fork() == 0) {
                 //reverse(p->files[0].begin(), p->files[0].end());
-                myCat(redirect_in_file, in_pipe[1], p->files[0]);
+                my_cat(redirect_in_file, in_pipe[1], p->files[0]);
                 exit(0);
             }
             close(in_pipe[1]);
@@ -182,7 +189,7 @@ void job::launch_job(AST *ast) {
                 close(process_out_file);
                 if (fork() == 0) {
                     setpgid(getpid(), this->pgid);
-                    myTee(my_pipe[0], out_file, p->files[1], p->files[4]);
+                    my_tee(my_pipe[0], out_file, p->files[1], p->files[4]);
                     exit(0);
                 }
                 //clean up write end of pipe
@@ -197,7 +204,7 @@ void job::launch_job(AST *ast) {
                 if (fork() == 0) {
                     setpgid(getpid(), this->pgid);
                     vector <string> empty;
-                    myTee(err_pipe[0], 1, p->files[2], empty);
+                    my_tee(err_pipe[0], 1, p->files[2], empty);
                     exit(0);
                 }
                 close(err_pipe[0]);
@@ -207,13 +214,13 @@ void job::launch_job(AST *ast) {
                 if (fork() == 0) {
                     setpgid(getpid(), this->pgid);
                     vector <string> empty;
-                    myTee(out_err_pipe[0], 1, p->files[3], p->files[5]);
+                    my_tee(out_err_pipe[0], 1, p->files[3], p->files[5]);
                     exit(0);
                 }
                 close(out_err_pipe[0]);
             }
             //clean pipes
-            if (in_file != this->stdin_fd) {
+            if (in_file != STDIN_FILENO) {
                 close(in_file);
             }
             if (process_out_file != this->stdout_fd) {
@@ -230,8 +237,8 @@ void job::launch_job(AST *ast) {
         print_process_information();
         this->put_job_in_background(0);
     }
-    dup2(old_stdin, STDIN_FILENO);
-    dup2(old_stdout, STDOUT_FILENO);
+    dup2(old_stdin, this->stdin_fd);
+    dup2(old_stdout, this->stdout_fd);
 }
 
 int job::wait_for_job() {
@@ -244,6 +251,9 @@ int job::wait_for_job() {
     while (!mark_process_status (pid, status)
             && !this->job_is_stopped ()
             && !this->job_is_completed ());
+    for (auto p: this->substProcesses) {
+        delete p;
+    }
     return status;
 }
 
@@ -253,6 +263,11 @@ int job::job_is_stopped () {
             return 0;
         }
     }
+    /*for (auto p: this->substProcesses) {
+        if (p->completed == 0 && p->stopped == 0) {
+            return 0;
+        }
+    }*/
     return 1;
 }
 
@@ -262,6 +277,11 @@ int job::job_is_completed () {
             return 0;
         }
     }
+    /*for (auto p: this->substProcesses) {
+        if (p->completed == 0) {
+            return 0;
+        }
+    }*/
     return 1;
 }
 
@@ -278,14 +298,14 @@ void job::put_job_in_foreground(int cont) {
             perror ("kill (SIGCONT)");
     }
     status = this->wait_for_job();
-    if (WIFSTOPPED(status) == 0) {
-        Shell::last_job_exit_status = WEXITSTATUS(status);
-        Shell::delete_job(this);
-    }
     tcsetpgrp (Shell::shell_terminal, Shell::shell_pgid);
 
     tcgetattr (Shell::shell_terminal, &this->tmodes);
     tcsetattr (Shell::shell_terminal, TCSADRAIN, &Shell::shell_tmodes);
+    if (WIFSTOPPED(status) == 0) {
+        Shell::last_job_exit_status = WEXITSTATUS(status);
+        Shell::delete_job(this);
+    }
 }
 
 void job::put_job_in_background (int cont)
@@ -356,6 +376,18 @@ int mark_process_status(pid_t pid, int status) {
                     return 0;
                 }
             }
+            for (auto p: j->substProcesses) {
+                if (p->pid == pid) {
+                    p->status = status;
+                    if (WIFSTOPPED(status)) {
+                        p->stopped = 1;
+                    }
+                    else {
+                        p->completed = 1;
+                    }
+                    return 0;
+                }
+            }
         }
         return -1;
     }
@@ -390,9 +422,10 @@ job *find_job_by_pid(pid_t pid)
 
 job *create_job_from_ast(AST **tr) {
     job *j = new job;
+    Shell::currentJob = j;
     string command;
     j->foreground = !(*tr)->root->background;
-    string expanded_command = tryExpandCommand((*tr)->root, command);
+    string expanded_command = try_expand_command((*tr)->root, command);
     //cout << expanded_command << endl;
     delete *tr;
 
@@ -431,7 +464,7 @@ void traverse_helper(Node *node, job *j, string &command) {
           }*/
         for (int i = 0; i < 6; i++) {
             for (auto j: (((Command *)node->obj)->files[i])) {
-                p->files[i].push_back(j);
+                p->files[i].push_back(*(string*)j->obj);
             }
         }
         j->append_process(p);

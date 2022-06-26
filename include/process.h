@@ -20,4 +20,5 @@ typedef struct process {
     char stopped;
     int status;
 }process;
+void delete_argv(char **argv);
 #endif
