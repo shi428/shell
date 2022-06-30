@@ -20,7 +20,7 @@ struct Node {
     void *obj;
     Type type;
     vector <Node *> children;
-    vector <char> expansionType;
+    vector <char> expansionFlags;
 };
 
 struct AST {
@@ -30,5 +30,5 @@ struct AST {
     Node  *root;
 };
 
-Node *make_arg_node(string &arg, vector <char> &expansionTypes);
+Node *make_arg_node(string &arg, vector <char> &expansionFlags);
 #endif

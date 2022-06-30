@@ -15,25 +15,25 @@ vector <int> open_files(vector <string> &files, int append) {
 }
 void my_tee(int inputFd, int outputFd, vector <string> &outFiles, vector <string> & appendFiles) {
     char buffer[4096];
-    vector <int> out_fds = open_files(outFiles, 0);
-    vector <int> append_fds = open_files(appendFiles, 1);
+    vector <int> outFds = open_files(outFiles, 0);
+    vector <int> appendFds = open_files(appendFiles, 1);
     ssize_t n_bytes;
     while ((n_bytes = read(inputFd, buffer, (sizeof(buffer) / sizeof(buffer[0])) - 1)) != 0) {
         buffer[n_bytes] = '\0';
-        for (auto i: out_fds) {
+        for (auto i: outFds) {
             write(i, buffer, n_bytes);
         }
-        for (auto i: append_fds) {
+        for (auto i: appendFds) {
             write(i, buffer, n_bytes);
         }
         if (outputFd != 1) {
         write(outputFd, buffer, n_bytes);
         }
     }
-    for (auto i: out_fds) {
+    for (auto i: outFds) {
         close(i);
     }
-    for (auto i: append_fds) {
+    for (auto i: appendFds) {
         close(i);
     }
 }

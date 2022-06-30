@@ -1,24 +1,24 @@
-#include <jobs.h>
+//#include <jobs.h>
 #include <shell.h>
-#include "yacc.yy.hpp"
-#include "lex.yy.hpp"
+#include "../yacc.yy.hpp"
+#include "../lex.yy.hpp"
 
 job::job() {
-    this->job_id = 0;
+    this->jobId = 0;
     this->next = NULL;
     this->command = NULL;
-    this->first_process = NULL;
-    this->last_process = NULL;
+    this->firstProcess = NULL;
+    this->lastProcess = NULL;
     this->pgid = 0;
     this->notified = 0;
-    this->stdin_fd = 0;
-    this->stdout_fd = 1;
-    this->stderr_fd = 2;
+    this->stdinFd = 0;
+    this->stdoutFd = 1;
+    this->stderrFd = 2;
     this->foreground = 0;
 }
 
 job::~job() {
-    process *p = first_process;
+    process *p = this->firstProcess;
     while (p) {
         process* next = p->next;
         delete p;
@@ -29,27 +29,27 @@ job::~job() {
 
 void job::launch_job(AST *ast) {
     pid_t pid;
-    int my_pipe[2]; //to output/append redirection
-    int my_pipe2[2]; //to pipe redirection
-    int err_pipe[2]; //error redirection
-    int out_err_pipe[2]; //output and error redirection
-    int in_pipe[2]; //input redirection
+    int myPipe[2]; //to output/append redirection
+    int myPipe2[2]; //to pipe redirection
+    int errPipe[2]; //error redirection
+    int outErrPipe[2]; //output and error redirection
+    int inPipe[2]; //input redirection
 
-    int in_file; 
-    int out_file;
-    int err_file;
-    int process_out_file;
-    int redirect_in_file;
+    int inFile; 
+    int outFile;
+    int errFile;
+    int processOutFile;
+    int redirectInFile;
 
-    in_file = this->stdin_fd;
-    redirect_in_file = this->stdin_fd;
+    inFile = this->stdinFd;
+    redirectInFile = this->stdinFd;
 
-    int old_stdin = dup(this->stdin_fd);
-    int old_stdout = dup(this->stdout_fd);
+    int oldStdin = dup(this->stdinFd);
+    int oldStdout = dup(this->stdoutFd);
 
 
     //execute a pipeline
-    for (process *p = this->first_process; p; p = p->next) {
+    for (process *p = this->firstProcess; p; p = p->next) {
         //running builtin commands that have to be run in the parent
         int flag = 0;
 
@@ -62,7 +62,7 @@ void job::launch_job(AST *ast) {
         if (this->foreground) {
             if (!strcmp(p->argv[0], "exit")) {
                 cout << "exit" << endl;
-                Shell::exit_status = 1;
+                Shell::exitStatus = 1;
                 return ;
             }
 
@@ -102,62 +102,62 @@ void job::launch_job(AST *ast) {
 
         //if redirection is necessary
         if (p->next) { 
-            pipe(my_pipe2);
-            process_out_file = my_pipe2[1];
-            err_file = this->stderr_fd;
+            pipe(myPipe2);
+            processOutFile = myPipe2[1];
+            errFile = this->stderrFd;
             if (p->files[0].size()) {
-                pipe(in_pipe);
-                redirect_in_file = in_file;
-                in_file = in_pipe[0];
-                if (p->files[0].size() == 1 && redirect_in_file == this->stdin_fd /*not coming from a pipe*/) {
-                    in_file = open(p->files[0][0].c_str(), O_RDONLY);
+                pipe(inPipe);
+                redirectInFile = inFile;
+                inFile = inPipe[0];
+                if (p->files[0].size() == 1 && redirectInFile == this->stdinFd /*not coming from a pipe*/) {
+                    inFile = open(p->files[0][0].c_str(), O_RDONLY);
                 }
             }
             if (p->files[1].size() || p->files[4].size()) {
-                pipe(my_pipe);
-                process_out_file = my_pipe[1];
-                out_file = my_pipe2[1];
+                pipe(myPipe);
+                processOutFile = myPipe[1];
+                outFile = myPipe2[1];
             }
             if (p->files[2].size()) {
-                pipe(err_pipe);
-                err_file = err_pipe[1];
+                pipe(errPipe);
+                errFile = errPipe[1];
             }
         }
         else { //end of pipeline
-            process_out_file = this->stdout_fd;
-            err_file = this->stderr_fd;
+            processOutFile = this->stdoutFd;
+            errFile = this->stderrFd;
             if (p->files[0].size()) {
-                pipe(in_pipe);
-                redirect_in_file = in_file;
-                in_file = in_pipe[0];
-                if (p->files[0].size() == 1 && redirect_in_file == this->stdin_fd) {
-                    in_file = open(p->files[0][0].c_str(), O_RDONLY);
+                pipe(inPipe);
+                redirectInFile = inFile;
+                inFile = inPipe[0];
+                if (p->files[0].size() == 1 && redirectInFile == this->stdinFd) {
+                    inFile = open(p->files[0][0].c_str(), O_RDONLY);
                 }
             }
             if (p->files[1].size() || p->files[4].size()) {
-                pipe(my_pipe);
-                process_out_file = my_pipe[1];
+                pipe(myPipe);
+                processOutFile = myPipe[1];
             }
             if (p->files[2].size()) {
-                pipe(err_pipe);
-                err_file = err_pipe[1];
+                pipe(errPipe);
+                errFile = errPipe[1];
             }
             if (p->files[3].size() || p->files[5].size()) {
-                pipe(out_err_pipe);
-                process_out_file = out_err_pipe[1];
-                err_file = out_err_pipe[1];
+                pipe(outErrPipe);
+                processOutFile = outErrPipe[1];
+                errFile = outErrPipe[1];
             }
-            //process_out_file = this->stdout_fd;
-            out_file = this->stdout_fd;
+            //process_out_file = this->stdoutFd;
+            outFile = this->stdoutFd;
         }
         //input redirection here
-        if (p->files[0].size() > 1 || (p->files[0].size() && redirect_in_file != this->stdin_fd)) {
+        if (p->files[0].size() > 1 || (p->files[0].size() && redirectInFile != this->stdinFd)) {
             if (fork() == 0) {
                 //reverse(p->files[0].begin(), p->files[0].end());
-                my_cat(redirect_in_file, in_pipe[1], p->files[0]);
+                my_cat(redirectInFile, inPipe[1], p->files[0]);
                 exit(0);
             }
-            close(in_pipe[1]);
+            close(inPipe[1]);
         }
 
         //execute command
@@ -165,7 +165,7 @@ void job::launch_job(AST *ast) {
         if (pid == 0) { //child process
             if (flag == 0) {
                 //use first pipe output for piping
-                p->launch_process(ast, this->pgid, in_file, process_out_file, err_file, this->foreground);
+                p->launch_process(ast, this->pgid, inFile, processOutFile, errFile, this->foreground);
             }
             exit(0);
         }
@@ -176,7 +176,7 @@ void job::launch_job(AST *ast) {
         else { //parent process
             //assign process group
             p->pid = pid;
-            if (Shell::shell_is_interactive) {
+            if (Shell::shellIsInteractive) {
                 if (this->pgid == 0) {
                     this->pgid = pid;
                 }
@@ -186,48 +186,48 @@ void job::launch_job(AST *ast) {
             //output redirection
             if (p->files[1].size() || p->files[4].size()) {
                 //only do if redirect files exist
-                close(process_out_file);
+                close(processOutFile);
                 if (fork() == 0) {
                     setpgid(getpid(), this->pgid);
-                    my_tee(my_pipe[0], out_file, p->files[1], p->files[4]);
+                    my_tee(myPipe[0], outFile, p->files[1], p->files[4]);
                     exit(0);
                 }
                 //clean up write end of pipe
-                if (out_file != this->stdout_fd) {
-                    close(out_file);
+                if (outFile != this->stdoutFd) {
+                    close(outFile);
                 }
-                close(my_pipe[0]);
+                close(myPipe[0]);
             }
             //error redirection
             if (p->files[2].size()) {
-                close(err_file);
+                close(errFile);
                 if (fork() == 0) {
                     setpgid(getpid(), this->pgid);
                     vector <string> empty;
-                    my_tee(err_pipe[0], 1, p->files[2], empty);
+                    my_tee(errPipe[0], 1, p->files[2], empty);
                     exit(0);
                 }
-                close(err_pipe[0]);
+                close(errPipe[0]);
             }
             if (p->files[3].size() || p->files[5].size()) {
-                close(out_err_pipe[1]);
+                close(outErrPipe[1]);
                 if (fork() == 0) {
                     setpgid(getpid(), this->pgid);
                     vector <string> empty;
-                    my_tee(out_err_pipe[0], 1, p->files[3], p->files[5]);
+                    my_tee(outErrPipe[0], 1, p->files[3], p->files[5]);
                     exit(0);
                 }
-                close(out_err_pipe[0]);
+                close(outErrPipe[0]);
             }
             //clean pipes
-            if (in_file != STDIN_FILENO) {
-                close(in_file);
+            if (inFile != STDIN_FILENO) {
+                close(inFile);
             }
-            if (process_out_file != this->stdout_fd) {
-                close(process_out_file);
+            if (processOutFile != this->stdoutFd) {
+                close(processOutFile);
             }
         }
-        in_file  = my_pipe2[0];
+        inFile  = myPipe2[0];
     }
 
     if (this->foreground) {
@@ -237,8 +237,10 @@ void job::launch_job(AST *ast) {
         print_process_information();
         this->put_job_in_background(0);
     }
-    dup2(old_stdin, this->stdin_fd);
-    dup2(old_stdout, this->stdout_fd);
+
+    //restore old file descriptors
+    dup2(oldStdin, this->stdinFd);
+    dup2(oldStdout, this->stdoutFd);
 }
 
 int job::wait_for_job() {
@@ -258,7 +260,7 @@ int job::wait_for_job() {
 }
 
 int job::job_is_stopped () {
-    for (process *p = this->first_process; p != NULL; p = p->next) {
+    for (process *p = this->firstProcess; p != NULL; p = p->next) {
         if (p->completed == 0 && p->stopped == 0) {
             return 0;
         }
@@ -272,7 +274,7 @@ int job::job_is_stopped () {
 }
 
 int job::job_is_completed () {
-    for (process *p = this->first_process; p != NULL; p = p->next) {
+    for (process *p = this->firstProcess; p != NULL; p = p->next) {
         if (p->completed == 0) {
             return 0;
         }
@@ -291,19 +293,19 @@ void job::put_job_in_foreground(int cont) {
     this->foreground = 1;
 
     //continue job
-    tcsetpgrp(Shell::shell_terminal, this->pgid);
+    tcsetpgrp(Shell::shellTerminal, this->pgid);
     if (cont) {
-        //tcsetattr (Shell::shell_terminal, TCSADRAIN, &this->tmodes);
+        //tcsetattr (Shell::shellTerminal, TCSADRAIN, &this->tmodes);
         if (kill (- this->pgid, SIGCONT) < 0)
             perror ("kill (SIGCONT)");
     }
     status = this->wait_for_job();
-    tcsetpgrp (Shell::shell_terminal, Shell::shell_pgid);
+    tcsetpgrp (Shell::shellTerminal, Shell::shellPgid);
 
-    tcgetattr (Shell::shell_terminal, &this->tmodes);
-    tcsetattr (Shell::shell_terminal, TCSADRAIN, &Shell::shell_tmodes);
+    tcgetattr (Shell::shellTerminal, &this->tmodes);
+    tcsetattr (Shell::shellTerminal, TCSADRAIN, &Shell::shellTmodes);
     if (WIFSTOPPED(status) == 0) {
-        Shell::last_job_exit_status = WEXITSTATUS(status);
+        Shell::lastJobExitStatus = WEXITSTATUS(status);
         Shell::delete_job(this);
     }
 }
@@ -320,36 +322,36 @@ void job::put_job_in_background (int cont)
 }
 
 void job::append_process(process *p) {
-    if (this->last_process == NULL) {
-        this->last_process = p;
-        this->first_process = p;
+    if (this->lastProcess == NULL) {
+        this->lastProcess = p;
+        this->firstProcess = p;
         return ;
     }
-    this->last_process->next = p;
-    this->last_process = p;
+    this->lastProcess->next = p;
+    this->lastProcess = p;
 }
 
 void job::print_process_information() {
-    printf("[%d] ", this->job_id);
-    for (process *p = this->first_process; p; p = p->next) {
+    printf("[%d] ", this->jobId);
+    for (process *p = this->firstProcess; p; p = p->next) {
         printf("%d ", p->pid);
     }
     printf("\n");
 }
 
 void format_job_info (job *j) {
-    printf("[%d] ", j->job_id);
-    for (process *p = j->first_process; p->next; p = p->next) {
-        if (p != j->first_process) {
+    printf("[%d] ", j->jobId);
+    for (process *p = j->firstProcess; p->next; p = p->next) {
+        if (p != j->firstProcess) {
             printf("    ");
         }
         p->print_process_info();
         printf("|\n");
     }
-    if (j->last_process != j->first_process) {
+    if (j->lastProcess != j->firstProcess) {
         printf("    ");
     }
-    j->last_process->print_process_info();
+    j->lastProcess->print_process_info();
     printf("\n");
     //fprintf (stderr, "%ld (%s): %s\n", (long)j->pgid, status, j->command);
 }
@@ -362,7 +364,7 @@ void job::print_job_information() {
 int mark_process_status(pid_t pid, int status) {
     if (pid > 0) {
         for (job *j = Shell::jobs->first_job; j; j = j->next) {
-            for (process *p = j->first_process; p; p = p->next) {
+            for (process *p = j->firstProcess; p; p = p->next) {
                 if (p->pid == pid) {
                     p->status = status;
                     if (WIFSTOPPED(status)) {
@@ -411,7 +413,7 @@ void update_status() {
 job *find_job_by_pid(pid_t pid)
 {
     for (job *j = Shell::jobs->first_job; j != NULL; j = j->next) {
-        for (process *p = j->first_process; p != NULL; p = p->next) {
+        for (process *p = j->firstProcess; p != NULL; p = p->next) {
             if (p->pid == pid) {
                 return j;
             }
@@ -454,14 +456,8 @@ void traverse_helper(Node *node, job *j, string &command) {
             command += *(string *)i->obj;
             command += " ";
             index++;
-            //cout << *(string *)i->obj << endl;
         }
         p->argv[index] = NULL;
-        //((Command *)node->obj)->createArgs(args);
-        /*while (((Command *)node->obj)->cmd[i]) {
-          p->argv[i] = strdup(((Command *)node->obj)->cmd[i]);
-          i++;
-          }*/
         for (int i = 0; i < 6; i++) {
             for (auto j: (((Command *)node->obj)->files[i])) {
                 p->files[i].push_back(*(string*)j->obj);

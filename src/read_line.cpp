@@ -5,7 +5,6 @@ extern unsigned int ind;
 extern vector <string> history;
 void set_tty_raw_mode();
 void tty_reset();
-//extern Trie *trie;
 Trie *trie;
 Trie *buildTrie(string &currentdir);
 string current;
@@ -51,39 +50,25 @@ unsigned int position;
 string read_line() {
     string dir = string(getenv("PWD")) + '/';
     string ret = current;
+
     set_tty_raw_mode();
-    //unsigned int position = ret.length();
     errno = 0;
+
     write(1, ret.c_str(), ret.length());
     for (unsigned int i= 0; i < ret.length() - position; i++) {
         char ch = '\b';
         write(1, &ch, 1);
     }
-    /*if (!*tab) {
-      trie = buildTrie(dir.c_str());
-      }*/
+
     while (1) {
-        /*        if (ret.back() == '/') {
-                  string current_dir = dir + '/' + ret;
-                  if (DIR *d = opendir(current_dir.c_str())) {
-        //cout << "ok" << endl;
-        closedir(d);
-        delete trie;
-        trie = buildTrie(current_dir.c_str());
-        }
-        //cout << current_dir << endl;
-        }*/
         string trie_str = ret;
         if (isatty(0)) {
-        splitString(ret);
-        if (args.size()) {
-            int index = getIndex(position);
-            //cout << index << " " << args.size() <<  endl;
-            //if (index == -1) break;
-            trie_str = args[index].second;
-        }
-        // cout << trie_str << endl;
-        trie = buildTrie(trie_str);
+            splitString(ret);
+            if (args.size()) {
+                int index = getIndex(position);
+                trie_str = args[index].second;
+            }
+            trie = buildTrie(trie_str);
         }
         errno = 0;
         char ch;
@@ -93,6 +78,7 @@ string read_line() {
         if (ch == 4) {
             return "";
         }
+
         if (ch == '\n') {
             if (isatty(0))
                 write(1, &ch, 1);
@@ -102,20 +88,21 @@ string read_line() {
             delete trie;
             break;
         }
+
         if (ch == '\t') {
-            size_t slash_pos = trie_str.find_last_of('/');
+            size_t slashPos = trie_str.find_last_of('/');
             size_t period = trie_str.find_last_of('.');
-            if (period == 0 && period == slash_pos - 1 && slash_pos < trie_str.length() - 1) {
+            if (period == 0 && period == slashPos - 1 && slashPos < trie_str.length() - 1) {
                 string substr = trie_str.substr(0, period);
-                slash_pos = substr.find_last_of('/');
+                slashPos = substr.find_last_of('/');
             }
-            string filename = slash_pos != string::npos? trie_str.substr(slash_pos + 1) : trie_str;
+            string filename = slashPos != string::npos? trie_str.substr(slashPos + 1) : trie_str;
             string empty = filename;
             string fill = trie->try_complete(filename);
             TrieNode *node = trie->search(filename);
-            //ret += fill;
             ret.insert(position, fill);
             position += fill.length();
+
             write(1, fill.c_str(), fill.length());
             write(1, ret.substr(position).c_str(), ret.length()-position);
             for (unsigned int i= 0; i < ret.length() - position; i++) {
@@ -165,8 +152,6 @@ string read_line() {
                     write(1, &ch, 1);
                 }
             }
-            /*ch = '\b';
-              write(1, &ch, 1);*/
         }
         else {
             if (ch == 27)  {
@@ -262,7 +247,7 @@ string read_line() {
             }
         }
         if (isatty(0)) {
-        delete trie;
+            delete trie;
         }
         args.clear();
     }

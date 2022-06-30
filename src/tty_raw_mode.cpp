@@ -2,7 +2,7 @@
 struct termios tty_attr;
 void set_tty_raw_mode() {
     struct termios newtty_attr;
-    tcgetattr(0,&Shell::shell_tmodes);
+    tcgetattr(0,&Shell::shellTmodes);
     tcgetattr(0,&newtty_attr);
     newtty_attr.c_lflag &= (~(ICANON|ECHO));
     newtty_attr.c_cc[VTIME] = 0;
@@ -13,5 +13,5 @@ void set_tty_raw_mode() {
 
 void tty_reset() {
     /* flush and reset */
-    tcsetattr(0,TCSAFLUSH,&Shell::shell_tmodes);
+    tcsetattr(0,TCSAFLUSH,&Shell::shellTmodes);
 }

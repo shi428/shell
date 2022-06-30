@@ -38,8 +38,8 @@ void Command::createArgs(vector <string> &cmd) {
     this->cmd[args.size()] = NULL;
 }
 
-void Command::add_file_list(int id, vector <Node *>file_args) {
-    for (auto i: file_args) {
+void Command::add_file_list(int id, vector <Node *>fileArgs) {
+    for (auto i: fileArgs) {
         files[id].push_back(i);
     }
 }

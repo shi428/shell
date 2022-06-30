@@ -3,6 +3,7 @@
 
 #include <shell_util.h>
 #include <jobs.h>
+#include <unordered_map>
 
 //colors
 #define RED "\e[0;31m"
@@ -15,14 +16,15 @@
 struct Shell {
     Shell();
     ~Shell();
-    inline static pid_t shell_pgid;
-    inline static struct termios shell_tmodes;
-    inline static int shell_terminal;
-    inline static int shell_is_interactive;
-    inline static int exit_status;
-    inline static int last_job_exit_status;
-    inline static char *shell_path;
+    inline static pid_t shellPgid;
+    inline static struct termios shellTmodes;
+    inline static int shellTerminal;
+    inline static int shellIsInteractive;
+    inline static int exitStatus;
+    inline static int lastJobExitStatus;
+    inline static char *shellPath;
     inline static job *currentJob;
+    inline static unordered_map<string,string> users;
 
     struct list_of_jobs {
         list_of_jobs() {
@@ -55,6 +57,7 @@ struct Shell {
     static void print_jobs();
     static job *find_first_stopped_or_bg_job();
     static void mark_job_as_running(job *j);
+    static void get_users();
 };
 
 //helpers

@@ -9,7 +9,7 @@ using namespace std;
 typedef struct process {
     process();
     ~process();
-    void launch_process(AST *ast, pid_t pgid, int in_file, int out_file, int err_file, int foreground);
+    void launch_process(AST *ast, pid_t pgid, int inFile, int outFile, int errFile, int foreground);
     void print_process_info();
 
     vector <string> files[6];

@@ -17,15 +17,15 @@ typedef struct job {
     void print_process_information();
     void print_job_information();
 
-    int job_id;
+    int jobId;
     struct job *next;           
     char *command;              
-    process *first_process;     
-    process *last_process;
+    process *firstProcess;     
+    process *lastProcess;
     pid_t pgid;                 
     char notified;              
     struct termios tmodes;      
-    int stdin_fd, stdout_fd, stderr_fd;  
+    int stdinFd, stdoutFd, stderrFd;  
     int foreground;
     vector <process *> substProcesses;
 } job;

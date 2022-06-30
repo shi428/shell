@@ -33,11 +33,12 @@ Trie *buildTrie(string &str) {
 
     DIR *dir = opendir(currentDir.c_str());
     if (!dir) return NULL;
+
     Trie *ret = new Trie;
     while (struct dirent *entry = readdir(dir)) {
-        string file_name = entry->d_name;
+        string fileName = entry->d_name;
         string newFile;
-        for (auto i: file_name) {
+        for (auto i: fileName) {
             if (i == ' ') {
                 newFile += "\\ ";
             }
@@ -45,18 +46,18 @@ Trie *buildTrie(string &str) {
                 newFile += i;
             }
         }
-        file_name = newFile;
-        string full_path = string(currentDir) + '/' + string(file_name);
+        fileName = newFile;
+        string fullPath = string(currentDir) + '/' + string(fileName);
         if (entry->d_type == DT_DIR) {
-            file_name = string(file_name) + '/';
+            fileName = string(fileName) + '/';
         }
-        else if (access(full_path.c_str(), F_OK | X_OK) != -1 && !strcmp(currentDir.c_str(), getenv("PWD"))) {
+        else if (access(fullPath.c_str(), F_OK | X_OK) != -1 && !strcmp(currentDir.c_str(), getenv("PWD"))) {
             if (!currentDir.compare(getenv("PWD"))) {
-                file_name = "./" + string(entry->d_name);
+                fileName = "./" + string(entry->d_name);
             }
         }
-        if (!strncmp(currFile.c_str(), file_name.c_str(), currFile.length())) {
-            ret->insert(file_name);
+        if (!strncmp(currFile.c_str(), fileName.c_str(), currFile.length())) {
+            ret->insert(fileName);
         }
     }
     closedir(dir);

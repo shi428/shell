@@ -1,27 +1,7 @@
 %{
 #include <shell_util.h>
-//#include <ast.h>
-//#include <string>
-//#include <vector>
-//#include <misc.h>
-//#include <command.h>
-//#include <exec.h>
-//#include <expansion.h>
-//#include "lex.yy.hpp"
-extern unsigned int ind;
-extern struct passwd *p;
-extern std::vector <pair<pid_t, std::vector <std::string>>> bPids;
-extern std::vector <int> pos;
-typedef struct yy_buffer_state * YY_BUFFER_STATE;
-extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
-extern YY_BUFFER_STATE  yy_scan_string(const char *str);
-extern YY_BUFFER_STATE  buffer;
-extern void yy_switch_to_buffer(YY_BUFFER_STATE new_buffer);
-extern void yypush_buffer_state(YY_BUFFER_STATE new_buffer);
-   #define YYERROR_VERBOSE 1
+#define YYERROR_VERBOSE 1
 std::vector <std::string> args_vec;
-   extern void myunput(int c);
-
 pair <string *, vector <char> *> * create_arg();
 void add_file_list(vector <Node *>**file_lists, int index, vector <Node*> file_list);
 void copy_arg(pair <string *, vector <char> * > *argOne, pair<string *, vector <char> * > *argTwo);
@@ -61,7 +41,7 @@ void yyerror(YYLTYPE *yylocp, yyscan_t, AST **ast, int, const char *);
 %token GREATGREAT
 %token GREATGREATAND
 %token IOERR
-//%token SPACE
+%token SPACE
 %token <ch> LESS
 %token <ch> DQUOTE
 %token <ch> SQUOTE
@@ -69,7 +49,7 @@ void yyerror(YYLTYPE *yylocp, yyscan_t, AST **ast, int, const char *);
 %token <ch> RIGHT_BRACE
 %token <ch> NEWLINE
 %token SPACE;
-%type <str> ch
+%type <str> ch;
 %type <str> word;
 %type <node> no_arg_command;
 %type <node> simple_command;
@@ -90,8 +70,7 @@ void yyerror(YYLTYPE *yylocp, yyscan_t, AST **ast, int, const char *);
 %%
 
 goal: input 
-    input:
- space linebreak full_command_line space linebreak {
+input: space linebreak full_command_line space linebreak {
     AST *tr = new AST;
     *ast = tr;
     tr->root = $3;
@@ -274,24 +253,11 @@ arg expansion {
 $$ = create_arg();
 copy_arg($$, $1);
 append_arg($$, $2);
-/*$$->first->append(*$2);
-for (size_t i = 0; i < $2->length(); i++) {
-    if (i == 0 || i == $2->length() - 1) {
-    $$->second->push_back(COMMAND_SUBST);
-    }
-    else {
-    $$->second->push_back(REGULAR);
-    }
-}
-//delete_arg($1);
-delete $2;*/
+delete $2;
 }
 |
 {
 $$ = create_arg();
-/*$$ = new pair <string *, vector<char> *>();
-$$->first=new string();
-$$->second=new vector<char>();*/
 };
 
 quote_word: quote_word ch {

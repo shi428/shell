@@ -1,4 +1,4 @@
-#include <process.h>
+//#include <process.h>
 #include <shell.h>
 process::process() {
     this->next = NULL;
@@ -25,10 +25,10 @@ void delete_argv(char **argv) {
     delete [] argv;
 }
 
-void process::launch_process(AST *ast, pid_t pgid, int in_file, int out_file, int err_file, int foreground) {
+void process::launch_process(AST *ast, pid_t pgid, int inFile, int outFile, int errFile, int foreground) {
     pid_t pid;
 
-    if (Shell::shell_is_interactive) {
+    if (Shell::shellIsInteractive) {
 
         //put process into process group
         pid = getpid();
@@ -39,7 +39,7 @@ void process::launch_process(AST *ast, pid_t pgid, int in_file, int out_file, in
 
         //give process group terminal permissions
         if (foreground) {
-                tcsetpgrp(Shell::shell_terminal, pgid);
+                tcsetpgrp(Shell::shellTerminal, pgid);
         }
 
         //Set the handling for job control signals back to the default.
@@ -52,20 +52,20 @@ void process::launch_process(AST *ast, pid_t pgid, int in_file, int out_file, in
     }
 
     //setup pipes
-    if (in_file != STDIN_FILENO) {
-        dup2 (in_file, STDIN_FILENO);
-        close (in_file);
+    if (inFile != STDIN_FILENO) {
+        dup2 (inFile, STDIN_FILENO);
+        close (inFile);
     }
-    if (out_file != STDOUT_FILENO) {
-        if (out_file == err_file) {
-            dup2(err_file, STDERR_FILENO);
+    if (outFile != STDOUT_FILENO) {
+        if (outFile == errFile) {
+            dup2(errFile, STDERR_FILENO);
         }
-        dup2 (out_file, STDOUT_FILENO);
-        close (out_file);
+        dup2 (outFile, STDOUT_FILENO);
+        close (outFile);
     }
-    if (out_file != err_file && err_file != STDERR_FILENO) {
-        dup2 (err_file, STDERR_FILENO);
-        close (err_file);
+    if (outFile != errFile && errFile != STDERR_FILENO) {
+        dup2 (errFile, STDERR_FILENO);
+        close (errFile);
     }
 
     if (is_builtin(this->argv[0])) {
@@ -81,28 +81,28 @@ void process::launch_process(AST *ast, pid_t pgid, int in_file, int out_file, in
 }
 
 void process::print_process_info() {
-    string status_str;
+    string statusStr;
     if (status == -1) {
-        status_str = "Running";
+        statusStr = "Running";
     }
     else if (WIFEXITED(status)) {
-        status_str = "Done";
+        statusStr = "Done";
     }
     else if (WIFSTOPPED(status)) {
         if (this->stopped) {
-        status_str = "Stopped";
+        statusStr = "Stopped";
         }
         else {
-        status_str = "Continued";
+        statusStr = "Continued";
         }
     }
     else if (WIFCONTINUED(status)) {
-        status_str = "Continued";
+        statusStr = "Continued";
     }
     else if (WTERMSIG(status)) {
-        status_str = "Terminated";
+        statusStr = "Terminated";
     }
-    printf("%d %s ", this->pid, status_str.c_str());
+    printf("%d %s ", this->pid, statusStr.c_str());
     int i = 0;
     while (this->argv[i]) {
         cout << this->argv[i] << " ";

@@ -12,17 +12,17 @@ vector <int> open_files(vector <string> &files) {
 void my_cat(int inputFd, int outputFd, vector <string> &files) {
     char buffer[4096];
     vector <int> fds = open_files(files);
-    ssize_t n_bytes;
+    ssize_t nbytes;
     if (inputFd) {
-        while ((n_bytes = read(inputFd, buffer, 4095)) != 0) {
-            buffer[n_bytes] = '\0';
-            write(outputFd, buffer, n_bytes);
+        while ((nbytes = read(inputFd, buffer, 4095)) != 0) {
+            buffer[nbytes] = '\0';
+            write(outputFd, buffer, nbytes);
         }
     }
     for (auto i: fds) {
-        while ((n_bytes = read(i, buffer, 4095)) != 0) {
-            buffer[n_bytes] = '\0';
-            write(outputFd, buffer, n_bytes);
+        while ((nbytes = read(i, buffer, 4095)) != 0) {
+            buffer[nbytes] = '\0';
+            write(outputFd, buffer, nbytes);
         }
     }
 }

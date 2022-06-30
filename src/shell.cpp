@@ -5,20 +5,30 @@ void Shell::init_shell() {
     /* See if we are running interactively.  */
     //first_job = NULL;
     jobs = new list_of_jobs;
-    shell_terminal = STDIN_FILENO;
-    shell_is_interactive = isatty (shell_terminal);
-    exit_status = 0;
-    shell_path = realpath("/proc/self/exe", NULL);
-    char *temp = strdup(shell_path);
+    shellTerminal = STDIN_FILENO;
+    shellIsInteractive = isatty (shellTerminal);
+    exitStatus = 0;
+    shellPath = realpath("/proc/self/exe", NULL);
+
+    string shellrc_loc = string(getenv("HOME")) + string("/.shellrc");
+    const char *source[3] = {"source", shellrc_loc.c_str(), NULL};
+    const char *set_shell[4] = {"setenv", "SHELL", shellPath, NULL};
+    char *temp = strdup(shellPath);
     string namedPipeDir = string(dirname(temp)) + "/tmp";
+
     mkdir(namedPipeDir.c_str(), 0777);
     free(temp);
 
-    if (shell_is_interactive)
+    //get user information
+    get_users();
+
+    //set shell env var
+    run_builtin_command_setenv((char **)set_shell);
+    if (shellIsInteractive)
     {
         /* Loop until we are in the foreground.  */
-        while (tcgetpgrp (shell_terminal) != (shell_pgid = getpgrp ()))
-            kill (- shell_pgid, SIGTTIN);
+        while (tcgetpgrp (shellTerminal) != (shellPgid = getpgrp ()))
+            kill (- shellPgid, SIGTTIN);
 
         /* Ignore interactive and job-control signals.  */
         signal (SIGINT, sigint_handler);
@@ -29,18 +39,23 @@ void Shell::init_shell() {
         signal (SIGCHLD, SIG_DFL);
 
         /* Put ourselves in our own process group.  */
-        shell_pgid = getpid ();
-        if (setpgid (shell_pgid, shell_pgid) < 0)
+        shellPgid = getpid ();
+        if (setpgid (shellPgid, shellPgid) < 0)
         {
             perror ("Couldn't put the shell in its own process group");
             exit (1);
         }
 
         /* Grab control of the terminal.  */
-        tcsetpgrp (shell_terminal, shell_pgid);
+        tcsetpgrp (shellTerminal, shellPgid);
 
         /* Save default terminal attributes for shell.  */
-        tcgetattr (shell_terminal, &shell_tmodes);
+        tcgetattr (shellTerminal, &shellTmodes);
+    }
+
+    //source shellrc
+    if (shellIsInteractive) {
+        run_builtin_command_source((char **)source);
     }
 }
 
@@ -52,10 +67,11 @@ int unlink_cb(const char *fpath, const struct stat *sb, int typeflag, struct FTW
 int rmrf(const char *fpath) {
     return nftw(fpath, unlink_cb, 64, FTW_DEPTH | FTW_PHYS);
 }
+
 void Shell::destroy_shell() {
-    char *temp = strdup(shell_path);
+    char *temp = strdup(shellPath);
     string namedPipeDir = string(dirname(temp)) + "/tmp";
-    free(shell_path);
+    free(shellPath);
     free(temp);
     rmrf(namedPipeDir.c_str());
     delete jobs;
@@ -90,13 +106,13 @@ void Shell::insert_job(job *j) {
     if (jobs->last_job == NULL) {
         jobs->last_job = j;
         jobs->first_job = j;
-        j->job_id = 1;
+        j->jobId = 1;
         return ;
     }
     for (job *it = jobs->first_job; it; it = jnext) {
         jnext = it->next;
-        if (it->job_id > i) {
-            j->job_id = i;
+        if (it->jobId > i) {
+            j->jobId = i;
             insert_job_after(j, jlast);
             return ;
         }
@@ -107,7 +123,7 @@ void Shell::insert_job(job *j) {
     //last job
     jobs->last_job->next = j;
     jobs->last_job = jobs->last_job->next;
-    j->job_id = i;
+    j->jobId = i;
 }
 
 void Shell::delete_job(job *j) {
@@ -142,54 +158,33 @@ void Shell::check_zombie() {
         mark_process_status(pid, status);
         job *j = find_job_by_pid(pid);
         if (j && j->job_is_completed() && !j->foreground) {
-            Shell::last_job_exit_status = WEXITSTATUS(status);
+            Shell::lastJobExitStatus = WEXITSTATUS(status);
             j->print_job_information();
             delete_job(j);
-            /*if (isatty(0)) {
-                print_prompt();
-            }*/
             fflush(stdout);
             return ;
-        }/*for (unsigned int i = 0; i < bPids.size(); i++) {
-           if (bPids[i].first == pid && pos.size()) {
-           background_process = pid;
-           cout << endl;
-           cout << pos[i] <<". [" << pid << "] ";
-           for (auto j: bPids[i].second) {
-           cout << j << " ";
-           }
-           cout << "has exited";
-           cout << endl;
-           bPids.erase(bPids.begin() + i);
-           pos.erase(pos.begin() + i);
-           i--;
-           if (isatty(0)) {
-           print_prompt();
-           }
-           fflush(stdout);
-           }
-           }*/
+        }
     }
 }
 
 void Shell::print_prompt() {
     if (is_environ((char *)"PROMPT")) {
         char *prompt = getenv("PROMPT");
-        if (!Shell::last_job_exit_status) {
-        cout << expand_prompt(prompt);
+        if (!Shell::lastJobExitStatus) {
+            cout << expand_prompt(prompt);
             cout << HGRN << "[ " <<  setw(3) << 0 << " ] $ " << RST;;
         }
         else {
-        cout << expand_prompt(prompt);
-            cout << HRED << "[ " <<  setw(3) << Shell::last_job_exit_status << " ] $ " << RST;
+            cout << expand_prompt(prompt);
+            cout << HRED << "[ " <<  setw(3) << Shell::lastJobExitStatus << " ] $ " << RST;
         }
     }
     else {
-        if (!Shell::last_job_exit_status) {
+        if (!Shell::lastJobExitStatus) {
             cout << HGRN << "[ " <<  setw(3) << 0 << " ] $ " << RST;;
         }
         else {
-            cout << HRED << "[ " <<  setw(3) << Shell::last_job_exit_status << " ] $ " << RST;
+            cout << HRED << "[ " <<  setw(3) << Shell::lastJobExitStatus << " ] $ " << RST;
         }
     }
     fflush(stdout);
@@ -217,7 +212,23 @@ job *Shell::find_first_stopped_or_bg_job() {
 }
 
 void Shell::mark_job_as_running(job *j) {
-    for (process *p = j->first_process; p; p = p->next) {
+    for (process *p = j->firstProcess; p; p = p->next) {
         p->stopped = 0;
     }
+}
+
+void Shell::get_users() {
+    while (true) {
+        errno = 0;
+        struct passwd *entry = getpwent();
+        if (!entry) {
+            if (errno) {
+                cerr << "error reading password database\n";
+                return;
+            }
+            break;
+        }
+        users[string(entry->pw_name)] = string(entry->pw_dir);
+    }
+    endpwent();
 }

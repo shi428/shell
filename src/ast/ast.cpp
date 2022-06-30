@@ -29,33 +29,33 @@ string Node::get_command(Node *root) {
             ret += " ";
         }
         for (int i = 0; i < 6; i++) {
-            string redirect_symbol;
+            string redirectSymbol;
             switch(i) {
             case 0:
-                redirect_symbol = " < ";
+                redirectSymbol = " < ";
                 break;
             case 1:
-                redirect_symbol = " > ";
+                redirectSymbol = " > ";
                 break;
             case 2:
-                redirect_symbol = " 2> ";
+                redirectSymbol = " 2> ";
                 break;
             case 3:
-                redirect_symbol = " >& ";
+                redirectSymbol = " >& ";
                 break;
             case 4:
-                redirect_symbol = " >> ";
+                redirectSymbol = " >> ";
                 break;
             case 5:
-                redirect_symbol = " >>& ";
+                redirectSymbol = " >>& ";
                 break;
             }
             vector <Node*> files = ((Command *)(root->obj))->files[i];
             if (files.size()) {
-            ret += redirect_symbol;
+            ret += redirectSymbol;
             for (unsigned int j = 0; j < files.size() - 1; j++) {
                 ret += *(string*)files[j]->obj;
-                ret += redirect_symbol;
+                ret += redirectSymbol;
             }
             ret += *(string*)files[files.size() - 1]->obj;
             }
