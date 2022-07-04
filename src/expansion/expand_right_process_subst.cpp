@@ -27,12 +27,6 @@ void expand_right_process_subst(int *writeCommandPipe, string &subshellCommand, 
         delete tr;
         exit(0);
     }
-    Shell::currentJob->pgid = child;
-    process *p = new process();
-    p->pid = child;
-    Shell::currentJob->substProcesses.push_back(p);
-    //dup2(old:stdin, STDIN_FILENO);
-    //delete j;
     delete tr;
 
 }

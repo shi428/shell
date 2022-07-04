@@ -102,54 +102,24 @@ void job::launch_job(AST *ast) {
             pipe(myPipe2);
             processOutFile = myPipe2[1];
             errFile = this->stderrFd;
-            if (p->files[0].size()) {
-                pipe(inPipe);
-                redirectInFile = inFile;
-                inFile = inPipe[0];
-                if (p->files[0].size() == 1 && redirectInFile == this->stdinFd /*not coming from a pipe*/) {
-                    inFile = open(p->files[0][0].c_str(), O_RDONLY);
-                }
-            }
-            if (p->files[1].size() || p->files[4].size()) {
-                pipe(myPipe);
-                processOutFile = myPipe[1];
-                outFile = myPipe2[1];
-            }
-            if (p->files[2].size()) {
-                pipe(errPipe);
-                errFile = errPipe[1];
-            }
+
+            p->setup_input_pipe(inPipe, &redirectInFile, &inFile);
+            p->setup_output_pipe(myPipe, myPipe2, &processOutFile, &outFile);
+            p->setup_err_pipe(errPipe, &errFile);
         }
         else { //end of pipeline
             processOutFile = this->stdoutFd;
             errFile = this->stderrFd;
-            if (p->files[0].size()) {
-                pipe(inPipe);
-                redirectInFile = inFile;
-                inFile = inPipe[0];
-                if (p->files[0].size() == 1 && redirectInFile == this->stdinFd) {
-                    inFile = open(p->files[0][0].c_str(), O_RDONLY);
-                }
-            }
-            if (p->files[1].size() || p->files[4].size()) {
-                pipe(myPipe);
-                processOutFile = myPipe[1];
-            }
-            if (p->files[2].size()) {
-                pipe(errPipe);
-                errFile = errPipe[1];
-            }
-            if (p->files[3].size() || p->files[5].size()) {
-                pipe(outErrPipe);
-                processOutFile = outErrPipe[1];
-                errFile = outErrPipe[1];
-            }
+
+            p->setup_input_pipe(inPipe, &redirectInFile, &inFile);
+            p->setup_output_pipe(myPipe, myPipe2, &processOutFile, &outFile);
+            p->setup_err_pipe(errPipe, &errFile);
+            p->setup_out_err(outErrPipe, &errFile, &processOutFile);
+
             outFile = this->stdoutFd;
         }
         //input redirection here
-        if (p->files[0].size() > 1 || (p->files[0].size() && redirectInFile != this->stdinFd)) {
-            p->redirect_input(redirectInFile, inPipe);
-        }
+        p->redirect_input(redirectInFile, inPipe);
 
         //execute command
         pid = fork();
@@ -174,19 +144,10 @@ void job::launch_job(AST *ast) {
                 setpgid(pid, this->pgid);
             }
 
-            //output redirection
-            if (p->files[1].size() || p->files[4].size()) {
-                p->redirect_out(processOutFile, outFile, myPipe, this->pgid);
-            }
+            p->redirect_out(processOutFile, outFile, myPipe, this->pgid);
+            p->redirect_err(errFile, errPipe, this->pgid);
+            p->redirect_outerr(outErrPipe, pgid);
 
-            //error redirection
-            if (p->files[2].size()) {
-                p->redirect_err(errFile, errPipe, this->pgid);
-            }
-            
-            if (p->files[3].size() || p->files[5].size()) {
-                p->redirect_outerr(outErrPipe, pgid);
-            }
             //clean pipes
             if (inFile != STDIN_FILENO) {
                 close(inFile);
@@ -221,9 +182,6 @@ int job::wait_for_job() {
     while (!mark_process_status (pid, status)
             && !this->job_is_stopped ()
             && !this->job_is_completed ());
-    for (auto p: this->substProcesses) {
-        delete p;
-    }
     return status;
 }
 
@@ -233,11 +191,6 @@ int job::job_is_stopped () {
             return 0;
         }
     }
-    /*for (auto p: this->substProcesses) {
-        if (p->completed == 0 && p->stopped == 0) {
-            return 0;
-        }
-    }*/
     return 1;
 }
 
@@ -247,11 +200,6 @@ int job::job_is_completed () {
             return 0;
         }
     }
-    /*for (auto p: this->substProcesses) {
-        if (p->completed == 0) {
-            return 0;
-        }
-    }*/
     return 1;
 }
 
@@ -321,7 +269,6 @@ void format_job_info (job *j) {
     }
     j->lastProcess->print_process_info();
     printf("\n");
-    //fprintf (stderr, "%ld (%s): %s\n", (long)j->pgid, status, j->command);
 }
 
 void job::print_job_information() {
@@ -339,18 +286,6 @@ int mark_process_status(pid_t pid, int status) {
                         p->stopped = 1;
                         printf("\n");
                         format_job_info(j); 
-                    }
-                    else {
-                        p->completed = 1;
-                    }
-                    return 0;
-                }
-            }
-            for (auto p: j->substProcesses) {
-                if (p->pid == pid) {
-                    p->status = status;
-                    if (WIFSTOPPED(status)) {
-                        p->stopped = 1;
                     }
                     else {
                         p->completed = 1;
