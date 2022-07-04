@@ -1,6 +1,6 @@
 #include <shell.h>
-#include "../yacc.yy.hpp"
-#include "../lex.yy.hpp"
+#include <yacc.yy.hpp>
+#include <lex.yy.hpp>
 
 string convert_to_regex(string &wildcard) {
     string ret;

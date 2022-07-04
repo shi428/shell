@@ -1,6 +1,6 @@
 #include <shell.h>
-#include "../yacc.yy.hpp"
-#include "../lex.yy.hpp"
+#include <yacc.yy.hpp>
+#include <lex.yy.hpp>
 
 string expand_command_subst(string &subshell_command) {
     const char *shell[2] = {"/proc/self/exe", NULL};

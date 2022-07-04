@@ -1,6 +1,6 @@
 #include <shell.h>
-#include "../yacc.yy.hpp"
-#include "../lex.yy.hpp"
+#include <yacc.yy.hpp>
+#include <lex.yy.hpp>
 
 extern unordered_map<string, pair<char **, int>> aliases;
 char **expand_alias(char **cmd) {

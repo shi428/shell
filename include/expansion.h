@@ -22,6 +22,8 @@ char **expand_alias(char **cmd);
 vector <string> expand_wildcard(string &wildcard, bool cwd);
 string expand_command_subst(string &subshellCommand);
 string expand_process_subst(string &subshellCommand, bool readWrite);
+void expand_left_process_subst(int *writeCommandPipe, string &subshellCommand, string &namedPipe, const char **shell);
+void expand_right_process_subst(int *writeCommandPipe, string &subshellCommand, string &namedPipe, const char **shell);
 string try_expand_command(Node *node, string &command);
 string expand_arg(Node *argNode, string &command);
 #endif
