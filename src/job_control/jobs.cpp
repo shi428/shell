@@ -144,17 +144,11 @@ void job::launch_job(AST *ast) {
                 processOutFile = outErrPipe[1];
                 errFile = outErrPipe[1];
             }
-            //process_out_file = this->stdoutFd;
             outFile = this->stdoutFd;
         }
         //input redirection here
         if (p->files[0].size() > 1 || (p->files[0].size() && redirectInFile != this->stdinFd)) {
-            if (fork() == 0) {
-                //reverse(p->files[0].begin(), p->files[0].end());
-                my_cat(redirectInFile, inPipe[1], p->files[0]);
-                exit(0);
-            }
-            close(inPipe[1]);
+            p->redirect_input(redirectInFile, inPipe);
         }
 
         //execute command
@@ -182,39 +176,16 @@ void job::launch_job(AST *ast) {
 
             //output redirection
             if (p->files[1].size() || p->files[4].size()) {
-                //only do if redirect files exist
-                close(processOutFile);
-                if (fork() == 0) {
-                    setpgid(getpid(), this->pgid);
-                    my_tee(myPipe[0], outFile, p->files[1], p->files[4]);
-                    exit(0);
-                }
-                //clean up write end of pipe
-                if (outFile != this->stdoutFd) {
-                    close(outFile);
-                }
-                close(myPipe[0]);
+                p->redirect_out(processOutFile, outFile, myPipe, this->pgid);
             }
+
             //error redirection
             if (p->files[2].size()) {
-                close(errFile);
-                if (fork() == 0) {
-                    setpgid(getpid(), this->pgid);
-                    vector <string> empty;
-                    my_tee(errPipe[0], 1, p->files[2], empty);
-                    exit(0);
-                }
-                close(errPipe[0]);
+                p->redirect_err(errFile, errPipe, this->pgid);
             }
+            
             if (p->files[3].size() || p->files[5].size()) {
-                close(outErrPipe[1]);
-                if (fork() == 0) {
-                    setpgid(getpid(), this->pgid);
-                    vector <string> empty;
-                    my_tee(outErrPipe[0], 1, p->files[3], p->files[5]);
-                    exit(0);
-                }
-                close(outErrPipe[0]);
+                p->redirect_outerr(outErrPipe, pgid);
             }
             //clean pipes
             if (inFile != STDIN_FILENO) {
