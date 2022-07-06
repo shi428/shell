@@ -23,7 +23,7 @@ void Shell::init_shell() {
     get_users();
 
     //set shell env var
-    //run_builtin_command_setenv((char **)set_shell);
+    run_builtin_command_setenv((char **)set_shell);
     if (shellIsInteractive)
     {
         /* Loop until we are in the foreground.  */
