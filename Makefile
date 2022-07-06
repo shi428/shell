@@ -44,13 +44,13 @@ yacc.yy.cpp: yacc.y
 		bison -d -y -t --debug -o $(SRCDIR)/yacc.yy.cpp $<
 compile_shell:
 		make $(MAKEFLAGS) $(WORKDIR)
-			make $(MAKEFLAGS) headers
-				make $(MAKEFLAGS) $(SHELLOBJS)
-					$(CPP) $(addprefix $(WORKDIR)/, $(SHELLOBJS)) -o shell
+		make $(MAKEFLAGS) headers
+		make $(MAKEFLAGS) $(SHELLOBJS)
+		$(CPP) $(addprefix $(WORKDIR)/, $(SHELLOBJS)) -o shell
 compile_readline: $(READLINEOBJS)
 		$(CPP) $(addprefix $(WORKDIR)/, $(READLINEOBJS)) -o readline
 %.o: %.cpp
 		@#time --format='%e' $(CPP) -c $<  -o  $(WORKDIR)/$@ 
-			$(CPP) -c $< -o  $(WORKDIR)/$@ 
+		$(CPP) -c $< -o  $(WORKDIR)/$@ 
 clean:
 		rm -rf shell tokenizer parser work readline testing/*diff testing/out* testing/*.out testing/o* testing/f* src/lex.yy.cpp src/yacc.yy.cpp src/yacc.yy.hpp src/lex.yy.hpp include/*.gch src/*.gch

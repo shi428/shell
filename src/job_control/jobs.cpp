@@ -63,36 +63,8 @@ void job::launch_job(AST *ast) {
                 return ;
             }
 
-            if (!strcmp(p->argv[0], "cd")) {
-                run_builtin_command(p->argv);
-                flag = 1;
-            }
-
-            if (!strcmp(p->argv[0], "setenv")) {
-                run_builtin_command(p->argv);
-                flag = 1;
-            }
-
-            if (!strcmp(p->argv[0], "source")) {
-                run_builtin_command(p->argv);
-                flag = 1;
-            }
-
-            if (!strcmp(p->argv[0], "fg")) {
-                run_builtin_command(p->argv);
-                flag = 1;
-            }
-            if (!strcmp(p->argv[0], "bg")) {
-                run_builtin_command(p->argv);
-                flag = 1;
-            }
-            if (!strcmp(p->argv[0], "unsetenv")) {
-                run_builtin_command(p->argv);
-                flag = 1;
-            }
-
-            if (!strcmp(p->argv[0], "alias") && p->argv[1]) {
-                run_builtin_command(p->argv);
+            if (is_builtin(p->argv[0])) {
+                //run_builtin_command(p->argv);
                 flag = 1;
             }
         }
@@ -122,12 +94,12 @@ void job::launch_job(AST *ast) {
         p->redirect_input(redirectInFile, inPipe);
 
         //execute command
-        pid = fork();
+        if (flag == 0) {
+            pid = fork();
+        }
         if (pid == 0) { //child process
-            if (flag == 0) {
-                //use first pipe output for piping
-                p->launch_process(ast, this->pgid, inFile, processOutFile, errFile, this->foreground);
-            }
+            //use first pipe output for piping
+            p->launch_process(ast, this->pgid, inFile, processOutFile, errFile, this->foreground);
             exit(0);
         }
         else if (pid < 0) {
@@ -142,6 +114,26 @@ void job::launch_job(AST *ast) {
                     this->pgid = pid;
                 }
                 setpgid(pid, this->pgid);
+            }
+            if (is_builtin(p->argv[0]) && flag) {
+                if (inFile != STDIN_FILENO) {
+                    dup2 (inFile, STDIN_FILENO);
+                    close (inFile);
+                }
+                if (processOutFile != STDOUT_FILENO) {
+                    if (processOutFile == errFile) {
+                        dup2(errFile, STDERR_FILENO);
+                    }
+                    dup2 (processOutFile, STDOUT_FILENO);
+                    close (processOutFile);
+                }
+                if (processOutFile != errFile && errFile != STDERR_FILENO) {
+                    dup2 (errFile, STDERR_FILENO);
+                    close (errFile);
+                }
+                run_builtin_command(p->argv);
+                dup2(oldStdin, this->stdinFd);
+                dup2(oldStdout, this->stdoutFd);
             }
 
             p->redirect_out(processOutFile, outFile, myPipe, this->pgid);
