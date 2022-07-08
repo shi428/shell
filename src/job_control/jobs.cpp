@@ -89,6 +89,12 @@ void job::launch_job(AST *ast) {
             p->setup_out_err(outErrPipe, &errFile, &processOutFile);
 
             outFile = this->stdoutFd;
+            int i = 0;
+            while (p->argv[i]) {
+                i++;
+            }
+            const char *set_uscore[4] = {"setenv", "_", p->argv[i-1], NULL};
+            run_builtin_command((char **)set_uscore);
         }
         //input redirection here
         p->redirect_input(redirectInFile, inPipe);
@@ -146,6 +152,8 @@ void job::launch_job(AST *ast) {
             }
             if (processOutFile != this->stdoutFd) {
                 close(processOutFile);
+            }
+            if (!this->foreground) {
             }
         }
         inFile  = myPipe2[0];

@@ -19,6 +19,8 @@ void job::put_job_in_foreground(int cont) {
     tcsetattr (Shell::shellTerminal, TCSADRAIN, &Shell::shellTmodes);
     if (WIFSTOPPED(status) == 0) {
         Shell::lastJobExitStatus = WEXITSTATUS(status);
+        const char *set_question[4] = {"setenv", "?", to_string(Shell::lastJobExitStatus).c_str(), NULL};
+        run_builtin_command((char **)set_question);
         Shell::delete_job(this);
     }
 }

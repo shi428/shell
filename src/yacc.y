@@ -34,6 +34,7 @@ void yyerror(YYLTYPE *yylocp, yyscan_t, AST **ast, int, const char *);
 %token LEFT_PROCESS_SUBST
 %token RIGHT_PROCESS_SUBST
 %token ENV
+%token DOLLAR
 %token <ch> LEFT_PAREN
 %token <ch> RIGHT_PAREN
 %token <ch> GREAT
@@ -58,6 +59,7 @@ void yyerror(YYLTYPE *yylocp, yyscan_t, AST **ast, int, const char *);
 %type <node> full_command_line;
 %type space;
 %type <str> cmd_subst;
+%type <str> env_expansion;
 %type <str> left_process_subst;
 %type <str> right_process_subst;
 %type <arg_str> arg;
@@ -272,6 +274,9 @@ quote_word: quote_word ch {
           quote_word PIPE {
           $$->push_back('|');
           } | 
+          quote_word DOLLAR {
+          $$->push_back('$');
+          } |
           quote_word OR {
           $$->append("||");
           } | 
@@ -376,10 +381,34 @@ for (size_t i = 0; i < $1->length(); i++) {
     }
 }
 delete $1;
+} | env_expansion {
+$$ = create_arg();
+$$->first->append(*$1);
+for (size_t i = 0; i < $1->length(); i++) {
+    if (i == 0 || i == $1->length() - 1) {
+    $$->second->push_back(ENV_EXPANSION);
+    }
+    else {
+    $$->second->push_back(REGULAR);
+    }
+}
+delete $1;
 }
 
-cmd_subst: SUBSHELL space linebreak full_command_line space linebreak RIGHT_PAREN {
-         $$ = new string("$("+$4->get_command($4)+")");
+env_expansion: DOLLAR LEFT_BRACE space word space RIGHT_BRACE {
+         $$ = new string("${"+*$4+"}");
+         delete $4;
+        } | DOLLAR LEFT_BRACE space DOLLAR space RIGHT_BRACE {
+         $$ = new string("${$}");
+        } |DOLLAR word {
+         $$ = new string("${"+*$2+"}");
+         delete $2;
+        } | DOLLAR DOLLAR {
+         $$ = new string("${$}");
+        }
+             
+cmd_subst: DOLLAR LEFT_PAREN space linebreak full_command_line space linebreak RIGHT_PAREN {
+         $$ = new string("$("+$5->get_command($5)+")");
 }
 
 left_process_subst: LEFT_PROCESS_SUBST space linebreak full_command_line space linebreak RIGHT_PAREN {

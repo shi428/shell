@@ -6,14 +6,14 @@
 #include <regex.h>
 #include <vector>
 #include <algorithm>
-/*vector <Token> expand_env(vector <Token> &tokens);
-vector <Token> expand_tilde(vector <Token> &tokens);*/
+/*vector <Token> expand_tilde(vector <Token> &tokens);*/
 
 enum expansion_t {
     REGULAR=0,
     COMMAND_SUBST=1,
     READ_PROCESS_SUBST=2,
     WRITE_PROCESS_SUBST=3,
+    ENV_EXPANSION=4,
 };
 //#define REGULAR 0
 //#define COMMAND_SUBST 1
@@ -26,4 +26,5 @@ void expand_left_process_subst(int *writeCommandPipe, string &subshellCommand, s
 void expand_right_process_subst(int *writeCommandPipe, string &subshellCommand, string &namedPipe, const char **shell);
 string try_expand_command(Node *node, string &command);
 string expand_arg(Node *argNode, string &command);
+string expand_env(string &env_var);
 #endif

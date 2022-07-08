@@ -23,6 +23,12 @@ string expand_arg(Node *argNode, string &command) {
             expandedArg += expand_process_subst(subshell_command, false);
             index = delimIndex;
         }
+        else if (tokens[index] == 4) {
+            int delimIndex = find(tokens.begin() + index + 1, tokens.end(), 4) - tokens.begin();
+            string env_var = ((string *)argNode->obj)->substr(index + 2, delimIndex - (index + 2));
+            expandedArg += expand_env(env_var);
+            index = delimIndex;
+        }
         else {
             expandedArg += (*(string *)argNode->obj)[index];
         }

@@ -53,10 +53,12 @@ void Shell::init_shell() {
         tcgetattr (shellTerminal, &shellTmodes);
     }
 
+    const char *set_shell_pid[4] = {"setenv", "$", to_string(getpid()).c_str(), NULL};
     //source shellrc
     if (shellIsInteractive) {
         run_builtin_command_source((char **)source);
     }
+    run_builtin_command((char **)set_shell_pid);
 }
 
 int unlink_cb(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
@@ -157,6 +159,10 @@ void Shell::check_zombie() {
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
         mark_process_status(pid, status);
         job *j = find_job_by_pid(pid);
+        if (j) {
+        const char *set_bang[4] = {"setenv", "!", to_string(pid).c_str(), NULL};
+        run_builtin_command((char **)set_bang);
+        }
         if (j && j->job_is_completed() && !j->foreground) {
             Shell::lastJobExitStatus = WEXITSTATUS(status);
             j->print_job_information();

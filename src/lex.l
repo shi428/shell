@@ -24,17 +24,14 @@
 "||" { 
     return OR;
 }
-"$(" { 
-    return SUBSHELL;
-}
 "<(" { 
     return LEFT_PROCESS_SUBST;
 }
 ">(" { 
     return RIGHT_PROCESS_SUBST;
 }
-"${" { 
-    return ENV;
+"$" {
+    return DOLLAR;
 }
 "(" { 
     return LEFT_PAREN;
