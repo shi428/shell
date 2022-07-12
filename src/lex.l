@@ -69,6 +69,9 @@
 "}" {
     return RIGHT_BRACE;
 }
+"~" {
+    return '~';
+}
 [^ \t\n] { 
     yylval->ch = *yytext;
     return CHAR;

@@ -40,19 +40,19 @@ void expand_wildcardHelper(string &prefix, string &suffix, string &relative_dir,
                 if (dir[0] == '.') {
                     if (suffix.substr(suffix.find('/') + 1)[0] == '.') {
                         if (pwd) {
-                            entries.push_back(relative_dir + dir);
+                            entries.push_back("\""+ relative_dir + dir + "\"");
                         }
                         else  {
-                            entries.push_back(prefix + dir);
+                            entries.push_back("\"" + prefix + dir + "\"");
                         }
                     }
                 }
                 else {
                     if (pwd) {
-                        entries.push_back(relative_dir + dir);
+                        entries.push_back("\"" + relative_dir + dir + "\"");
                     }
                     else  {
-                        entries.push_back(prefix + dir);
+                        entries.push_back("\"" + prefix + dir + "\"");
                     }
                 }
             }

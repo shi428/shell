@@ -2,7 +2,7 @@
 #include <shell_util.h>
 #define YYERROR_VERBOSE 1
 std::vector <std::string> args_vec;
-pair <string *, vector <char> *> * create_arg();
+   pair <string *, vector <char> *> * create_arg();
 void add_file_list(vector <Node *>**file_lists, int index, vector <Node*> file_list);
 void copy_arg(pair <string *, vector <char> * > *argOne, pair<string *, vector <char> * > *argTwo);
 void append_arg(pair <string *, vector <char> * > *argOne, pair<string *, vector <char> * > *argTwo);
@@ -60,6 +60,7 @@ void yyerror(YYLTYPE *yylocp, yyscan_t, AST **ast, int, const char *);
 %type space;
 %type <str> cmd_subst;
 %type <str> env_expansion;
+%type <str> tilde_expansion;
 %type <str> left_process_subst;
 %type <str> right_process_subst;
 %type <arg_str> arg;
@@ -72,7 +73,7 @@ void yyerror(YYLTYPE *yylocp, yyscan_t, AST **ast, int, const char *);
 %%
 
 goal: input 
-input: space linebreak full_command_line space linebreak {
+    input: space linebreak full_command_line space linebreak {
     AST *tr = new AST;
     *ast = tr;
     tr->root = $3;
@@ -214,6 +215,19 @@ args:
     arg {
    if ($1->first->length()) {
    $$ = new std::vector <Node*>();
+/*   if (detect_wildcard(*($1->first)) && ($1->first->find('$') == -1) ) {
+   $1->first->insert(0, ".(");
+   $1->first->append(")");
+   $1->second->clear();
+for (size_t i = 0; i < $1->first->length(); i++) {
+    if (i == 0 || i == $1->first->length() - 1) {
+    $1->second->push_back(WILDCARD_EXPANSION);
+    }
+    else {
+    $1->second->push_back(REGULAR);
+    }
+}
+}*/
    $$->push_back(make_arg_node(*($1->first), *($1->second)));
     }
     delete_arg($1);
@@ -222,6 +236,19 @@ args:
    args SPACE arg {
    if (($3)->first->length()) {
    $$ = new std::vector <Node*>(*$1);
+ /*  if (detect_wildcard(*($3->first)) && ($3->first->find('$') == -1) ) {
+   $3->first->insert(0, ".(");
+   $3->first->append(")");
+   $3->second->clear();
+for (size_t i = 0; i < $3->first->length(); i++) {
+    if (i == 0 || i == $3->first->length() - 1) {
+    $3->second->push_back(WILDCARD_EXPANSION);
+    }
+    else {
+    $3->second->push_back(REGULAR);
+    }
+}
+}*/
    $$->push_back(make_arg_node(*($3->first), *($3->second)));
     delete $1;
     }
@@ -264,6 +291,8 @@ $$ = create_arg();
 
 quote_word: quote_word ch {
           $$->append(*$2);
+          } |quote_word '~' {
+          $$->push_back('~');
           } |
           quote_word SPACE {
           $$->push_back(' ');
@@ -346,7 +375,7 @@ word:  ch word {
     ;
 
 expansion: cmd_subst {
-$$ = create_arg();
+         $$ = create_arg();
 $$->first->append(*$1);
 for (size_t i = 0; i < $1->length(); i++) {
     if (i == 0 || i == $1->length() - 1) {
@@ -393,10 +422,21 @@ for (size_t i = 0; i < $1->length(); i++) {
     }
 }
 delete $1;
+} | tilde_expansion {
+$$ = create_arg();
+$$->first->append(*$1);
+for (size_t i = 0; i < $1->length(); i++) {
+    if (i == 0 || i == $1->length() - 1) {
+    $$->second->push_back(TILDE_EXPANSION);
+    }
+    else {
+    $$->second->push_back(REGULAR);
+    }
+}
 }
 
 env_expansion: DOLLAR LEFT_BRACE space word space RIGHT_BRACE {
-         $$ = new string("${"+*$4+"}");
+             $$ = new string("${"+*$4+"}");
          delete $4;
         } | DOLLAR LEFT_BRACE space DOLLAR space RIGHT_BRACE {
          $$ = new string("${$}");
@@ -406,16 +446,31 @@ env_expansion: DOLLAR LEFT_BRACE space word space RIGHT_BRACE {
         } | DOLLAR DOLLAR {
          $$ = new string("${$}");
         }
-             
+
+tilde_expansion: '~' {
+               $$ = new string("~");
+} | tilde_expansion: '~' word {
+         $$ = new string("~"+*$2);
+         delete $2;
+}
+| tilde_expansion: '~' quote {
+         $$ = new string("~"+*$2);
+         delete $2;
+}
+/*}| tilde_expansion: '~' quote {
+         $$ = new string("~"+*$2);
+         delete $2;
+}*/
+
 cmd_subst: DOLLAR LEFT_PAREN space linebreak full_command_line space linebreak RIGHT_PAREN {
          $$ = new string("$("+$5->get_command($5)+")");
 }
 
 left_process_subst: LEFT_PROCESS_SUBST space linebreak full_command_line space linebreak RIGHT_PAREN {
-             $$= new string("<("+$4->get_command($4)+")");
+                  $$= new string("<("+$4->get_command($4)+")");
              }
 right_process_subst: RIGHT_PROCESS_SUBST space linebreak full_command_line space linebreak RIGHT_PAREN {
-             $$= new string(">("+$4->get_command($4)+")");
+                   $$= new string(">("+$4->get_command($4)+")");
 }
 ch: CHAR {
   $$=new string(1, $1);

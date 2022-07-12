@@ -7,18 +7,34 @@ job *create_job_from_ast(AST **tr) {
     Shell::currentJob = j;
     string command;
     j->foreground = !(*tr)->root->background;
-    string expanded_command = try_expand_command((*tr)->root, command);
-    //cout << expanded_command << endl;
+    string expanded_command = try_expand_command_it1((*tr)->root, command);
     delete *tr;
 
     //parse expanded command
     yyscan_t local;
+    YY_BUFFER_STATE buffer;
+
     yylex_init(&local);
-    YY_BUFFER_STATE buffer = yy_scan_string((char *)expanded_command.c_str(), local);
+    buffer = yy_scan_string((char *)expanded_command.c_str(), local);
+    yyparse(local, tr, 0);
+    yy_delete_buffer(buffer, local);
+    yylex_destroy(local);
+    expanded_command = try_expand_command_it2((*tr)->root, command);
+
+    delete *tr;
+    yylex_init(&local);
+    buffer = yy_scan_string((char *)expanded_command.c_str(), local);
+    yyparse(local, tr, 0);
+    yy_delete_buffer(buffer, local);
+    yylex_destroy(local);
+    expanded_command = try_expand_command_it3((*tr)->root, command);
+    delete *tr;
+
+    yylex_init(&local);
+    buffer = yy_scan_string((char *)expanded_command.c_str(), local);
     yyparse(local, tr, 1);
     yy_delete_buffer(buffer, local);
     yylex_destroy(local);
-
     traverse_helper((*tr)->root, j, command);
     j->command = strdup(command.c_str());
     return j;
