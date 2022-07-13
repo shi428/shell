@@ -110,7 +110,9 @@ string expand_arg_it3(Node *argNode, string &command) {
 
     while (index < tokens.size()) {
         if (tokens[index] == QUOTE) {
-            index = find(tokens.begin() + index + 1, tokens.end(), QUOTE) - tokens.begin();
+            int delimIndex = find(tokens.begin() + index + 1, tokens.end(), QUOTE) - tokens.begin();
+            expandedArg += original.substr(index, delimIndex - index + 1);
+            index = delimIndex;
         }
         else {
             if (original[index] == '?' || original[index] == '*') {
