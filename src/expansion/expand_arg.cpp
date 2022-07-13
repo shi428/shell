@@ -59,7 +59,10 @@ string expand_arg_it1(Node *argNode, string &command) {
 string expand_arg_it2(Node *argNode, string &command) {
     string expandedArg;
     size_t index = 0;
+    string original = *(string *)argNode->obj;
     vector <char> tokens = argNode->expansionFlags;
+    // vector <char> tokens = get_tokens(*(string*)argNode->obj);
+    //cout <<  << endl;
     //cout << *(string*)argNode->obj << endl;
     while (index < tokens.size()) {
         if (tokens[index] == 5) {
@@ -70,7 +73,11 @@ string expand_arg_it2(Node *argNode, string &command) {
             }
             else {
                 int delimIndex = find(tokens.begin() + index + 1, tokens.end(), 5) - tokens.begin();
-                tilde = ((string *)argNode->obj)->substr(index + 1, delimIndex - index + 1);
+                vector <char> tokens = get_tokens(original);
+                int quoteDelimIndex = find(tokens.begin() + index + 1, tokens.end(), 5) - tokens.begin();
+                string evaluatedString = get_evaluated_string(original);
+                tilde = evaluatedString.substr(index + 1, quoteDelimIndex - index + 1);
+                tilde.pop_back();
                 char c = tilde[0];
                 if (c == '\'' || c == '\"') {
                     tilde.erase(tilde.begin());
@@ -81,7 +88,8 @@ string expand_arg_it2(Node *argNode, string &command) {
             expandedArg += expand_tilde(tilde);
         }
         else {
-            expandedArg += (*(string *)argNode->obj)[index];
+            //expandedArg += (*(string *)argNode->obj)[index];
+            expandedArg += original[index];
         }
         index++;
     }
@@ -96,23 +104,37 @@ string expand_arg_it2(Node *argNode, string &command) {
 string expand_arg_it3(Node *argNode, string &command) {
     string expandedArg;
     size_t index = 0;
+    string original = *(string *)argNode->obj;
     vector <char> tokens = argNode->expansionFlags;
     //cout << *(string*)argNode->obj << endl;
-    if (detect_wildcard(*(string *)argNode->obj)) {
-            string wildcard = *(string *)argNode->obj;
-            bool pwd = !(wildcard.find('/') == 0);
-            string full_wildcard = !pwd? wildcard : string(getenv("PWD")) +"/"+ wildcard;
-            vector <string> args = expand_wildcard(full_wildcard, pwd);
-            for (auto i: args) {
-                expandedArg += i; 
-                expandedArg += " ";
+
+    while (index < tokens.size()) {
+        if (tokens[index] == QUOTE) {
+            index = find(tokens.begin() + index + 1, tokens.end(), QUOTE) - tokens.begin();
+        }
+        else {
+            if (original[index] == '?' || original[index] == '*') {
+                expandedArg = "";
+                string evaluatedString = get_evaluated_string(original);
+                evaluatedString.pop_back();
+                string wildcard = evaluatedString;
+                bool pwd = !(wildcard.find('/') == 0);
+                string full_wildcard = !pwd? wildcard : string(getenv("PWD")) +"/"+ wildcard;
+                vector <string> args = expand_wildcard(full_wildcard, pwd);
+                for (auto i: args) {
+                    expandedArg += i; 
+                    expandedArg += " ";
+                }
+                if (args.size() == 0) {
+                    expandedArg += "\"" + wildcard + "\"";
+                }
+                break;
             }
-            if (args.size() == 0) {
-                expandedArg += "\"" + wildcard + "\"";
+            else {
+                expandedArg += original[index];
             }
-    }
-    else {
-        expandedArg = *(string *)argNode->obj;
+        }
+        index++;
     }
     command += *(string *)argNode->obj;
     command += " ";

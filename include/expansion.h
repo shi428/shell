@@ -15,7 +15,7 @@ enum expansion_t {
     WRITE_PROCESS_SUBST=3,
     ENV_EXPANSION=4,
     TILDE_EXPANSION=5,
-    WILDCARD_EXPANSION=6,
+    QUOTE=6,
 };
 //#define REGULAR 0
 //#define COMMAND_SUBST 1
@@ -35,4 +35,5 @@ string expand_arg_it3(Node *argNode, string &command);
 string expand_env(string &env_var);
 string expand_tilde(string &env_var);
 string get_evaluated_string(string &command);
+vector <char> get_tokens(string &command);
 #endif

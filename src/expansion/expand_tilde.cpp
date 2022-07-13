@@ -16,12 +16,12 @@ string expand_tilde(string &tilde) {
         ret = getenv("HOME") + remaining;
     }
     else {
-    if (Shell::users.find(user) != Shell::users.end()) {
-        ret = Shell::users[user]+remaining;
-    }
-    else {
-        ret = "\\~"+tilde;
-    }
+        if (Shell::users.find(user) != Shell::users.end()) {
+            ret = Shell::users[user]+remaining;
+        }
+        else {
+            ret = "\\~"+tilde;
+        }
     }
     return ret;
 }

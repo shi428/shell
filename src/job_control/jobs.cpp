@@ -63,7 +63,7 @@ void job::launch_job(AST *ast) {
                 return ;
             }
 
-            if (is_builtin(p->argv[0])) {
+            if (is_builtin(p->argv[0])/* && strcmp(p->argv[0], "printenv")*/) {
                 //run_builtin_command(p->argv);
                 flag = 1;
             }

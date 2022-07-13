@@ -270,10 +270,18 @@ delete $2;
 arg quote {
 $$ = create_arg();
 copy_arg($$, $1);
-string quote_str(*$2);
-$$->first->append(quote_str);
+$$->first->append(*$2);
+/*$$->first->append(quote_str);
 for (auto i: quote_str) {
 $$->second->push_back(REGULAR);
+}*/
+for (size_t i = 0; i < $2->length(); i++) {
+    if (i == 0 || i == $2->length() - 1) {
+    $$->second->push_back(QUOTE);
+    }
+    else {
+    $$->second->push_back(REGULAR);
+    }
 }
 delete_arg($1);
 delete $2;
