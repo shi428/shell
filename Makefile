@@ -9,9 +9,12 @@ JOB_SRCS=$(shell ls src/job_control)
 SHELLUTIL_SRCS=$(shell ls src/shell_utils)
 AUTOCOMPLETE_SRCS=$(shell ls src/autocomplete)
 READLINE_SRCS=$(shell ls src/read_line)
+HEADERS=shell.h shell_util.h
+
 SHELLSRCS=shell_main.cpp misc.cpp lex.yy.cpp yacc.yy.cpp $(EXPANSION_SRCS) $(BUILTIN_SRCS) $(JOB_SRCS) $(AST_SRCS) $(SHELLUTIL_SRCS) $(AUTOCOMPLETE_SRCS) $(READLINE_SRCS)
 SHELLOBJS=$(SHELLSRCS:%.cpp=%.o)
-	TOKENOBJS=$(TOKENSRCS:%.cpp=%.o)
+PRECOMPILED_HEADERS=$(HEADERS:%.h=%.h.gch)
+
 vpath %.cpp $(SRCDIR)/ 
 vpath %.cpp $(SRCDIR)/expansion
 vpath %.cpp $(SRCDIR)/built_ins
@@ -20,16 +23,25 @@ vpath %.cpp $(SRCDIR)/ast
 vpath %.cpp $(SRCDIR)/shell_utils
 vpath %.cpp $(SRCDIR)/autocomplete
 vpath %.cpp $(SRCDIR)/read_line
+vpath %.h $(INCDIR)/
 vpath %.l $(SRCDIR)/
 vpath %.y $(SRCDIR)/
 vpath %.o $(WORKDIR)/
-testall: compile_shell
-		cd testing && ./testall
-test_%: compile_shell
-		cd testing && ./testall $@
-headers:
-		$(CPP) include/shell_util.h
-			$(CPP) include/shell.h
+compile_shell:
+		$(MAKE) $(WORKDIR)
+		$(MAKE) headers
+		$(MAKE) $(SHELLOBJS)
+		$(CPP) $(addprefix $(WORKDIR)/, $(SHELLOBJS)) -o shell
+testall: testregular testmemory
+testmemory: compile_shell
+		cd testing/memory_tests && 	./testall $@
+testmemory: compile_shell
+		cd testing/memory_tests && 	./testall
+testregular: compile_shell
+		cd testing/regular_tests && ./testall
+testregular_%: compile_shell
+		cd testing/regular_tests && ./testall $@
+headers: $(PRECOMPILED_HEADERS)
 $(WORKDIR): lex.yy.cpp yacc.yy.cpp
 		test -d $(WORKDIR) || mkdir $(WORKDIR)
 %: compile_%
@@ -37,20 +49,20 @@ $(WORKDIR): lex.yy.cpp yacc.yy.cpp
 debug_%: compile_%
 		gdb ./$*
 memory_%: compile_%
-		valgrind --show-leak-kinds=all --leak-check=full ./$*
+		valgrind --track-origins=yes --show-leak-kinds=all --leak-check=full ./$*
 lex.yy.cpp: lex.l
 		lex  --header-file=$(SRCDIR)/$(patsubst %.cpp,%.hpp, $@) -o $(SRCDIR)/$@ $<
 yacc.yy.cpp: yacc.y
 		bison -d -y -t --debug -o $(SRCDIR)/yacc.yy.cpp $<
-compile_shell:
-		make $(MAKEFLAGS) $(WORKDIR)
-		make $(MAKEFLAGS) headers
-		make $(MAKEFLAGS) $(SHELLOBJS)
-		$(CPP) $(addprefix $(WORKDIR)/, $(SHELLOBJS)) -o shell
 compile_readline: $(READLINEOBJS)
 		$(CPP) $(addprefix $(WORKDIR)/, $(READLINEOBJS)) -o readline
+%.h.gch: %.h
+		$(CPP) $< -o $(INCDIR)/$@
 %.o: %.cpp
 		@#time --format='%e' $(CPP) -c $<  -o  $(WORKDIR)/$@ 
 		$(CPP) -c $< -o  $(WORKDIR)/$@ 
-clean:
-		rm -rf shell tokenizer parser work readline testing/*diff testing/out* testing/*.out testing/o* testing/f* src/lex.yy.cpp src/yacc.yy.cpp src/yacc.yy.hpp src/lex.yy.hpp include/*.gch src/*.gch
+clean_shell:
+		rm -rf $(addprefix $(WORKDIR)/, $(SHELLOBJS)) $(PRECOMPILED_HEADERS) shell src/lex.yy.cpp src/yacc.yy.cpp src/yacc.yy.hpp src/lex.yy.hpp
+clean_test%:
+		rm testing/$*_tests/out* testing/$*_tests/f* testing/$*_tests/*.*
+clean: clean_shell clean_testregular clean_testmemory

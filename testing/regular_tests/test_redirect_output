@@ -1,0 +1,56 @@
+#!/bin/zsh
+diffFile=test_redirect_output.diff
+pass=true
+check() {
+    if [ $2 -ne 0 ] 
+    then
+        echo -e "\033[1;31m Failed to run $1\033[0m"
+        pass=false
+    else
+        echo -e "\033[1;32m $1 ran successfully\033[0m"
+    fi
+}
+echo -e "\033[1;4;93m\ttest redirect output\033[0m"
+echo -e "\033[1;4;93m\ttest redirect output\033[0m" > $diffFile
+shell_in=$'echo hello > out1'
+zsh_in=$'echo hello > out2'
+rm -f out*
+echo Processing Command: $shell_in>>$diffFile
+diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; cat out2) <(../../shell <<< $shell_in 2>&1; cat out1) >>& $diffFile
+check $shell_in $?
+shell_in=$'head test_redirect_output > out1'
+zsh_in=$'head test_redirect_output > out2'
+rm -f out*
+echo Processing Command: $shell_in>>$diffFile
+diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; cat out2) <(../../shell <<< $shell_in 2>&1; cat out1) >>& $diffFile
+check $shell_in $?
+shell_in=$'head test_redirect_output > out1>out2'
+zsh_in=$'head test_redirect_output > out3>out4'
+rm -f out*
+echo Processing Command: $shell_in>>$diffFile
+diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; cat out3 out4) <(../../shell <<< $shell_in 2>&1; cat out1 out2) >>& $diffFile
+check $shell_in $?
+shell_in=$'grep a testall > out1'
+zsh_in=$'grep a testall > out2'
+rm -f out*
+echo Processing Command: $shell_in>>$diffFile
+diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; cat out2) <(../../shell <<< $shell_in 2>&1; cat out1) >>& $diffFile
+check $shell_in $?
+shell_in=$'cat /usr/share/dict/words > out1 > out2 > out3'
+zsh_in=$'cat /usr/share/dict/words > out4 > out5 > out6'
+rm -f out*
+echo Processing Command: $shell_in>>$diffFile
+diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; cat out4 out5 out6) <(../../shell <<< $shell_in 2>&1; cat out1 out2 out3) >>& $diffFile
+check $shell_in $?
+shell_in=$'cat testall test_redirect_input >out1>out2'
+zsh_in=$'cat testall test_redirect_input >out3>out4'
+rm -f out*
+echo Processing Command: $shell_in>>$diffFile
+diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; cat out3 out4 ) <(../../shell <<< $shell_in 2>&1; cat out1 out2 ) >>& $diffFile
+check $shell_in $?
+if [ $pass = true ]
+then
+    exit 0
+else
+    exit 1
+fi

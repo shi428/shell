@@ -1,0 +1,27 @@
+#!/bin/zsh
+diffFile=test_zombie.diff
+pass=true
+run_cmd() {
+    #echo Processing Command: $1
+    echo Processing Command: $1 >>& $diffFile
+    before=$(ps -u | grep defunct)
+    ../../shell <<< $shell_in
+    sleep 0.2 
+    after=$(ps -u | grep defunct)
+    if [ $before -ne $after ]; then
+        echo -e "\033[1;31m Failed to run $1\033[0m"
+        pass=false
+    else
+        echo -e "\033[1;32m $1 ran successfully\033[0m"
+    fi
+}
+echo -e "\033[1;4;93m\ttest zombie\033[0m"
+echo -e "\033[1;4;93m\ttest zombie\033[0m" > $diffFile
+run_cmd "ls&"
+run_cmd "ls&\nleep 10&\n cat testall &"
+if [ $pass = true ]
+then
+    exit 0
+else
+    exit 1
+fi

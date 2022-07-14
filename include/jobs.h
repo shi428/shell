@@ -7,12 +7,12 @@
 typedef struct job {
     job();
     ~job();
-    void launch_job(AST *ast);
+    int launch_job(AST *ast);
     int wait_for_job();
     int job_is_stopped();
     int job_is_completed();
-    void put_job_in_foreground(int cont);
-    void put_job_in_background(int cont);
+    int put_job_in_foreground(int cont);
+    int put_job_in_background(int cont);
     void append_process(process *p);
     void print_process_information();
     void print_job_information();

@@ -45,8 +45,7 @@ int main(int argc, char *argv[]) {
         if (ast && ast->root) {
         job *j = create_job_from_ast(&ast);
         Shell::insert_job(j);
-        j->launch_job(ast);
-        if (Shell::exitStatus) {
+        if (j->launch_job(ast) || Shell::exitStatus) {
             Shell::delete_job(j);
         }
         delete ast;

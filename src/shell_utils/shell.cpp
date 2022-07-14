@@ -23,7 +23,7 @@ void Shell::init_shell() {
     get_users();
 
     //set shell env var
-    run_builtin_command_setenv((char **)set_shell);
+    //run_builtin_command_setenv((char **)set_shell);
     if (shellIsInteractive)
     {
         /* Loop until we are in the foreground.  */
@@ -56,9 +56,9 @@ void Shell::init_shell() {
     const char *set_shell_pid[4] = {"setenv", "$", to_string(getpid()).c_str(), NULL};
     //source shellrc
     if (shellIsInteractive) {
-        run_builtin_command_source((char **)source);
+        //run_builtin_command_source((char **)source);
     }
-    run_builtin_command((char **)set_shell_pid);
+    //run_builtin_command((char **)set_shell_pid);
 }
 
 int unlink_cb(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf) {

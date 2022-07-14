@@ -24,7 +24,7 @@ job::~job() {
     free(command);
 }
 
-void job::launch_job(AST *ast) {
+int job::launch_job(AST *ast) {
     pid_t pid;
     int myPipe[2]; //to output/append redirection
     int myPipe2[2]; //to pipe redirection
@@ -44,8 +44,11 @@ void job::launch_job(AST *ast) {
     int oldStdin = dup(this->stdinFd);
     int oldStdout = dup(this->stdoutFd);
 
+    int retVal;
+
 
     //execute a pipeline
+    pid = 0xffff; //initialize
     for (process *p = this->firstProcess; p; p = p->next) {
         //running builtin commands that have to be run in the parent
         int flag = 0;
@@ -60,7 +63,7 @@ void job::launch_job(AST *ast) {
             if (!strcmp(p->argv[0], "exit")) {
                 cout << "exit" << endl;
                 Shell::exitStatus = 1;
-                return ;
+                return 1;
             }
 
             if (is_builtin(p->argv[0])/* && strcmp(p->argv[0], "printenv")*/) {
@@ -153,23 +156,22 @@ void job::launch_job(AST *ast) {
             if (processOutFile != this->stdoutFd) {
                 close(processOutFile);
             }
-            if (!this->foreground) {
-            }
         }
         inFile  = myPipe2[0];
     }
 
     if (this->foreground) {
-        this->put_job_in_foreground(0);
+        retVal = this->put_job_in_foreground(0);
     }
     else {
         print_process_information();
-        this->put_job_in_background(0);
+        retVal = this->put_job_in_background(0);
     }
 
     //restore old file descriptors
     dup2(oldStdin, this->stdinFd);
     dup2(oldStdout, this->stdoutFd);
+    return retVal;
 }
 
 int job::wait_for_job() {
