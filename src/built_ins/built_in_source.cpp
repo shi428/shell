@@ -1,6 +1,7 @@
 #include <shell.h>
 #include <yacc.yy.hpp>
 #include <lex.yy.hpp>
+#include <fstream>
 
 void run_builtin_command_source(char **cmd) {
     string line;

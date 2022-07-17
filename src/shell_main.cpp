@@ -7,7 +7,7 @@ pid_t shell_pid;
 int return_code;
 string last_arg;
 
-Trie *buildTrie(const char *currentdir);
+//Trie *buildTrie(const char *currentdir);
 
 vector <string> history;
 extern string read_line();

@@ -14,7 +14,7 @@ check() {
         echo -e "\033[1;31m Failed to run $1\033[0m"
         pass=false
     else
-        grep -E "lost: [1-9]" <(make -j$(nproc) -C ../../ memory_shell <<< $1 2>&1) >>& $memFile
+        grep -E "lost: [1-9]" <(valgrind --show-leak-kinds=all --leak-check=full --track-origins=yes ../../shell  <<< $1 2>&1) >>& $memFile
         if [ $? -eq 0 ]
         then
             pass=false

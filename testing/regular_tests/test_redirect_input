@@ -26,8 +26,8 @@ input_str=$'grep a < testall'
 run_cmd $input_str
 input_str=$'head < test_redirect_input'
 run_cmd $input_str
-#input_str=$'tail < test_redirect_input<testall'
-#run_cmd $input_str
+input_str=$'tail < test_redirect_input<testall'
+run_cmd $input_str
 input_str=$'wc < testall'
 run_cmd $input_str
 input_str=$'ls < testall < test_redirect_input'

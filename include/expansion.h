@@ -1,9 +1,7 @@
 #ifndef EXPANSION_H
 #define EXPANSION_H
 
-#include <built-in.h>
-#include <dirent.h>
-#include <regex.h>
+//#include <built-in.h>
 #include <vector>
 #include <algorithm>
 /*vector <Token> expand_tilde(vector <Token> &tokens);*/
@@ -32,7 +30,8 @@ string try_expand_command_it3(Node *node, string &command);
 string expand_arg_it1(Node *argNode, string &command);
 string expand_arg_it2(Node *argNode, string &command);
 string expand_arg_it3(Node *argNode, string &command);
-string expand_env(string &env_var);
+bool is_environ(char *str);
+char* expand_env(char *env_var);
 string expand_tilde(string &env_var);
 string get_evaluated_string(string &command);
 vector <char> get_tokens(string &command);

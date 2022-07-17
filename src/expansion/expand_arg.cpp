@@ -26,7 +26,7 @@ string expand_arg_it1(Node *argNode, string &command) {
         else if (tokens[index] == 4) {
             int delimIndex = find(tokens.begin() + index + 1, tokens.end(), 4) - tokens.begin();
             string env_var = ((string *)argNode->obj)->substr(index + 2, delimIndex - (index + 2));
-            expandedArg += expand_env(env_var);
+            expandedArg += expand_env((char *)env_var.c_str());
             index = delimIndex;
         }
         /*else if (tokens[index] == 6) {

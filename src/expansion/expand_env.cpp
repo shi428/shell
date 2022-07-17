@@ -1,22 +1,32 @@
-#include <shell.h>
+#include <c_headers.h>
 
 extern char **environ;
-bool is_environ(const char *str) {
+bool is_environ(char *str) {
     int i = 0;
     while (environ[i]) {
-        string env = environ[i];
-        string token = env.substr(0, env.find('='));
-        if (!strcmp(token.c_str(), str)) {
+        char *env = environ[i];
+        char *substr = strdup(env);
+        int terminator = strchr(substr, '=') - substr;
+        memcpy(substr, env, terminator);
+        substr[terminator] = '\0';
+        //string token = env.substr(0, env.find('='));
+        if (!strcmp(substr, str)) {
+            free(substr);
             return true;
         }
+            free(substr);
         i++;
     }
     return false;
 }
-string expand_env(string &env_var) {
-    string ret;
-    if (is_environ(env_var.c_str())) {
-        ret = getenv(env_var.c_str());
+
+char *expand_env(char *envVar) {
+    char *ret = NULL;
+    if (is_environ(envVar)){
+        ret = getenv(envVar);
+    }
+    else {
+        return strdup("");
     }
     return ret;
 }

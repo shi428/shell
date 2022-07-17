@@ -6,6 +6,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <regex.h>
 #include <fcntl.h>
 #include <string.h>
 #include <pwd.h>
@@ -15,7 +16,6 @@
 #include <ast.h>
 #include <built-in.h>
 #include <command.h>
-#include <exec.h>
 #include <expansion.h>
 #include <misc.h>
 #include <process.h>

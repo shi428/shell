@@ -1,7 +1,5 @@
 #ifndef BUILT_IN_H
 #define BUILT_IN_H
-#include <unordered_map>
-#include <fstream>
 int get_length(char **cmd);
 bool is_builtin(char *cmd);
 bool check_builtin_syntax(char **cmd);

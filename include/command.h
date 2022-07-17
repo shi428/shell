@@ -3,12 +3,12 @@
 #include <vector>
 #include <string>
 #include <iostream>
-#include <sys/types.h>
+/*#include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <pwd.h>
-#include <unistd.h>
+#include <unistd.h>*/
 #include <ast.h>
 
 using namespace std;

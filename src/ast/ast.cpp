@@ -1,4 +1,5 @@
-#include <shell_util.h>
+#include <ast.h>
+#include <command.h>
 Node::Node() {
     obj = NULL;
     background = 0;

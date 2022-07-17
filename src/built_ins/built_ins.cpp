@@ -1,9 +1,5 @@
-#include <shell.h>
-#include <yacc.yy.hpp>
-#include <lex.yy.hpp>
-
-extern char **environ;
-
+#include <built-in.h>
+#include <c_headers.h>
 
 int get_length(char **cmd) {
     int args = 0;
@@ -87,7 +83,7 @@ int run_builtin_command(char **cmd) {
         return 0;
     }
 
-    cerr << cmd[0]<< ": wrong number of arguments" << endl;
+    fprintf(stderr, "%s: wrong number of arguments\n", cmd[0]);
     return -1;
 }
 

@@ -1,0 +1,35 @@
+#!/bin/zsh
+diffFile=test_zombie.diff
+memFile=test_zombie.mem
+pass=true
+run_cmd() {
+    #echo Processing Command: $1
+    echo Processing Command: $1 >>& $diffFile >>& $memFile
+    before=$(ps -u | grep -c defunc)
+    ../../shell <<< $shell_in
+    sleep 0.2 
+    after=$(ps -u | grep -c defunc)
+    if [ $before -ne $after ]; then
+        echo -e "\033[1;31m Failed to run $1\033[0m"
+        pass=false
+    else
+        grep -E "lost: [1-9]" <(valgrind --show-leak-kinds=all --leak-check=full --track-origins=yes ../../shell  <<< $1 2>&1) >>& $memFile
+        if [ $? -eq 0 ]
+        then
+            pass=false
+            echo -e "\033[1;31m Failed to run $1\033[0m"
+        else
+        echo -e "\033[1;32m $1 ran successfully\033[0m"
+        fi
+    fi
+}
+echo -e "\033[1;4;93m\ttest zombie\033[0m"
+echo -e "\033[1;4;93m\ttest zombie\033[0m" > $diffFile > $memFile
+run_cmd "ls&"
+run_cmd "ls&\nsleep 10&\n cat testall &"
+if [ $pass = true ]
+then
+    exit 0
+else
+    exit 1
+fi

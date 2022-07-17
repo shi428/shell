@@ -1,0 +1,39 @@
+#!/bin/zsh
+diffFile=test_source.diff
+memFile=test_source.mem
+pass=true
+run_cmd() {
+    #echo Processing Command: $1
+    echo Processing Command: $1 >>& $diffFile >>& $memFile
+    diff --color -u <(/bin/zsh <<< $1 2>&1) <(../../shell <<< $1 2>&1) >>& $diffFile
+    check $1 $?
+}
+check() {
+    if [ $2 -ne 0 ] 
+    then
+        echo -e "\033[1;31m Failed to run $1\033[0m"
+        pass=false
+    else
+        grep -E "lost: [1-9]" <(valgrind --show-leak-kinds=all --leak-check=full --track-origins=yes ../../shell  <<< $1 2>&1) >>& $memFile
+        if [ $? -eq 0 ]
+        then
+            pass=false
+            echo -e "\033[1;31m Failed to run $1\033[0m"
+        else
+        echo -e "\033[1;32m $1 ran successfully\033[0m"
+        fi
+    fi
+}
+echo -e "\033[1;4;93m\ttest source \033[0m"
+echo -e "\033[1;4;93m\ttest source \033[0m" > $diffFile > $memFile
+rm -rf sourceFile
+input_str=$'echo cat testall >sourceFile'
+run_cmd $input_str
+input_str=$'rm -f sourceFile\n source sourceFile\n source a'
+run_cmd $input_str
+if [ $pass = true ]
+then
+    exit 0
+else
+    exit 1
+fi

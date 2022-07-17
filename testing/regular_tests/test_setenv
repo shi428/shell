@@ -24,6 +24,7 @@ shell_in=$'setenv a bbbbbb aaaa\n printenv'
 echo Processing Command: $shell_in>>&$diffFile
 grep "setenv: wrong number of arguments" <(../../shell <<< $shell_in 2>&1)>>&$diffFile
 check $shell_in $?
+../../shell <<< $shell_in
 if [ $pass = true ]
 then
     exit 0

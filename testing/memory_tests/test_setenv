@@ -1,0 +1,40 @@
+#!/bin/zsh
+diffFile=test_setenv.diff
+memFile=test_setenv.mem
+pass=true
+check() {
+    if [ $2 -ne 0 ] 
+    then
+        echo -e "\033[1;31m Failed to run $1\033[0m"
+        pass=false
+    else
+        grep -E "lost: [1-9]" <(valgrind --show-leak-kinds=all --leak-check=full --track-origins=yes ../../shell  <<< $1 2>&1) >>& $memFile
+        if [ $? -eq 0 ]
+        then
+            pass=false
+            echo -e "\033[1;31m Failed to run $1\033[0m"
+        else
+        echo -e "\033[1;32m $1 ran successfully\033[0m"
+        fi
+    fi
+}
+echo -e "\033[1;4;93m\ttest setenv \033[0m"
+echo -e "\033[1;4;93m\ttest setenv \033[0m" > $diffFile > $memFile
+shell_in=$'setenv a b\n printenv'
+echo Processing Command: $shell_in>>&$diffFile >>& $memFile
+grep a=b <(../../shell <<< $shell_in 2>&1)>>&$diffFile
+check $shell_in $?
+shell_in=$'setenv a bbbbbb\n printenv'
+echo Processing Command: $shell_in>>&$diffFile>>& $memFile
+grep a=bbbbbb <(../../shell <<< $shell_in 2>&1)>>&$diffFile
+check $shell_in $?
+shell_in=$'setenv a bbbbbb aaaa\n printenv'
+echo Processing Command: $shell_in>>&$diffFile>>& $memFile
+grep "setenv: wrong number of arguments" <(../../shell <<< $shell_in 2>&1)>>&$diffFile
+check $shell_in $?
+if [ $pass = true ]
+then
+    exit 0
+else
+    exit 1
+fi

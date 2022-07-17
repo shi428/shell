@@ -65,7 +65,7 @@ string consume_spaces(StringIterator &it) {
     return ret;
 }
 
-extern char **environ;
+/*extern char **environ;
 bool is_environ(char *String) {
     int i = 0;
     while (environ[i]) {
@@ -77,5 +77,5 @@ bool is_environ(char *String) {
         i++;
     }
     return false;
-}
+}*/
 

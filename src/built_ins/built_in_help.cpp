@@ -1,4 +1,4 @@
-#include <shell.h>
+#include <c_headers.h>
 const char *built_in[9] = {"alias", "bg", "cd", "fg", "help", "printenv", "setenv", "source", "unsetenv"};
 const char *built_in_desc[9] = {"[name] [value]", "", "[dir]", "", "", "", "[name] [value]", "[file]", "[name]"};
 
@@ -10,8 +10,8 @@ bool is_builtin(char *cmd) {
 }
 
 void run_builtin_command_help(char **cmd) {
-    cout << "List of built-in commands" << endl;
+    printf("List of built-in commands\n");
     for (int i = 0; i < 9; i++) {
-        cout << '\t' << built_in[i] << " " << built_in_desc[i] << endl;
+        printf("\t%s %s\n", built_in[i], built_in_desc[i]);
     }
 }

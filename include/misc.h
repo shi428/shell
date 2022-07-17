@@ -18,9 +18,8 @@ typedef struct stringIterator {
     unsigned int pos;
     unsigned int len;
 }StringIterator;
-
 string consume_spaces(StringIterator &it);
-bool is_environ(char *String);
+//bool is_environ(char *String);
 bool detect_wildcard(string &a);
 char convert_escape_char(string &escapeCh);
 #endif

@@ -1,4 +1,5 @@
 #include <shell.h>
+#include <unordered_map>
 
 unordered_map<string, pair<char **, int>> aliases;
 vector <char **> alias_ptrs;

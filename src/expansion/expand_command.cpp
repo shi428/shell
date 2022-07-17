@@ -1,6 +1,4 @@
 #include <shell.h>
-#include <yacc.yy.hpp>
-#include <lex.yy.hpp>
 
 string try_expand_command_it1(Node *node, string &command) {
     string expandedCommand;
