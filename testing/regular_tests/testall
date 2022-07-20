@@ -54,6 +54,9 @@ if [ $# -eq 0 ]; then
     run_test test_cd
     run_test test_command_substitution
     run_test test_process_substitution
+    run_test test_env_expansion
+    run_test test_tilde
+    run_test test_wildcard
 else
     all=false
     run_test $1

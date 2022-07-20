@@ -164,7 +164,10 @@ int job::launch_job(AST *ast) {
         retVal = this->put_job_in_foreground(0);
     }
     else {
+        setenv("!", to_string(pid).c_str(), 1);
+        if (Shell::shellIsInteractive) {
         print_process_information();
+        }
         retVal = this->put_job_in_background(0);
     }
 

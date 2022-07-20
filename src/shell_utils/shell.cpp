@@ -23,6 +23,7 @@ void Shell::init_shell() {
     get_users();
 
     //set shell env var
+    setenv("SHELL", shellPath, 1);
     //run_builtin_command_setenv((char **)set_shell);
     if (shellIsInteractive)
     {
@@ -58,7 +59,7 @@ void Shell::init_shell() {
     if (shellIsInteractive) {
         //run_builtin_command_source((char **)source);
     }
-    //run_builtin_command((char **)set_shell_pid);
+    setenv("$", to_string(getpid()).c_str(), 1);
 }
 
 int unlink_cb(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
@@ -159,13 +160,11 @@ void Shell::check_zombie() {
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
         mark_process_status(pid, status);
         job *j = find_job_by_pid(pid);
-        if (j) {
-        const char *set_bang[4] = {"setenv", "!", to_string(pid).c_str(), NULL};
-        run_builtin_command((char **)set_bang);
-        }
         if (j && j->job_is_completed() && !j->foreground) {
             Shell::lastJobExitStatus = WEXITSTATUS(status);
+            if (Shell::shellIsInteractive) {
             j->print_job_information();
+            }
             delete_job(j);
             fflush(stdout);
             return ;
