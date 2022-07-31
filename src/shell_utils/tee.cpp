@@ -13,12 +13,14 @@ vector <int> open_files(vector <string> &files, int append) {
     }
     return ret;
 }
-void my_tee(int inputFd, int outputFd, vector <string> &outFiles, vector <string> & appendFiles) {
+
+void my_tee(int outFile, vector <string> &outFiles, vector <string> & appendFiles) {
     char buffer[4096];
     vector <int> outFds = open_files(outFiles, 0);
     vector <int> appendFds = open_files(appendFiles, 1);
     ssize_t n_bytes;
-    while ((n_bytes = read(inputFd, buffer, (sizeof(buffer) / sizeof(buffer[0])) - 1)) != 0) {
+
+    while ((n_bytes = read(STDIN_FILENO, buffer, (sizeof(buffer) / sizeof(buffer[0])) - 1)) != 0) {
         buffer[n_bytes] = '\0';
         for (auto i: outFds) {
             write(i, buffer, n_bytes);
@@ -26,8 +28,8 @@ void my_tee(int inputFd, int outputFd, vector <string> &outFiles, vector <string
         for (auto i: appendFds) {
             write(i, buffer, n_bytes);
         }
-        if (outputFd != 1) {
-        write(outputFd, buffer, n_bytes);
+        if (outFile != 1) {
+        write(STDOUT_FILENO, buffer, n_bytes);
         }
     }
     for (auto i: outFds) {
@@ -37,7 +39,6 @@ void my_tee(int inputFd, int outputFd, vector <string> &outFiles, vector <string
         close(i);
     }
 }
-
 /*int main() {
 
     //run ls > file1 > file2 > file3 >> append| grep a 

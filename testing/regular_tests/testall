@@ -57,6 +57,7 @@ if [ $# -eq 0 ]; then
     run_test test_env_expansion
     run_test test_tilde
     run_test test_wildcard
+    run_test test_all_expansions
 else
     all=false
     run_test $1

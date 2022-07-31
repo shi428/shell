@@ -1,5 +1,5 @@
-#ifndef PARSER_H
-#define PARSER_H
+#ifndef AST_H
+#define AST_H
 #include <vector>
 #include <string>
 using namespace std;

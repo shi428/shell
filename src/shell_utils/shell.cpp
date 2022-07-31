@@ -207,6 +207,16 @@ void Shell::print_jobs() {
     }
 }
 
+void Shell::delete_jobs() {
+    job *jnext = NULL;
+    for (job *j = jobs->first_job; j; j = jnext) {
+        jnext = j->next;
+        if (j->job_is_completed()) {
+            delete_job(j);
+        }
+    }
+}
+
 job *Shell::find_first_stopped_or_bg_job() {
     for (job *j = Shell::jobs->first_job; j; j = j->next) {
         if (j->job_is_stopped() || j->foreground == 0) {

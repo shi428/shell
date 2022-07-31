@@ -60,7 +60,7 @@ void yyerror(YYLTYPE *yylocp, yyscan_t, AST **ast, int, const char *);
 %type space;
 %type <str> cmd_subst;
 %type <str> env_expansion;
-%type <str> tilde_expansion;
+%type <arg_str> tilde_expansion;
 %type <str> left_process_subst;
 %type <str> right_process_subst;
 %type <arg_str> arg;
@@ -258,6 +258,8 @@ for (size_t i = 0; i < $3->first->length(); i++) {
    ;
 arg: arg word
    {
+string a = *$1->first;
+string b = *$2;
 $$ = create_arg();
 copy_arg($$, $1);
 $$->first->append(*$2);
@@ -377,8 +379,9 @@ word:  ch word {
     delete $2;
     delete $1;
    }
-    | {
-   $$ = new string();
+    | ch {
+   $$ = new string(*$1);
+   delete $1;
    }
     ;
 
@@ -431,8 +434,9 @@ for (size_t i = 0; i < $1->length(); i++) {
 }
 delete $1;
 } | tilde_expansion {
-$$ = create_arg();
-$$->first->append(*$1);
+//$$ = create_arg();
+$$ = $1;
+/*$$->first->append(*$1);
 for (size_t i = 0; i < $1->length(); i++) {
     if (i == 0 || i == $1->length() - 1) {
     $$->second->push_back(TILDE_EXPANSION);
@@ -440,7 +444,7 @@ for (size_t i = 0; i < $1->length(); i++) {
     else {
     $$->second->push_back(REGULAR);
     }
-}
+}*/
 }
 
 env_expansion: DOLLAR LEFT_BRACE space word space RIGHT_BRACE {
@@ -456,15 +460,37 @@ env_expansion: DOLLAR LEFT_BRACE space word space RIGHT_BRACE {
         }
 
 tilde_expansion: '~' {
-               $$ = new string("~");
-} | tilde_expansion: '~' word {
+               $$->first = new string("~");
+               $$->second->push_back(TILDE_EXPANSION);
+} | '~' arg {
+    string tildeString = "~" + *($2->first);
+    //cout << tildeString << endl;
+    $$ = create_arg();
+    if (tildeString[1] == '~') {
+    $$->first = new string(tildeString);
+    $$->second->push_back(REGULAR);
+    for (auto i: *$2->second) {
+        $$->second->push_back(REGULAR);
+    }
+    }
+    else {
+    $$->first = new string(tildeString);
+    $$->second->push_back(TILDE_EXPANSION);
+    for (auto i: *$2->second) {
+        $$->second->push_back(i);
+    }
+    $$->second->push_back(TILDE_EXPANSION);
+    }
+    delete_arg($2);
+}
+/* | tilde_expansion: '~' word {
          $$ = new string("~"+*$2);
          delete $2;
 }
 | tilde_expansion: '~' quote {
          $$ = new string("~"+*$2);
          delete $2;
-}
+}*/
 /*}| tilde_expansion: '~' quote {
          $$ = new string("~"+*$2);
          delete $2;

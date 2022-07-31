@@ -3,7 +3,7 @@
 void job::print_process_information() {
     printf("[%d] ", this->jobId);
     for (process *p = this->firstProcess; p; p = p->next) {
-        printf("%d ", p->pid);
+            printf("%d ", p->pid);
     }
     printf("\n");
 }

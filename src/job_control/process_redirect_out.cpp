@@ -1,16 +1,17 @@
 #include <shell.h>
-void process::redirect_out(int processOutFile, int outFile, int *redirectOutPipe, pid_t pgid) {
+void process::redirect_out(vector <int> &pipeFds, int processOutFile, int inFile, int outFile, int *redirectOutPipe, pid_t pgid) {
     if (this->files[1].size() || this->files[4].size()) {
-        close(processOutFile);
         if (fork() == 0) {
             setpgid(getpid(), pgid);
-            my_tee(redirectOutPipe[0], outFile, this->files[1], this->files[4]);
+            dup2(redirectOutPipe[0], STDIN_FILENO);
+            if (outFile != STDOUT_FILENO) {
+                dup2(outFile, STDOUT_FILENO);
+            }
+            for (auto i: pipeFds) {
+                close(i);
+            }
+            my_tee(outFile, this->files[1], this->files[4]);
             exit(0);
         }
-        //clean up write end of pipe
-        if (outFile != STDOUT_FILENO) {
-            close(outFile);
-        }
-        close(redirectOutPipe[0]);
     }
 }

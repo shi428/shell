@@ -46,7 +46,8 @@ int main(int argc, char *argv[]) {
         job *j = create_job_from_ast(&ast);
         Shell::insert_job(j);
         if (j->launch_job(ast) || Shell::exitStatus) {
-            Shell::delete_job(j);
+            update_status();
+            Shell::delete_jobs();
         }
         delete ast;
         }

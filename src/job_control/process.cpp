@@ -4,9 +4,11 @@ process::process() {
     this->next = NULL;
     this->argv = NULL;
     this->pid = 0;
+    this->inPid = 0;
     this->completed = 0;
     this->stopped = 0;
     this->status = -1;
+    this->inStatus = -1;
 }
 
 process::~process() {
@@ -25,7 +27,7 @@ void delete_argv(char **argv) {
     delete [] argv;
 }
 
-void process::launch_process(AST *ast, pid_t pgid, int inFile, int outFile, int errFile, int foreground) {
+void process::launch_process(AST *ast, vector <int> &pipeFds, pid_t pgid, int inFile, int outFile, int errFile, int foreground) {
     pid_t pid;
 
     if (Shell::shellIsInteractive) {
@@ -39,7 +41,7 @@ void process::launch_process(AST *ast, pid_t pgid, int inFile, int outFile, int 
 
         //give process group terminal permissions
         if (foreground) {
-                tcsetpgrp(Shell::shellTerminal, pgid);
+            tcsetpgrp(Shell::shellTerminal, pgid);
         }
 
         //Set the handling for job control signals back to the default.
@@ -54,20 +56,23 @@ void process::launch_process(AST *ast, pid_t pgid, int inFile, int outFile, int 
     //setup pipes
     if (inFile != STDIN_FILENO) {
         dup2 (inFile, STDIN_FILENO);
-        close (inFile);
+        close(inFile);
     }
     if (outFile != STDOUT_FILENO) {
+        dup2 (outFile, STDOUT_FILENO);
         if (outFile == errFile) {
             dup2(errFile, STDERR_FILENO);
         }
-        dup2 (outFile, STDOUT_FILENO);
-        close (outFile);
     }
     if (outFile != errFile && errFile != STDERR_FILENO) {
         dup2 (errFile, STDERR_FILENO);
-        close (errFile);
     }
 
+    for (auto i: pipeFds) {
+        if (i != inFile) {
+        close(i);
+        }
+    }
     if (is_builtin(this->argv[0])) {
         run_builtin_command(this->argv);
         delete ast;
@@ -89,12 +94,7 @@ void process::print_process_info() {
         statusStr = "Done";
     }
     else if (WIFSTOPPED(status)) {
-        if (this->stopped) {
         statusStr = "Stopped";
-        }
-        else {
-        statusStr = "Continued";
-        }
     }
     else if (WIFCONTINUED(status)) {
         statusStr = "Continued";

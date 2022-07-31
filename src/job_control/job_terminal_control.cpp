@@ -11,6 +11,7 @@ int job::put_job_in_foreground(int cont) {
         //tcsetattr (Shell::shellTerminal, TCSADRAIN, &this->tmodes);
         if (kill (- this->pgid, SIGCONT) < 0)
             perror ("kill (SIGCONT)");
+        update_status();
     }
     status = this->wait_for_job();
     tcsetpgrp (Shell::shellTerminal, Shell::shellPgid);

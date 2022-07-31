@@ -6,6 +6,5 @@ void run_builtin_command_fg(char **cmd) {
         cerr << "fg: No such job" << endl;
     }
     Shell::mark_job_as_running(j);
-    j->print_job_information();
     j->put_job_in_foreground(1);
 }

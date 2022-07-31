@@ -55,6 +55,7 @@ struct Shell {
     static void insert_job(job *j);
     static void delete_job(job *j);
     static void print_jobs();
+    static void delete_jobs();
     static job *find_first_stopped_or_bg_job();
     static void mark_job_as_running(job *j);
     static void get_users();

@@ -1,5 +1,18 @@
 #include <shell.h>
 
+string get_env_var(string &envVar) {
+    regex_t re;
+    regmatch_t match;
+    regcomp(&re, "^[?$?_!]|[a-zA-Z]+_?[a-zA-Z]*[0-9]*", REG_EXTENDED);
+    if (!regexec(&re, envVar.c_str(), 1, &match, 0)) {
+        int len = (int)match.rm_eo - (int)match.rm_so;
+        string ret = envVar.substr(len);
+        envVar = envVar.substr(0, len);
+        return ret;
+        regfree(&re);
+    }
+    return "";
+}
 string expand_arg_it1(Node *argNode, string &command) {
     string expandedArg;
     size_t index = 0;
@@ -26,7 +39,9 @@ string expand_arg_it1(Node *argNode, string &command) {
         else if (tokens[index] == 4) {
             int delimIndex = find(tokens.begin() + index + 1, tokens.end(), 4) - tokens.begin();
             string env_var = ((string *)argNode->obj)->substr(index + 2, delimIndex - (index + 2));
+            string remaining = get_env_var(env_var);
             expandedArg += expand_env((char *)env_var.c_str());
+            expandedArg += remaining;
             index = delimIndex;
         }
         /*else if (tokens[index] == 6) {

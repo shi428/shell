@@ -27,7 +27,7 @@ run_cmd $input_str
 input_str=$'cat testall | grep test | cat'
 run_cmd $input_str
 input_str=$'cat /usr/share/dict/words | grep o | head'
-#run_cmd $input_str
+run_cmd $input_str
 input_str=$'cat /usr/share/dict/words | grep o | tail'
 run_cmd $input_str
 input_str=$'ls -al | grep test | wc'

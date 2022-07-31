@@ -106,11 +106,22 @@ void expand_wildcardHelper(string &prefix, string &suffix, string &relative_dir,
     }
 }
 
+//#include <algorithm>
+bool comp(string &a, string &b) {
+    if (a.compare(0, b.size(), b) == 0 || b.compare(0, a.size(), a) == 0) {
+        return a.size() > b.size();
+    }
+    string tempa = a;
+    string tempb = b;
+    transform(tempa.begin(), tempa.end(), tempa.begin(), ::tolower);
+    transform(tempb.begin(), tempb.end(), tempb.begin(), ::tolower);
+    return tempa < tempb;
+}
 vector <string> expand_wildcard(string &wildcard, bool pwd){
     vector <string> ret;
     string root_dir = "/";
     string relative_dir = "";
     expand_wildcardHelper(root_dir, wildcard, relative_dir, ret, false, pwd);
-    sort(ret.begin(), ret.end());
+    sort(ret.begin(), ret.end(), comp);
     return ret;
 }

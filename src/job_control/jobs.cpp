@@ -1,5 +1,5 @@
 #include <shell.h>
-
+#include <pipe_selector.h>
 job::job() {
     this->jobId = 0;
     this->next = NULL;
@@ -38,14 +38,15 @@ int job::launch_job(AST *ast) {
     int processOutFile;
     int redirectInFile;
 
-    inFile = this->stdinFd;
-    redirectInFile = this->stdinFd;
 
     int oldStdin = dup(this->stdinFd);
     int oldStdout = dup(this->stdoutFd);
+    //int oldStderr = dup(this->stderrFd);
 
     int retVal;
 
+    inFile = this->stdinFd;
+    redirectInFile = this->stdinFd;
 
     //execute a pipeline
     pid = 0xffff; //initialize
@@ -72,24 +73,28 @@ int job::launch_job(AST *ast) {
             }
         }
 
+        vector <int> pipeFds;
         //if redirection is necessary
         if (p->next) { 
             pipe(myPipe2);
             processOutFile = myPipe2[1];
             errFile = this->stderrFd;
 
-            p->setup_input_pipe(inPipe, &redirectInFile, &inFile);
-            p->setup_output_pipe(myPipe, myPipe2, &processOutFile, &outFile);
-            p->setup_err_pipe(errPipe, &errFile);
+            pipeFds.push_back(myPipe2[0]);
+            pipeFds.push_back(myPipe2[1]);
+
+            p->setup_input_pipe(pipeFds, inPipe, &redirectInFile, &inFile);
+            p->setup_output_pipe(pipeFds, myPipe, myPipe2, &processOutFile, &outFile);
+            p->setup_err_pipe(pipeFds, errPipe, &errFile);
         }
         else { //end of pipeline
             processOutFile = this->stdoutFd;
             errFile = this->stderrFd;
 
-            p->setup_input_pipe(inPipe, &redirectInFile, &inFile);
-            p->setup_output_pipe(myPipe, myPipe2, &processOutFile, &outFile);
-            p->setup_err_pipe(errPipe, &errFile);
-            p->setup_out_err(outErrPipe, &errFile, &processOutFile);
+            p->setup_input_pipe(pipeFds, inPipe, &redirectInFile, &inFile);
+            p->setup_output_pipe(pipeFds, myPipe, myPipe2, &processOutFile, &outFile);
+            p->setup_err_pipe(pipeFds, errPipe, &errFile);
+            p->setup_out_err(pipeFds, outErrPipe, &errFile, &processOutFile);
 
             outFile = this->stdoutFd;
             int i = 0;
@@ -100,15 +105,19 @@ int job::launch_job(AST *ast) {
             run_builtin_command((char **)set_uscore);
         }
         //input redirection here
-        p->redirect_input(redirectInFile, inPipe);
 
         //execute command
+        //int *pipeOut = pipe_select_output(processOutFile, myPipe, myPipe2, outErrPipe);
+        //int *pipeIn = pipe_select_input(inFile, myPipe2, inPipe);
         if (flag == 0) {
             pid = fork();
         }
         if (pid == 0) { //child process
             //use first pipe output for piping
-            p->launch_process(ast, this->pgid, inFile, processOutFile, errFile, this->foreground);
+            if (redirectInFile != this->stdinFd) {
+                close(redirectInFile);
+            }
+            p->launch_process(ast, pipeFds, this->pgid, inFile, processOutFile, errFile, this->foreground);
             exit(0);
         }
         else if (pid < 0) {
@@ -145,19 +154,43 @@ int job::launch_job(AST *ast) {
                 dup2(oldStdout, this->stdoutFd);
             }
 
-            p->redirect_out(processOutFile, outFile, myPipe, this->pgid);
-            p->redirect_err(errFile, errPipe, this->pgid);
-            p->redirect_outerr(outErrPipe, pgid);
+            p->redirect_input(pipeFds, redirectInFile, inPipe, this->pgid);
+            p->redirect_out(pipeFds, processOutFile, myPipe2[0], outFile, myPipe, this->pgid);
+            p->redirect_err(pipeFds, errFile, errPipe, this->pgid);
+            p->redirect_outerr(pipeFds, outErrPipe, this->pgid);
 
             //clean pipes
-            if (inFile != STDIN_FILENO) {
-                close(inFile);
+            /*if (inFile != this->stdinFd) {
+              close(inFile);
+              }
+              if (processOutFile != STDOUT_FILENO) {
+              close(processOutFile);
+              }*/
+        }
+        if (p->next) {
+            if (inFile != this->stdinFd) {
+            close(inFile);
             }
-            if (processOutFile != this->stdoutFd) {
-                close(processOutFile);
+            if (redirectInFile != this->stdinFd) {
+                close(redirectInFile);
+            }
+            for (auto i: pipeFds) {
+                if (i != myPipe2[0]) close(i);
+            }
+        }
+        else {
+            for (auto i: pipeFds) {
+                close(i);
+            }
+            if (inFile != this->stdinFd) {
+            close(inFile);
+            }
+            if (redirectInFile != this->stdinFd) {
+                close(redirectInFile);
             }
         }
         inFile  = myPipe2[0];
+
     }
 
     if (this->foreground) {
@@ -166,7 +199,7 @@ int job::launch_job(AST *ast) {
     else {
         setenv("!", to_string(pid).c_str(), 1);
         if (Shell::shellIsInteractive) {
-        print_process_information();
+            print_process_information();
         }
         retVal = this->put_job_in_background(0);
     }
@@ -174,6 +207,7 @@ int job::launch_job(AST *ast) {
     //restore old file descriptors
     dup2(oldStdin, this->stdinFd);
     dup2(oldStdout, this->stdoutFd);
+    //dup2(oldStderr, this->stderrFd);
     return retVal;
 }
 
@@ -189,4 +223,4 @@ int job::wait_for_job() {
             && !this->job_is_completed ());
     return status;
 }
-
+ 

@@ -1,10 +1,10 @@
 #!/bin/zsh
-diffFile=test_wildcard.diff
+diffFile=test_all_expansions.diff
 pass=true
 run_cmd() {
     #echo Processing Command: $1
     echo Processing Command: $1 >>& $diffFile
-    diff --color -u <(/bin/bash <<< $1 2>&1) <(../../shell <<< $1 2>&1) >>& $diffFile
+    diff --color -u <(/bin/zsh <<< $1 2>&1) <(../../shell <<< $1 2>&1) >>& $diffFile
     check $1 $?
 }
 check() {
@@ -16,18 +16,16 @@ check() {
         echo -e "\033[1;32m $1 ran successfully\033[0m"
     fi
 }
-echo -e "\033[1;4;93m\ttest wildcard\033[0m"
-echo -e "\033[1;4;93m\ttest wildcard\033[0m"> $diffFile
+echo -e "\033[1;4;93m\ttest all expansions\033[0m"
+echo -e "\033[1;4;93m\ttest all expansions\033[0m"> $diffFile
 
-input_str=$'echo ${HOME}/*'
+input_str=$'ls $HOME/*'
 run_cmd $input_str
-input_str=$'ls test?l?'
+input_str=$'ls $PWD*'
 run_cmd $input_str
-input_str=$'ls test_di?/a*'
+input_str=$'echo ~$USER/* | sort'
 run_cmd $input_str
-input_str=$'ls /u*"/bin"/*'
-run_cmd $input_str
-input_str=$'ls t*ing'
+input_str=$'echo ~${USER}/"D"*'
 run_cmd $input_str
 if [ $pass = true ]
 then

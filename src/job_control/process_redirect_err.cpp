@@ -1,13 +1,15 @@
 #include <shell.h>
-void process::redirect_err(int errFile, int *redirectErrPipe, pid_t pgid) {
+void process::redirect_err(vector <int> &pipeFds, int errFile, int *redirectErrPipe, pid_t pgid) {
     if (this->files[2].size()) {
-        close(errFile);
         if (fork() == 0) {
             setpgid(getpid(), pgid);
             vector <string> empty;
-            my_tee(redirectErrPipe[0], 1, this->files[2], empty);
+            dup2(redirectErrPipe[0], STDIN_FILENO);
+            for (auto i: pipeFds) {
+                close(i);
+            }
+            my_tee(1, this->files[2], empty);
             exit(0);
         }
-        close(redirectErrPipe[0]);
     }
 }

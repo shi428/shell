@@ -59,6 +59,7 @@ void traverse_helper(Node *node, job *j, string &command) {
                 p->files[i].push_back(*(string*)j->obj);
             }
         }
+        p->foreground = j->foreground;
         j->append_process(p);
     }
     else {

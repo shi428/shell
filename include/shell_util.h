@@ -23,6 +23,6 @@
 
 using namespace std;
 
-void my_tee(int inputFd, int outputFd, vector <string> &outFiles, vector <string> & appendFiles);
+void my_tee(int outFile, vector <string> &outFiles, vector <string> & appendFiles);
 void my_cat(int inputFd, int outputFd, vector <string> &files);
 #endif
