@@ -163,6 +163,13 @@ simple_iomodifier:
             $$[i] = new std::vector <Node*>();
             }
             }
+          | LESS space args space simple_iomodifier {
+            for (int i = 0; i < 6; i++) {
+            $$[i] = new std::vector <Node*>(*($5[i]));
+            delete $5[i];
+            }
+            add_file_list($$, 0, *$3);
+            }
             ;
 iomodifier: 
           GREAT space args space iomodifier {

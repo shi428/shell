@@ -22,7 +22,7 @@ shell_in=$'cat testall >> out1'
 zsh_in=$'cat testall >> out2'
 echo Processing Command: $shell_in>>$diffFile
 diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; cat out2) <(../../shell <<< $shell_in 2>&1; cat out1) >>& $diffFile
-check $shell_in $?
+ceck $shell_in $?
 shell_in=$'diff testall test_redirect_output >> out1'
 zsh_in=$'diff testall test_redirect_output>> out2'
 echo Processing Command: $shell_in>>$diffFile

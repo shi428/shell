@@ -4,11 +4,13 @@ process::process() {
     this->next = NULL;
     this->argv = NULL;
     this->pid = 0;
-    this->inPid = 0;
+    this->status = -1;
+    for (int i = 0; i < 4; i++) {
+        this->redirectPids[i] = 0;
+        this->redirectStatuses[i] = -1;
+    }
     this->completed = 0;
     this->stopped = 0;
-    this->status = -1;
-    this->inStatus = -1;
 }
 
 process::~process() {

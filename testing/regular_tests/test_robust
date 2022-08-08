@@ -1,0 +1,57 @@
+#!/bin/zsh
+diffFile=test_robust.diff
+pass=true
+run_cmd() {
+    #echo Processing Command: $1
+    echo Processing Command: $1 >>& $diffFile
+    diff --color -u <(/bin/zsh <<< $1 2>&1) <(../../shell <<< $1 2>&1) >>& $diffFile
+    check $1 $?
+}
+check() {
+    echo
+    if [ $2 -ne 0 ] 
+    then
+        echo -e "\033[1;31m Failed to run $1\033[0m"
+        pass=false
+    else
+        echo -e "\033[1;32m $1 ran successfully\033[0m"
+    fi
+}
+echo -e "\033[1;4;93m\ttest robust\033[0m"
+echo -e "\033[1;4;93m\ttest robust\033[0m" > $diffFile
+
+#all redirects together with large files
+rm -f out*
+
+echo Processing Command: $shell_in>>$diffFile
+shell_in=$'grep random stuff 2> out9 >> out3'
+zsh_in=$'grep random stuff 2> out8 >> out4'
+diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; cat out8 out4) <(../../shell <<< $shell_in 2>&1; cat out9 out3) >>& $diffFile
+check $shell_in $?
+
+shell_in=$'cat </usr/share/dict/words < /bin/bash > out1 > out2'
+zsh_in=$'cat </usr/share/dict/words < /bin/bash > out4  >out5' 
+echo Processing Command: $shell_in>>$diffFile
+diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; cat out[4-6]) <(../../shell <<< $shell_in 2>&1; cat out[1-3]) >>& $diffFile
+check $shell_in $?
+
+shell_in=$'grep test < testall </usr/share/dict/words >>& out9 >& out10'
+zsh_in=$'grep test < testall < /usr/share/dict/words >>& out8 >& out12'
+echo Processing Command: $shell_in>>$diffFile
+diff --color -u <(/bin/zsh <<< $zsh_in 2>&1; cat out8 out12 ) <(../../shell <<< $shell_in 2>&1; cat out9 out10 ) >>& $diffFile
+check $shell_in $?
+
+#pipe tests
+input_str=$'cat /usr/share/dict/words /bin/bash /bin/gcc > file1 > file2 > file3 | head  | grep o\n' #output redirection in the beginning
+input_str+=$'ls -R / | grep b > file4 > file5 >file6 | tail\n' #output redirection in the middle
+input_str+=$'ls -R / | cat | cut -d \' \' -f1 > file7 >> file4\n' #output redirection in the end
+input_str+=$'cat < /usr/share/dict/words < /bin/bash < /bin/gcc | grep o  | gcc o\n' #input redirection in the beginning
+input_str+=$'ls -R /home | grep b < /bin/gcc < /usr/share/dict/words | tail\n' #input redirection in the middle
+input_str+=$'make -C ../../ | cat | cut -d \' \' -f2 | grep o < /bin/sh\n' #output redirection in the end
+run_cmd $input_str
+if [ $pass = true ]
+then
+    exit 0
+else
+    exit 1
+fi

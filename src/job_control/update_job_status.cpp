@@ -19,14 +19,31 @@ int mark_process_status(pid_t pid, int status) {
                         }
                         p->completed = 1;
                     }
-                    return 0;
                 }
-                if (p->inPid == pid && status != p->inStatus) {
+                for (int i = 0; i < 4; i++) {
+                    pid_t redirectPid = p->redirectPids[i];
+                    pid_t redirectStatus = p->redirectStatuses[i];
+                 //   cout << pid << " " << redirectPid << " " << redirectStatus << " " << status << endl;
+                    if (redirectPid == pid && status != redirectStatus) {
+                //        cout << "ok" << endl;
+                        p->redirectStatuses[i] = status;
+                        return 0;
+                    }
+                }
+                /*if (p->inPid == pid && status != p->inStatus) {
                     p->inStatus = status;
                     return 0;
+                }*/
+
+                int complete = 1;
+                for (int i = 0; i < 4; i++) {
+                    if ((p->redirectPids[i] != 0 && !WIFEXITED(p->redirectStatuses[i]))) {
+                        complete = 0;
+                    }
                 }
-                if ((p->inPid != 0 && WIFEXITED(p->inStatus) && WIFEXITED(p->status)) || WIFEXITED(p->status)) {
+                if (complete && WIFEXITED(p->status)) {
                     p->completed = 1;
+                    return 0;
                 }
             }
         }

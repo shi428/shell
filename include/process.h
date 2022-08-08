@@ -24,11 +24,11 @@ typedef struct process {
     struct process *next;
     char **argv;
     pid_t pid;
-    pid_t inPid;
+    pid_t redirectPids[4]; //0 input redirection 1 output 2 err 3 outErr
+    int redirectStatuses[4]; //0 input redirection 1 output 2 err 3 outErr
     char completed;
     char stopped;
     int status;
-    int inStatus;
     int foreground;
 }process;
 void delete_argv(char **argv);

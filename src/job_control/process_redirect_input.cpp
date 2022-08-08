@@ -4,16 +4,20 @@ void process::redirect_input(vector <int> &pipeFds, int redirectInFile, int *red
         pid_t pid;
         pid = fork();
         if (pid == 0) {
-            setpgid(getpid(), pgid);
+            setpgid(getpid(), pgid); //put process in process group
+
+            //set terminal permissions
             if (this->foreground) {
                 tcsetpgrp(Shell::shellTerminal, pgid);
             }
-        signal (SIGINT, SIG_DFL);
-        signal (SIGQUIT, SIG_DFL);
-        signal (SIGTSTP, SIG_DFL);
-        signal (SIGTTIN, SIG_DFL);
-        signal (SIGTTOU, SIG_DFL);
-        signal (SIGCHLD, SIG_DFL);
+
+            //set signals back to default
+            signal (SIGINT, SIG_DFL);
+            signal (SIGQUIT, SIG_DFL);
+            signal (SIGTSTP, SIG_DFL);
+            signal (SIGTTIN, SIG_DFL);
+            signal (SIGTTOU, SIG_DFL);
+            signal (SIGCHLD, SIG_DFL);
             dup2(redirectInFile, STDIN_FILENO);
             dup2(redirectInPipe[1], STDOUT_FILENO);
             for (auto i: pipeFds) {
@@ -23,7 +27,8 @@ void process::redirect_input(vector <int> &pipeFds, int redirectInFile, int *red
             my_cat(redirectInFile, redirectInPipe[1], this->files[0]);
             exit(0);
         }
+
         setpgid(pid, pgid);
-        this->inPid = pid;
+        this->redirectPids[0] = pid;
     }
 }
